@@ -1,0 +1,1 @@
+java -server -Xms512m -Xmx512m -Xss128k -XX:+AggressiveOpts -XX:+UseParallelGC -XX:+UseBiasedLocking -XX:NewSize=64m -XX:MaxDirectMemorySize=256m -jar ams.jar 
