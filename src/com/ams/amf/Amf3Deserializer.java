@@ -98,7 +98,6 @@ public class Amf3Deserializer {
 	
 	private AmfValue readByType(int type) throws IOException, AmfException {
 		AmfValue amfValue = null;
-System.out.println("type:"+type); 		
 		switch(type) {
 		case 0x00:
 			//This specifies the data in the AMF packet is a undefined.

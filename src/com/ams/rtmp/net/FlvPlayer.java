@@ -12,8 +12,8 @@ import com.ams.event.*;
 public class FlvPlayer implements IPlayer{
 	private static int FLV_BUFFER_TIME = 5 * 1000; // 5 seconds of buffering
 	private NetStream stream = null;
-	private String fileName = null;
-	private ByteBufferInputStream input = null;
+	private RandomAccessFileReader reader;
+	private FlvDeserializer deserializer;
 	private long startTime = -1;
 	private long currentTime = 0;
 	private long blockedTime = -1;
@@ -22,17 +22,15 @@ public class FlvPlayer implements IPlayer{
 	private boolean videoPlaying = true;
 	private LinkedList<Event> readMsgQueue;
 
-	public FlvPlayer(String fileName, NetStream stream) {
-		this.fileName = fileName;
+	public FlvPlayer(String fileName, NetStream stream) throws IOException {
 		this.stream = stream;
+		this.reader = new RandomAccessFileReader(fileName, 0);
+		this.deserializer = new FlvDeserializer(reader);
 		this.readMsgQueue = new LinkedList<Event>();
 	}
 
 	public void close() throws IOException {
-		if (input != null) {
-			input.close();
-		}
-		input = null;
+		reader.close();
 	}
 	
 	public void seek(long seekTime) throws IOException {
@@ -45,62 +43,29 @@ public class FlvPlayer implements IPlayer{
 		blockedTime = -1;
 
 		// close the flv file
-		if( input != null ) {
-			input.close();
-		}
-		
-		// open the flv file
-		input = new ByteBufferInputStream(new RandomAccessFileReader(fileName, 0));
 		readMsgQueue.clear();
 		
 		try {
-			// prepare to send first audio + video chunk (with null time stamp)
-			FlvHeader flvHeader = FlvHeader.read(input);
-			
-			boolean hasAudio = flvHeader.isHasAudio();
-			boolean hasVideo = flvHeader.isHasVideo();
-			
-			// TODO seek key frame from index file
-			//long startPosition = 0;
-			//input = new RandomAccessFileInputStream(raInputFile, startPosition, raInputFile.length());
-
-			while(hasAudio || hasVideo) {
-				FlvTag flvTag = FlvTag.read(input);
-				if( flvTag == null ) {
-					break;
+			FlvTag flvTag = deserializer.seek(seekTime);
+			if (flvTag == null) return;
+			ByteBuffer[] data = flvTag.getData();
+			long time = flvTag.getTimestamp();
+			switch( flvTag.getTagType() ) {
+			case FlvTag.FLV_AUDIO:
+				if(audioPlaying) {
+					readMsgQueue.offer(new Event(time, new RtmpMessageAudio(data)));
 				}
-				ByteBuffer[] data = flvTag.getData();
-				long time = flvTag.getTimestamp();
-				switch( flvTag.getTagType() ) {
-				case FlvTag.FLV_AUDIO:
-					if( time < seekTime ) {
-						continue;
-					}
-					if(audioPlaying) {
-						readMsgQueue.offer(new Event(time, new RtmpMessageAudio(data)));
-					}
-					
-					hasAudio = false;
-					break;
-				case FlvTag.FLV_VIDEO:
-					if(FlvTag.isVideoKeyFrame(data)) {
-						readMsgQueue.clear();
-					}
-					if(videoPlaying) {
-						readMsgQueue.offer(new Event(time, new RtmpMessageVideo(data)));
-					}
-					if(time < seekTime) {
-						continue;
-					}
-					hasVideo = false;
-					break;
-				case FlvTag.FLV_META:
-					if(time < seekTime) {
-						continue;
-					}
-					readMsgQueue.offer(new Event(time, new RtmpMessageData(data)));
+				break;
+			case FlvTag.FLV_VIDEO:
+				if(flvTag.isVideoKeyFrame()) {
+					readMsgQueue.clear();
 				}
-				
+				if(videoPlaying) {
+					readMsgQueue.offer(new Event(time, new RtmpMessageVideo(data)));
+				}
+				break;
+			case FlvTag.FLV_META:
+				readMsgQueue.offer(new Event(time, new RtmpMessageData(data)));
 			}
 		} catch(FlvException e) {
 			e.printStackTrace();
@@ -112,9 +77,6 @@ public class FlvPlayer implements IPlayer{
 
 	public void play() throws IOException {
 		long now = System.currentTimeMillis();
-		if (input == null) {
-			return;
-		}
 		if (pausedTime != -1) {
 			return;
 		}
@@ -139,9 +101,8 @@ public class FlvPlayer implements IPlayer{
 		try {
 			long relativeTime = now - startTime;
 			while(relativeTime > currentTime) {
-				FlvTag flvTag = FlvTag.read(input);
+				FlvTag flvTag = deserializer.read();
 				if( flvTag == null ) {	// eof
-					input.close();
 					stream.setPlayer(null);
 					throw new EOFException();
 				}

@@ -17,7 +17,7 @@ public class StreamPublisher implements IEventPublisher {
 
 	private LinkedList<IEventSubscriber> subscribers = new LinkedList<IEventSubscriber>();
 
-	private FlvRecorder recorder = null; // record to file stream
+	private FlvSerializer recorder = null; // record to file stream
 
 	public StreamPublisher(String publishName) {
 		this.publishName = publishName;
@@ -48,7 +48,7 @@ public class StreamPublisher implements IEventPublisher {
 
 		// record to file
 		if (recorder != null) {
-			recorder.record(type, data, timestamp);
+			recorder.write(type, data, timestamp);
 		}
 
 		// publish packet to other stream subscriber
@@ -94,7 +94,7 @@ public class StreamPublisher implements IEventPublisher {
 		}
 	}
 
-	public void setRecorder(FlvRecorder recorder) {
+	public void setRecorder(FlvSerializer recorder) {
 		this.recorder = recorder;
 	}
 

@@ -5,6 +5,7 @@ import java.util.HashMap;
 
 import com.ams.amf.*;
 import com.ams.flv.FlvException;
+import com.ams.flv.FlvSerializer;
 import com.ams.io.*;
 import com.ams.rtmp.RtmpConnection;
 import com.ams.rtmp.message.*;
@@ -193,10 +194,12 @@ public class NetStream {
 		publisher = new StreamPublisher(name);
 		if ("record".equals(type)) {
 			String file = context.getRealPath(app, name);
-			publisher.setRecorder(new FlvRecorder(new RandomAccessFileWriter(file, false)));
+			RandomAccessFileWriter writer = new RandomAccessFileWriter(file, false); 
+			publisher.setRecorder(new FlvSerializer(writer));
 		} else if ("append".equals(type)) {
 			String file = context.getRealPath(app, name);
-			publisher.setRecorder(new FlvRecorder(new RandomAccessFileWriter(file, true)));
+			RandomAccessFileWriter writer = new RandomAccessFileWriter(file, true); 
+			publisher.setRecorder(new FlvSerializer(writer));
 		} else if ("live".equals(type)) {
 			// nothing to do	
 		}

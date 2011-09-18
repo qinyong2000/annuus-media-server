@@ -106,7 +106,7 @@ public class FlvTag {
 		out.write32Bit(dataSize + 11);
 	}
 
-	public static boolean isVideoKeyFrame(ByteBuffer[] data) {
+	public boolean isVideoKeyFrame() {
 		return (data[0].get(0) >>> 4) == 1;
 	}
 

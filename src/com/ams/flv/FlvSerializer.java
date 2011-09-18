@@ -1,31 +1,29 @@
-package com.ams.rtmp.net;
+package com.ams.flv;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import com.ams.flv.FlvHeader;
-import com.ams.flv.FlvTag;
 import com.ams.io.ByteBufferOutputStream;
 import com.ams.io.RandomAccessFileWriter;
 
-public class FlvRecorder {
-	private ByteBufferOutputStream outputStream;		//record to file stream
+public class FlvSerializer {
+	private ByteBufferOutputStream out;		//record to file stream
 	private boolean headerWrite = false;
 	
-	public FlvRecorder(RandomAccessFileWriter writer) {
+	public FlvSerializer(RandomAccessFileWriter writer) {
 		super();
-		this.outputStream = new ByteBufferOutputStream(writer);
+		this.out = new ByteBufferOutputStream(writer);
 	}
 
-	public void record(int type, ByteBuffer[] data, long time) throws IOException {
+	public void write(int type, ByteBuffer[] data, long time) throws IOException {
 		if (!headerWrite) {
 			FlvHeader header = new FlvHeader(true, true);
-			FlvHeader.write(outputStream, header);
+			FlvHeader.write(out, header);
 			headerWrite = true;
 		}
 		
 		FlvTag flvTag = new FlvTag(type, data, time);
-		FlvTag.write(outputStream, flvTag);
-		outputStream.flush();
+		FlvTag.write(out, flvTag);
+		out.flush();
 /*
 		if (type == FlvTag.FLV_VIDEO && Flv.isVideoKeyFrame(data)) {	
 			// add meta tag for http pseudo streaming
@@ -46,7 +44,7 @@ public class FlvRecorder {
 	}
 	public synchronized void close() {
 		try {
-			outputStream.close();
+			out.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
