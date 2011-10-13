@@ -13,5 +13,9 @@ public final class STSS {
 			syncTable[i] = in.readInt();
 		}
 	}
+
+	public int[] getSyncTable() {
+		return syncTable;
+	}
 	
 }

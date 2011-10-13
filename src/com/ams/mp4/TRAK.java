@@ -37,44 +37,78 @@ public final class TRAK {
 		this.stsz = stsz;
 	}
 	
-	public List<Mp4Sample> getSamples(int startIndex, int endIndex) {
-		ArrayList<Mp4Sample> list = new ArrayList<Mp4Sample>();
-		int sample = 0;
-		for(long chunkOffset : stco.getOffsets()) {
-			
-			//list.add(new Mp4Sample());
-		}
-		return list;
-	}
-	
 	public int getSampleIndex(long timeStamp) {
-		long delta = 0;
+		long duration = 0;
 		int index = 0;
-		for ( STTSRecord entry : stts.getEntries()) {
-			delta += entry.sampleDelta * entry.sampleCount;
-			if (delta >= timeStamp) {
-				index += (delta - timeStamp) / entry.sampleDelta; 
+		for (STTSRecord entry : stts.getEntries()) {
+			int delta = entry.sampleDelta * entry.sampleCount;
+			if (duration + delta >= timeStamp) {
+				index += (timeStamp - duration) / entry.sampleDelta; 
 				break;
 			}
+			duration += delta;	
 			index += entry.sampleCount;
 		}
 		return index;
 	}
+	
+	private long getSampleTimeStamp(int index) {
+		long timeStamp = 0;
+		int sampleCount = 0;
+		for (STTSRecord entry : stts.getEntries()) {
+			int delta = entry.sampleCount; 
+			if (sampleCount + delta >= index) {
+				timeStamp += (index - sampleCount) * entry.sampleDelta; 
+				break;
+			}
+			timeStamp += entry.sampleDelta * entry.sampleCount;
+			sampleCount += delta;
+ 		}
+		return timeStamp;
+	}
 
-	public int getSampleChunkIndex(int index) {
-		int count = 0;
+	private long getChunkOffset(int chunk) {
+		return stco.getOffsets()[chunk]; 
+	}
+
+	private int getSampleSize(int index) {
+		return stsz.getSizeTable()[index]; 
+	}
+	
+	private boolean isKeyFrameSample(int index) {
+		for(int sync : stss.getSyncTable()) {
+			if (index < sync - 1) return false;
+			if (index == sync - 1) return true;
+		}
+		return true;
+	}
+		
+	public Mp4Sample[] getAllSamples() {
+		ArrayList<Mp4Sample> list = new ArrayList<Mp4Sample>();
+		int sampleIndex = 0;
 		int prevFirstChunk = 0;
 		int prevSamplesPerChunk = 0;
-		for ( STSCRecord entry : stsc.getEntries()) {
-			count += (entry.firstChunk - prevFirstChunk) * prevSamplesPerChunk;
-			if (count >= index) {
-				return prevFirstChunk + (count - index) / prevSamplesPerChunk;
+		for (STSCRecord entry : stsc.getEntries()) {
+			for (int chunk = prevFirstChunk; chunk < entry.firstChunk; chunk++) {
+				// chunk offset
+				long sampleOffset = getChunkOffset(chunk);
+				for (int i = 0; i < prevSamplesPerChunk; i++ ) {
+					// sample size
+					int sampleSize = getSampleSize(sampleIndex);
+					// time stamp
+					long timeStamp = getSampleTimeStamp(sampleIndex);
+					// keyframe
+					boolean keyframe = isKeyFrameSample(sampleIndex);
+					// description index
+					int sampleDescIndex = entry.sampleDescIndex;
+					list.add(new Mp4Sample(sampleOffset, sampleSize, timeStamp, keyframe, sampleDescIndex));
+					sampleOffset += sampleSize;
+					sampleIndex++;	
+				}
 			}
 			prevFirstChunk = entry.firstChunk;
 			prevSamplesPerChunk = entry.samplesPerChunk;
 		}
-		count += prevSamplesPerChunk;
-		
-		return prevFirstChunk  + (count - index) / prevSamplesPerChunk; 
+		return list.toArray(new Mp4Sample[list.size()]); 
 	}	
 }
