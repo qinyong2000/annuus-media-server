@@ -84,4 +84,12 @@ public class Mp4Deserializer {
 		}
 		return samples;
 	}
+
+	public TRAK getVideoTrak() {
+		return videoTrak;
+	}
+
+	public TRAK getAudioTrak() {
+		return audioTrak;
+	}
 }

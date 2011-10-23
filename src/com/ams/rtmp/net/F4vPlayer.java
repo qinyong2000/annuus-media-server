@@ -50,7 +50,7 @@ public class F4vPlayer implements IPlayer{
 		Mp4Sample audioSample = samples[1];
 
 		if (videoSample != null) {
-			long time = videoSample.getTimeStamp();
+			long time = videoSample.getTimeStamp() / deserializer.getVideoTrak().getTimeScale();
 			ByteBuffer[] data = deserializer.readSampleData(videoSample);
 			if(videoPlaying) {
 				readMsgQueue.offer(new MediaMessage(time, new RtmpMessageVideo(data)));
@@ -58,7 +58,7 @@ public class F4vPlayer implements IPlayer{
 		}
 
 		if (audioSample != null) {
-			long time = audioSample.getTimeStamp();
+			long time = audioSample.getTimeStamp() / deserializer.getAudioTrak().getTimeScale();
 			ByteBuffer[] data = deserializer.readSampleData(audioSample);
 			if(audioPlaying) {
 				readMsgQueue.offer(new MediaMessage(time, new RtmpMessageAudio(data)));
@@ -102,7 +102,7 @@ public class F4vPlayer implements IPlayer{
 			Mp4Sample audioSample = samples[1];
 
 			if (videoSample != null) {
-				long time = videoSample.getTimeStamp();
+				long time = videoSample.getTimeStamp() / deserializer.getVideoTrak().getTimeScale();
 				currentTime = time;
 				ByteBuffer[] data = deserializer.readSampleData(videoSample);
 				if(videoPlaying) {
@@ -111,7 +111,7 @@ public class F4vPlayer implements IPlayer{
 			}
 
 			if (audioSample != null) {
-				long time = audioSample.getTimeStamp();
+				long time = audioSample.getTimeStamp() / deserializer.getAudioTrak().getTimeScale();
 				ByteBuffer[] data = deserializer.readSampleData(audioSample);
 				if(audioPlaying) {
 					readMsgQueue.offer(new MediaMessage(time, new RtmpMessageAudio(data)));
