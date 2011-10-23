@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import com.ams.amf.*;
 import com.ams.flv.FlvException;
-import com.ams.event.Event;
+import com.ams.message.MediaMessage;
 import com.ams.rtmp.message.*;
 import com.ams.rtmp.*;
 import com.ams.server.replicator.ReplicateCluster;
@@ -33,14 +33,14 @@ public class NetConnection {
 			throw new NetConnectionException("Publish not done on stream " + header.getStreamId());
 		}
 		
-		publisher.publish(new Event(header.getTimestamp(), message));
+		publisher.publish(new MediaMessage(header.getTimestamp(), message));
 		
 		if (publisher.isPing()) {
 			rtmp.writeProtocolControlMessage(new RtmpMessageAck(publisher.getBytes()));
 		}
 		
 		// replicate to all slave server
-		ReplicateCluster.publishMessage(publisher.getPublishName(), new Event(header.getTimestamp(), message));
+		ReplicateCluster.publishMessage(publisher.getPublishName(), new MediaMessage(header.getTimestamp(), message));
 	}
 
 	private void onSharedMessage(RtmpHeader header, RtmpMessage message) {

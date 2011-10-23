@@ -44,7 +44,7 @@ public class FlvDeserializer {
 		return flvTag;
 	}
 	
-	public FlvTag read() throws IOException, FlvException {
+	public FlvTag readNext() throws IOException, FlvException {
 		return FlvTag.read(in);
 	}
 

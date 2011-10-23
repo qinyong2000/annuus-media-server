@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 
-import com.ams.event.Event;
+import com.ams.message.MediaMessage;
 import com.ams.server.Connector;
 import com.ams.server.MulticastConnector;
 import com.ams.server.SocketConnector;
@@ -40,7 +40,7 @@ public class ReplicateCluster {
 		new Thread(replicator).start();
 	}
 
-	public static void publishMessage(String publishName, Event event) {
+	public static void publishMessage(String publishName, MediaMessage event) {
 		for (Replicator replicator : replicators) {
 			replicator.publishMessage(publishName, event);
 		}

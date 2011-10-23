@@ -5,7 +5,7 @@ import java.util.HashMap;
 
 import com.ams.amf.AmfException;
 import com.ams.amf.AmfValue;
-import com.ams.event.Event;
+import com.ams.message.MediaMessage;
 import com.ams.rtmp.RtmpConnection;
 import com.ams.rtmp.RtmpException;
 import com.ams.rtmp.RtmpHeader;
@@ -58,7 +58,7 @@ public class SlaveHandler implements IProtocolHandler {
 			if (publishName == null) break;
 			StreamPublisher publisher = (StreamPublisher) PublisherManager.getPublisher(publishName);
 			if (publisher != null) {
-				publisher.publish(new Event(header.getTimestamp(), message));
+				publisher.publish(new MediaMessage(header.getTimestamp(), message));
 			}
 			break;
 		}

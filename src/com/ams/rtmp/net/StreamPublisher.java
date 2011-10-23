@@ -5,17 +5,17 @@ import java.nio.ByteBuffer;
 import java.util.LinkedList;
 
 import com.ams.flv.*;
+import com.ams.message.*;
 import com.ams.rtmp.message.*;
 import com.ams.util.ByteBufferHelper;
-import com.ams.event.*;
 
-public class StreamPublisher implements IEventPublisher {
+public class StreamPublisher implements IMsgPublisher {
 	private String publishName = null;
 	private int bytes = 0;
 	private int lastPing = 0;
 	private boolean ping = false;
 
-	private LinkedList<IEventSubscriber> subscribers = new LinkedList<IEventSubscriber>();
+	private LinkedList<IMsgSubscriber> subscribers = new LinkedList<IMsgSubscriber>();
 
 	private FlvSerializer recorder = null; // record to file stream
 
@@ -23,11 +23,11 @@ public class StreamPublisher implements IEventPublisher {
 		this.publishName = publishName;
 	}
 
-	public synchronized void publish(Event msg) throws IOException {
+	public synchronized void publish(MediaMessage msg) throws IOException {
 		long timestamp = msg.getTimestamp();
 		int type = 0;
 		ByteBuffer[] data = null;
-		RtmpMessage message = (RtmpMessage) msg.getEvent();
+		RtmpMessage message = (RtmpMessage) msg.getData();
 		switch (message.getType()) {
 		case RtmpMessage.MESSAGE_AUDIO:
 			RtmpMessageAudio audio = (RtmpMessageAudio) message;
@@ -65,8 +65,8 @@ public class StreamPublisher implements IEventPublisher {
 		subscribers.clear();
 	}
 
-	private void notify(Event msg) {
-		for (IEventSubscriber subscriber : subscribers) {
+	private void notify(MediaMessage msg) {
+		for (IMsgSubscriber subscriber : subscribers) {
 			subscriber.messageNotify(msg);
 		}
 	}
@@ -82,13 +82,13 @@ public class StreamPublisher implements IEventPublisher {
 		}
 	}
 	
-	public void addSubscriber(IEventSubscriber subscrsiber) {
+	public void addSubscriber(IMsgSubscriber subscrsiber) {
 		synchronized (subscribers) {
 			subscribers.add(subscrsiber);
 		}
 	}
 
-	public void removeSubscriber(IEventSubscriber subscriber) {
+	public void removeSubscriber(IMsgSubscriber subscriber) {
 		synchronized (subscribers) {
 			subscribers.remove(subscriber);
 		}

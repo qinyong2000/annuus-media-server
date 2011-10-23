@@ -24,4 +24,9 @@ public final class STSD {
 			descriptions[i].description = description; 
 		}
 	}
+
+	public SampleDescription[] getDescriptions() {
+		return descriptions;
+	}
+	
 }

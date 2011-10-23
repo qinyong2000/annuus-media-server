@@ -1,14 +1,14 @@
 package com.ams.rtmp.net;
 
-import com.ams.event.IEventPublisher;
+import com.ams.message.IMsgPublisher;
 import com.ams.util.ObjectCache;
 
 public class PublisherManager {
 	private static int DEFAULT_EXPIRE_TIME = 24 * 60 * 60;
 	
-	private static ObjectCache<IEventPublisher> streamPublishers = new ObjectCache<IEventPublisher>();
+	private static ObjectCache<IMsgPublisher> streamPublishers = new ObjectCache<IMsgPublisher>();
 	
-	public static IEventPublisher getPublisher(String publishName) {
+	public static IMsgPublisher getPublisher(String publishName) {
 		return streamPublishers.get(publishName);
 	}
 

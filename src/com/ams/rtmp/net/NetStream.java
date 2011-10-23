@@ -7,9 +7,9 @@ import com.ams.amf.*;
 import com.ams.flv.FlvException;
 import com.ams.flv.FlvSerializer;
 import com.ams.io.*;
+import com.ams.message.*;
 import com.ams.rtmp.RtmpConnection;
 import com.ams.rtmp.message.*;
-import com.ams.event.*;
 
 public class NetStream {
 	private RtmpConnection rtmp;
@@ -110,7 +110,7 @@ public class NetStream {
 						return;
 					}
 					player = new StreamPlayer(this, publisher);
-					publisher.addSubscriber((IEventSubscriber)player);
+					publisher.addSubscriber((IMsgSubscriber)player);
 				}
 				break;
 		case -2:		// first find live
@@ -118,17 +118,17 @@ public class NetStream {
 					StreamPublisher publisher = (StreamPublisher) PublisherManager.getPublisher(streamName);
 					if (publisher != null) {
 						player = new StreamPlayer(this, publisher);
-						publisher.addSubscriber((IEventSubscriber)player);
+						publisher.addSubscriber((IMsgSubscriber)player);
 					} else {
 						String file = context.getRealPath(app, streamName);
-						player = new FlvPlayer(file, this);
+						player = createPlayer(file);
 						player.seek(0);
 					}
 				}		
 				break;
 		default:		// >= 0
 				String file = context.getRealPath(app, streamName);
-				player = new FlvPlayer(file, this);
+				player = createPlayer(file);
 				player.seek(start);
 		}
 
@@ -143,7 +143,15 @@ public class NetStream {
 		status.put("clientId", new AmfValue(streamId));
 		writeStatusMessage("NetStream.Play.Start", status);
 	}
-
+	
+	private IPlayer createPlayer(String file) throws IOException {
+		String ext = file.substring(file.lastIndexOf('.'));
+		if ("f4v".equalsIgnoreCase(ext) || "mp4".equalsIgnoreCase(ext)) {
+			return new F4vPlayer(file, this);
+		}
+		return new FlvPlayer(file, this);
+	}
+	
 	public void seek(int offset) throws NetConnectionException, IOException, FlvException {
 		if (player == null) {
 			writeErrorMessage("Invalid 'Seek' stream id " + streamId);

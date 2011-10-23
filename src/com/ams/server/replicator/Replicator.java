@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.ams.amf.AmfNull;
 import com.ams.amf.AmfValue;
-import com.ams.event.Event;
+import com.ams.message.MediaMessage;
 import com.ams.rtmp.message.RtmpMessage;
 import com.ams.rtmp.message.RtmpMessageCommand;
 import com.ams.rtmp.RtmpConnection;
@@ -36,7 +36,7 @@ class Replicator implements Runnable {
 		private String publishName;
 		private long keepAliveTime = 0;
 		private boolean start = false;
-		private ConcurrentLinkedQueue<Event> msgQueue = new ConcurrentLinkedQueue<Event>();
+		private ConcurrentLinkedQueue<MediaMessage> msgQueue = new ConcurrentLinkedQueue<MediaMessage>();
 		
 		public Publisher(int streamId, String publishName) {
 			this.streamId = streamId;
@@ -49,7 +49,7 @@ class Replicator implements Runnable {
 			return (currentTime - keepAliveTime > DEFAULT_TIMEOUT_MS);
 		}
 		
-		public void addEvent(Event event) {
+		public void addEvent(MediaMessage event) {
 			if (msgQueue.size() > MAX_EVENT_QUEUE_LENGTH) {
 				msgQueue.clear();
 			}
@@ -57,11 +57,11 @@ class Replicator implements Runnable {
 		}
 		
 		public void replicate() throws IOException {
-			ConcurrentLinkedQueue<Event> queue = msgQueue;
-			Event msg = null;
+			ConcurrentLinkedQueue<MediaMessage> queue = msgQueue;
+			MediaMessage msg = null;
 			while((msg = queue.poll()) != null) {
 				keepAliveTime = System.currentTimeMillis();
-				rtmp.writeRtmpMessage(CHANNEL_RTMP_PUBLISH, streamId, msg.getTimestamp(), (RtmpMessage)msg.getEvent());
+				rtmp.writeRtmpMessage(CHANNEL_RTMP_PUBLISH, streamId, msg.getTimestamp(), (RtmpMessage)msg.getData());
 			}
 		}
 		
@@ -167,7 +167,7 @@ class Replicator implements Runnable {
 		return id;
 	}
 	
-	public void publishMessage(String publishName, Event event) {
+	public void publishMessage(String publishName, MediaMessage event) {
 		if (!isConnected) return;
 		Publisher publisher = publishMap.get(publishName);
 		if (publisher != null) {

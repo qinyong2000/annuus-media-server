@@ -1,9 +1,9 @@
 package com.ams.mp4;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import com.ams.mp4.STSC.STSCRecord;
+import com.ams.mp4.STSD.SampleDescription;
 import com.ams.mp4.STTS.STTSRecord;
 
 public final class TRAK {
@@ -110,5 +110,32 @@ public final class TRAK {
 			prevSamplesPerChunk = entry.samplesPerChunk;
 		}
 		return list.toArray(new Mp4Sample[list.size()]); 
-	}	
+	}
+	
+	public byte[] getExtraData() {
+		SampleDescription desc = stsd.getDescriptions()[0];
+		if ("avc1".equalsIgnoreCase(desc.type)) {
+			int pos = 78; // start avcC
+			byte[] extra = new byte[desc.description.length - pos];
+			System.arraycopy(desc.description, pos, extra, 0, extra.length);
+			return extra;
+		} else if ("mp4a".equalsIgnoreCase(desc.type)) {
+			//TODO
+		}
+		return null;
+	}
+	
+	public int getTimeScale() {
+		return mdhd.getTimeScale();
+	}
+
+	public int getDuration() {
+		return mdhd.getDuration();
+	}
+
+	public String getType() {
+		SampleDescription desc = stsd.getDescriptions()[0];
+		return desc.type;
+	}
+	
 }

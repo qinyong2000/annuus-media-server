@@ -3,32 +3,32 @@ package com.ams.rtmp.net;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import com.ams.message.MediaMessage;
+import com.ams.message.IMsgSubscriber;
 import com.ams.rtmp.message.*;
-import com.ams.event.Event;
-import com.ams.event.IEventSubscriber;
 
-public class StreamPlayer implements IPlayer, IEventSubscriber {
+public class StreamPlayer implements IPlayer, IMsgSubscriber {
 	private NetStream stream;
 	private StreamPublisher publisher;
 	private long pausedTime = -1;
 	private boolean audioPlaying = true;
 	private boolean videoPlaying = true;
-	private ConcurrentLinkedQueue<Event> receivedEventQueue;
+	private ConcurrentLinkedQueue<MediaMessage> receivedEventQueue;
 	private static int MAX_EVENT_QUEUE_LENGTH = 100;
 	
 	public StreamPlayer(NetStream stream, StreamPublisher publisher) {
 		this.stream = stream;
 		this.publisher = publisher;
-		this.receivedEventQueue = new ConcurrentLinkedQueue<Event>();
+		this.receivedEventQueue = new ConcurrentLinkedQueue<MediaMessage>();
 	}
 
 	public void seek(long seekTime) throws IOException {
 	}
 
 	public void play() throws IOException {
-		Event msg;
+		MediaMessage msg;
 		while ((msg = receivedEventQueue.poll()) != null) {
-			RtmpMessage message = (RtmpMessage) msg.getEvent();
+			RtmpMessage message = (RtmpMessage) msg.getData();
 			if ((message instanceof RtmpMessageAudio && audioPlaying)
 					|| (message instanceof RtmpMessageVideo && videoPlaying)) {
 				stream.writeMessage(msg.getTimestamp(), message);
@@ -40,7 +40,7 @@ public class StreamPlayer implements IPlayer, IEventSubscriber {
 		}
 	}
 
-	public void messageNotify(Event msg) {
+	public void messageNotify(MediaMessage msg) {
 		if (!isPaused()) {
 			if (receivedEventQueue.size() > MAX_EVENT_QUEUE_LENGTH) {
 				receivedEventQueue.clear();

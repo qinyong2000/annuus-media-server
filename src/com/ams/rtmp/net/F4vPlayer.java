@@ -4,16 +4,17 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
-import com.ams.flv.*;
 import com.ams.io.*;
 import com.ams.message.*;
+import com.ams.mp4.Mp4Deserializer;
+import com.ams.mp4.Mp4Sample;
 import com.ams.rtmp.message.*;
 
-public class FlvPlayer implements IPlayer{
+public class F4vPlayer implements IPlayer{
 	private static int BUFFER_TIME = 5 * 1000; // 5 seconds of buffering
 	private NetStream stream = null;
 	private RandomAccessFileReader reader;
-	private FlvDeserializer deserializer;
+	private Mp4Deserializer deserializer;
 	private long startTime = -1;
 	private long currentTime = 0;
 	private long blockedTime = -1;
@@ -22,10 +23,10 @@ public class FlvPlayer implements IPlayer{
 	private boolean videoPlaying = true;
 	private LinkedList<MediaMessage> readMsgQueue;
 
-	public FlvPlayer(String fileName, NetStream stream) throws IOException {
+	public F4vPlayer(String fileName, NetStream stream) throws IOException {
 		this.stream = stream;
 		this.reader = new RandomAccessFileReader(fileName, 0);
-		this.deserializer = new FlvDeserializer(reader);
+		this.deserializer = new Mp4Deserializer(reader);
 		this.readMsgQueue = new LinkedList<MediaMessage>();
 	}
 
@@ -42,36 +43,27 @@ public class FlvPlayer implements IPlayer{
 		}
 		blockedTime = -1;
 
-		// close the flv file
 		readMsgQueue.clear();
 		
-		try {
-			FlvTag flvTag = deserializer.seek(seekTime);
-			if (flvTag == null) return;
-			ByteBuffer[] data = flvTag.getData();
-			long time = flvTag.getTimestamp();
-			switch( flvTag.getTagType() ) {
-			case FlvTag.FLV_AUDIO:
-				if(audioPlaying) {
-					readMsgQueue.offer(new MediaMessage(time, new RtmpMessageAudio(data)));
-				}
-				break;
-			case FlvTag.FLV_VIDEO:
-				if(flvTag.isVideoKeyFrame()) {
-					readMsgQueue.clear();
-				}
-				if(videoPlaying) {
-					readMsgQueue.offer(new MediaMessage(time, new RtmpMessageVideo(data)));
-				}
-				break;
-			case FlvTag.FLV_META:
-				readMsgQueue.offer(new MediaMessage(time, new RtmpMessageData(data)));
+		Mp4Sample[] samples = deserializer.seek(seekTime);
+		Mp4Sample videoSample = samples[0];
+		Mp4Sample audioSample = samples[1];
+
+		if (videoSample != null) {
+			long time = videoSample.getTimeStamp();
+			ByteBuffer[] data = deserializer.readSampleData(videoSample);
+			if(videoPlaying) {
+				readMsgQueue.offer(new MediaMessage(time, new RtmpMessageVideo(data)));
 			}
-		} catch(FlvException e) {
-			e.printStackTrace();
-			throw new IOException(e.getMessage());
 		}
-		
+
+		if (audioSample != null) {
+			long time = audioSample.getTimeStamp();
+			ByteBuffer[] data = deserializer.readSampleData(audioSample);
+			if(audioPlaying) {
+				readMsgQueue.offer(new MediaMessage(time, new RtmpMessageAudio(data)));
+			}
+		}
 	}
 	
 
@@ -98,42 +90,39 @@ public class FlvPlayer implements IPlayer{
 			}
 		}
 		
-		try {
-			long relativeTime = now - startTime;
-			while(relativeTime > currentTime) {
-				FlvTag flvTag = deserializer.readNext();
-				if( flvTag == null ) {	// eof
-					stream.setPlayer(null);
-					throw new EOFException();
-				}
+		long relativeTime = now - startTime;
+		while(relativeTime > currentTime) {
+			Mp4Sample[] samples = deserializer.readNext();
+			if( samples[0] == null && samples[1] == null) {	// eof
+				stream.setPlayer(null);
+				throw new EOFException();
+			}
 
-				ByteBuffer[] data = flvTag.getData();
-				long timeStamp = flvTag.getTimestamp();
-				currentTime = timeStamp;
-				switch(flvTag.getTagType()) {
-				case FlvTag.FLV_AUDIO:
-					if(audioPlaying) {
-						stream.writeMessage(timeStamp, new RtmpMessageAudio(data));
-					}
-					break;
-				case FlvTag.FLV_VIDEO:
-					if(videoPlaying) {
-						stream.writeMessage(timeStamp, new RtmpMessageVideo(data));
-					}
-					break;
-				case FlvTag.FLV_META:
-					stream.writeMessage(timeStamp, new RtmpMessageData(data));
-					break;
+			Mp4Sample videoSample = samples[0];
+			Mp4Sample audioSample = samples[1];
 
-				}
-	
-				if( stream.isWriteBlocking() ) {
-					blockedTime = now;
-					return;
+			if (videoSample != null) {
+				long time = videoSample.getTimeStamp();
+				currentTime = time;
+				ByteBuffer[] data = deserializer.readSampleData(videoSample);
+				if(videoPlaying) {
+					readMsgQueue.offer(new MediaMessage(time, new RtmpMessageVideo(data)));
 				}
 			}
-		} catch(FlvException e) {
-			throw new IOException(e.getMessage());
+
+			if (audioSample != null) {
+				long time = audioSample.getTimeStamp();
+				ByteBuffer[] data = deserializer.readSampleData(audioSample);
+				if(audioPlaying) {
+					readMsgQueue.offer(new MediaMessage(time, new RtmpMessageAudio(data)));
+				}
+			}
+			
+
+			if( stream.isWriteBlocking() ) {
+				blockedTime = now;
+				return;
+			}
 		}
 	}
 	
