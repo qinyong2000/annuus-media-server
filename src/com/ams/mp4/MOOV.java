@@ -1,5 +1,6 @@
 package com.ams.mp4;
 
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
@@ -10,50 +11,61 @@ public final class MOOV {
 	
 	public void read(DataInputStream in) throws IOException {
 		try {
+			TRAK trak = null;;
 			while(true) {
 				int size = in.readInt();
 				byte[] b = new byte[4];
 				in.read(b);
 				String box = new String(b);
-				TRAK trak = null;;
 				if ("trak".equalsIgnoreCase(box)) {
 					trak = new TRAK();
 					traks.add(trak);
-				} else if ("mdhd".equalsIgnoreCase(box)) {
+					continue;
+				} else if ("mdia".equalsIgnoreCase(box)) {
+					continue;
+				} else if ("minf".equalsIgnoreCase(box)) {
+					continue;
+				} else if ("stbl".equalsIgnoreCase(box)) {
+					continue;
+				}
+
+				// read size - 8 bytes
+				b = new byte[size - 8];
+				in.read(b);
+				DataInputStream bin = new DataInputStream(new ByteArrayInputStream(b));
+				bin.readInt(); // version & flags
+				if ("mdhd".equalsIgnoreCase(box)) {
 					MDHD mdhd = new MDHD();
-					mdhd.read(in);
+					mdhd.read(bin);
 					trak.setMdhd(mdhd);
 				} else if ("stco".equalsIgnoreCase(box)) {
 					STCO stco = new STCO();
-					stco.read(in);
+					stco.read(bin);
 					trak.setStco(stco);
 				} else if ("co64".equalsIgnoreCase(box)) {
 					STCO stco = new STCO();
-					stco.read64(in);
+					stco.read64(bin);
 					trak.setStco(stco);
 				} else if ("stsc".equalsIgnoreCase(box)) {
 					STSC stsc = new STSC();
-					stsc.read(in);
+					stsc.read(bin);
 					trak.setStsc(stsc);
 				} else if ("stsd".equalsIgnoreCase(box)) {
 					STSD stsd = new STSD();
-					stsd.read(in);
+					stsd.read(bin);
 					trak.setStsd(stsd);
 				} else if ("stss".equalsIgnoreCase(box)) {
 					STSS stss = new STSS();
-					stss.read(in);
+					stss.read(bin);
 					trak.setStss(stss);
 				} else if ("stsz".equalsIgnoreCase(box)) {
 					STSZ stsz = new STSZ();
-					stsz.read(in);
+					stsz.read(bin);
 					trak.setStsz(stsz);
 				} else if ("stts".equalsIgnoreCase(box)) {
 					STTS stts = new STTS();
-					stts.read(in);
+					stts.read(bin);
 					trak.setStts(stts);
-				} else {
-					// skip size - 8 bytes
-					in.skipBytes(size -8);
 				}
 			}
 		} catch(EOFException e) {

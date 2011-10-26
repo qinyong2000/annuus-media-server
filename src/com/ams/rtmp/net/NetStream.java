@@ -120,15 +120,29 @@ public class NetStream {
 						player = new StreamPlayer(this, publisher);
 						publisher.addSubscriber((IMsgSubscriber)player);
 					} else {
-						String file = context.getRealPath(app, streamName);
-						player = createPlayer(file);
+						String tokens[] = streamName.split(":");
+						String type = "";
+						String file = streamName;
+						if (tokens.length >= 2) {
+							type = tokens[0];
+							file = tokens[1];
+						}
+						String path = context.getRealPath(app, file);
+						player = createPlayer(type, path);
 						player.seek(0);
 					}
 				}		
 				break;
 		default:		// >= 0
-				String file = context.getRealPath(app, streamName);
-				player = createPlayer(file);
+				String tokens[] = streamName.split(":");
+				String type = "";
+				String file = streamName;
+				if (tokens.length >= 2) {
+					type = tokens[0];
+					file = tokens[1];
+				}
+				String path = context.getRealPath(app, file);
+				player = createPlayer(type, path);
 				player.seek(start);
 		}
 
@@ -144,8 +158,11 @@ public class NetStream {
 		writeStatusMessage("NetStream.Play.Start", status);
 	}
 	
-	private IPlayer createPlayer(String file) throws IOException {
-		String ext = file.substring(file.lastIndexOf('.'));
+	private IPlayer createPlayer(String type, String file) throws IOException {
+		if ("mp4".equalsIgnoreCase(type)) {
+			return new F4vPlayer(file, this);
+		}
+		String ext = file.substring(file.lastIndexOf('.') + 1);
 		if ("f4v".equalsIgnoreCase(ext) || "mp4".equalsIgnoreCase(ext)) {
 			return new F4vPlayer(file, this);
 		}

@@ -16,6 +16,7 @@ public final class STSC {
 		int count = in.readInt();
 		entries = new STSCRecord[count];
 		for (int i=0; i < count; i++) {
+			entries[i] = new STSCRecord();
 			entries[i].firstChunk = in.readInt();
 			entries[i].samplesPerChunk = in.readInt();
 			entries[i].sampleDescIndex = in.readInt();

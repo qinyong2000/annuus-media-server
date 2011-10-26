@@ -10,6 +10,7 @@ public class MimeTypes {
 		mimeMap.put("f4p", "video/mp4");
 		mimeMap.put("f4a", "video/mp4");
 		mimeMap.put("f4b", "video/mp4");
+		mimeMap.put("mp4", "video/mp4");
 		mimeMap.put("flv", "video/x-flv ");
 		
 	};

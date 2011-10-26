@@ -14,6 +14,7 @@ public final class STTS {
 		int count = in.readInt();
 		entries = new STTSRecord[count];
 		for (int i=0; i < count; i++) {
+			entries[i] = new STTSRecord();
 			entries[i].sampleCount = in.readInt();
 			entries[i].sampleDelta = in.readInt();
 		}

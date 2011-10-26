@@ -20,6 +20,7 @@ public final class STSD {
 			String type = new String(b);
 			byte[] description = new byte[length];
 			in.read(description);
+			descriptions[i] = new SampleDescription();
 			descriptions[i].type = type;
 			descriptions[i].description = description; 
 		}

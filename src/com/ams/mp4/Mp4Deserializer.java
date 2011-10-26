@@ -1,5 +1,6 @@
 package com.ams.mp4;
 
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -45,12 +46,14 @@ public class Mp4Deserializer {
 				reader.read(b, 0, 4);
 				String box = new String(b);
 				if ("moov".equalsIgnoreCase(box)) {
-					ByteBufferInputStream in = new ByteBufferInputStream(reader);
+					b = new byte[size - 8];
+					reader.read(b, 0, size - 8);
+					DataInputStream bin = new DataInputStream(new ByteArrayInputStream(b));
 					moov = new MOOV();
-					moov.read(new DataInputStream(in));
+					moov.read(bin);
 					break;
 				} else {
-					reader.skip(size);
+					reader.skip(size - 8);
 				}
 			}
 		} catch(IOException e) {
