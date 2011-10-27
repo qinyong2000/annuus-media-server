@@ -10,7 +10,7 @@ import com.ams.message.*;
 import com.ams.rtmp.message.*;
 
 public class FlvPlayer implements IPlayer{
-	private static int BUFFER_TIME = 5 * 1000; // 5 seconds of buffering
+	private static int BUFFER_TIME = 2 * 1000; // x seconds of buffering
 	private NetStream stream = null;
 	private RandomAccessFileReader reader;
 	private FlvDeserializer deserializer;

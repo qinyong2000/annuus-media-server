@@ -11,7 +11,7 @@ import com.ams.mp4.Mp4Sample;
 import com.ams.rtmp.message.*;
 
 public class F4vPlayer implements IPlayer{
-	private static int BUFFER_TIME = 5 * 1000; // 5 seconds of buffering
+	private static int BUFFER_TIME = 2 * 1000; // x seconds of buffering
 	private NetStream stream = null;
 	private RandomAccessFileReader reader;
 	private Mp4Deserializer deserializer;
@@ -92,6 +92,7 @@ public class F4vPlayer implements IPlayer{
 		
 		long relativeTime = now - startTime;
 		while(relativeTime > currentTime) {
+
 			Mp4Sample[] samples = deserializer.readNext();
 			if( samples[0] == null && samples[1] == null) {	// eof
 				stream.setPlayer(null);
@@ -102,7 +103,7 @@ public class F4vPlayer implements IPlayer{
 			Mp4Sample audioSample = samples[1];
 
 			if (videoSample != null) {
-				long time = videoSample.getTimeStamp() / deserializer.getVideoTrak().getTimeScale();
+				long time = 1000 * videoSample.getTimeStamp() / deserializer.getVideoTrak().getTimeScale();
 				currentTime = time;
 				ByteBuffer[] data = deserializer.readSampleData(videoSample);
 				if(videoPlaying) {
@@ -111,7 +112,7 @@ public class F4vPlayer implements IPlayer{
 			}
 
 			if (audioSample != null) {
-				long time = audioSample.getTimeStamp() / deserializer.getAudioTrak().getTimeScale();
+				long time = 1000 * audioSample.getTimeStamp() / deserializer.getAudioTrak().getTimeScale();
 				ByteBuffer[] data = deserializer.readSampleData(audioSample);
 				if(audioPlaying) {
 					readMsgQueue.offer(new MediaMessage(time, new RtmpMessageAudio(data)));

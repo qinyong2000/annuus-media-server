@@ -76,6 +76,7 @@ public final class TRAK {
 	}
 	
 	private boolean isKeyFrameSample(int index) {
+		if (stss == null) return false;
 		for(int sync : stss.getSyncTable()) {
 			if (index < sync - 1) return false;
 			if (index == sync - 1) return true;
