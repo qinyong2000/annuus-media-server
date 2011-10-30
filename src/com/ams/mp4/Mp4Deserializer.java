@@ -5,6 +5,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import com.ams.io.RandomAccessFileReader;
+import com.ams.server.ByteBufferFactory;
 
 public class Mp4Deserializer {
 	private RandomAccessFileReader reader;
@@ -60,9 +61,45 @@ public class Mp4Deserializer {
 		return moov;
 	}
 	
-	public ByteBuffer[] readSampleData(Mp4Sample sample) throws IOException {
+	private ByteBuffer[] readSampleData(Mp4Sample sample) throws IOException {
 		reader.seek(sample.getOffset());
 		return reader.read(sample.getSize());
+	}
+
+	public ByteBuffer[] getVideoHeaderTag() {
+		ByteBuffer[] buf = new ByteBuffer[1]; 
+		buf[0] = ByteBufferFactory.allocate(5);
+		buf[0].put(new byte[]{0x17, 0x00, 0x00, 0x00, 0x00});
+		return buf;
+	}
+
+	public ByteBuffer[] getAudioHeaderTag() {
+		ByteBuffer[] buf = new ByteBuffer[1]; 
+		buf[0] = ByteBufferFactory.allocate(2);
+		buf[0].put(new byte[]{(byte)0xaf, 0x00});
+		return buf;
+	}
+	
+	public ByteBuffer[] getVideoTag(Mp4Sample sample) throws IOException {
+		ByteBuffer[] data = readSampleData(sample);
+		ByteBuffer[] buf = new ByteBuffer[data.length + 1];
+		System.arraycopy(data, 0, buf, 1, data.length);
+		buf[0] = ByteBufferFactory.allocate(5);
+		if (sample.isKeyframe()) {
+			buf[0].put(new byte[]{0x17, 0x01, 0x00, 0x00, 0x00});
+		} else {
+			buf[0].put(new byte[]{0x27, 0x01, 0x00, 0x00, 0x00});
+		}
+		return buf;
+	}
+
+	public ByteBuffer[] getAudioTag(Mp4Sample sample) throws IOException {
+		ByteBuffer[] data = readSampleData(sample);
+		ByteBuffer[] buf = new ByteBuffer[data.length + 1];
+		System.arraycopy(data, 0, buf, 1, data.length);
+		buf[0] = ByteBufferFactory.allocate(2);
+		buf[0].put(new byte[]{(byte)0xaf, 0x01});
+		return buf;
 	}
 	
 	public Mp4Sample[] seek(long seekTime) {
@@ -86,11 +123,12 @@ public class Mp4Deserializer {
 		return samples;
 	}
 
-	public TRAK getVideoTrak() {
-		return videoTrak;
+	public int getVideoTimeScale() {
+		return videoTrak.getTimeScale();
 	}
 
-	public TRAK getAudioTrak() {
-		return audioTrak;
+	public int getAudioTimeScale() {
+		return audioTrak.getTimeScale();
 	}
+
 }

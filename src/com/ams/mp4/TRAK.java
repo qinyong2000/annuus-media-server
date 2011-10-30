@@ -1,7 +1,10 @@
 package com.ams.mp4;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
+import com.ams.io.ByteBufferOutputStream;
 import com.ams.mp4.STSC.STSCRecord;
 import com.ams.mp4.STSD.SampleDescription;
 import com.ams.mp4.STTS.STTSRecord;
@@ -113,13 +116,13 @@ public final class TRAK {
 		return list.toArray(new Mp4Sample[list.size()]); 
 	}
 	
-	public byte[] getExtraData() {
+	public ByteBuffer[] getExtraData() throws IOException {
 		SampleDescription desc = stsd.getDescriptions()[0];
+		ByteBufferOutputStream bos = new ByteBufferOutputStream();
 		if ("avc1".equalsIgnoreCase(desc.type)) {
 			int pos = 78; // start avcC
-			byte[] extra = new byte[desc.description.length - pos];
-			System.arraycopy(desc.description, pos, extra, 0, extra.length);
-			return extra;
+			bos.write(desc.description, pos, desc.description.length - pos);
+			return bos.toByteBufferArray();
 		} else if ("mp4a".equalsIgnoreCase(desc.type)) {
 			//TODO
 		}

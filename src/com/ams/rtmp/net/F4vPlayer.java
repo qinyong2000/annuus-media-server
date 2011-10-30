@@ -50,16 +50,20 @@ public class F4vPlayer implements IPlayer{
 		Mp4Sample audioSample = samples[1];
 
 		if (videoSample != null) {
-			long time = videoSample.getTimeStamp() / deserializer.getVideoTrak().getTimeScale();
-			ByteBuffer[] data = deserializer.readSampleData(videoSample);
+			readMsgQueue.offer(new MediaMessage(0, new RtmpMessageVideo(deserializer.getVideoHeaderTag())));
+
+			long time = videoSample.getTimeStamp() / deserializer.getVideoTimeScale();
+			ByteBuffer[] data = deserializer.getVideoTag(videoSample);
 			if(videoPlaying) {
 				readMsgQueue.offer(new MediaMessage(time, new RtmpMessageVideo(data)));
 			}
 		}
 
 		if (audioSample != null) {
-			long time = audioSample.getTimeStamp() / deserializer.getAudioTrak().getTimeScale();
-			ByteBuffer[] data = deserializer.readSampleData(audioSample);
+			readMsgQueue.offer(new MediaMessage(0, new RtmpMessageAudio(deserializer.getAudioHeaderTag())));
+
+			long time = audioSample.getTimeStamp() / deserializer.getAudioTimeScale();
+			ByteBuffer[] data = deserializer.getAudioTag(audioSample);
 			if(audioPlaying) {
 				readMsgQueue.offer(new MediaMessage(time, new RtmpMessageAudio(data)));
 			}
@@ -103,17 +107,17 @@ public class F4vPlayer implements IPlayer{
 			Mp4Sample audioSample = samples[1];
 
 			if (videoSample != null) {
-				long time = 1000 * videoSample.getTimeStamp() / deserializer.getVideoTrak().getTimeScale();
+				long time = 1000 * videoSample.getTimeStamp() / deserializer.getVideoTimeScale();
 				currentTime = time;
-				ByteBuffer[] data = deserializer.readSampleData(videoSample);
+				ByteBuffer[] data = deserializer.getVideoTag(videoSample);
 				if(videoPlaying) {
 					readMsgQueue.offer(new MediaMessage(time, new RtmpMessageVideo(data)));
 				}
 			}
 
 			if (audioSample != null) {
-				long time = 1000 * audioSample.getTimeStamp() / deserializer.getAudioTrak().getTimeScale();
-				ByteBuffer[] data = deserializer.readSampleData(audioSample);
+				long time = 1000 * audioSample.getTimeStamp() / deserializer.getAudioTimeScale();
+				ByteBuffer[] data = deserializer.getAudioTag(audioSample);
 				if(audioPlaying) {
 					readMsgQueue.offer(new MediaMessage(time, new RtmpMessageAudio(data)));
 				}

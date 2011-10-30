@@ -148,7 +148,6 @@ public class Amf3Serializer {
 			break;
 		case AmfValue.AMF_OBJECT:
 			//out.writeByte(0x0A);
-System.out.println("amf3 obj");			
 			out.writeByte(0x09);
 			writeAmf3Object(amfValue);
 			break;

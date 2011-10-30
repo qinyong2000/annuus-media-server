@@ -180,7 +180,9 @@ public final class ByteBufferAllocator {
 	
 	private int getSlabIndex(int size) {
 		if (size <= 0) return 0;
-		return (int) Math.ceil(Math.log((float)size / minChunkSize) / logFactor);
+		int index = (int) Math.ceil(Math.log((float)size / minChunkSize) / logFactor);
+		if (index < 0) return 0;
+		return index;
 	}
 	
 	public void setMinChunkSize(int minChunkSize) {
