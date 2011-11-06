@@ -66,39 +66,45 @@ public class Mp4Deserializer {
 		return reader.read(sample.getSize());
 	}
 
-	public ByteBuffer[] getVideoHeaderTag() {
-		ByteBuffer[] buf = new ByteBuffer[1]; 
+	public ByteBuffer[] createVideoHeaderTag() throws IOException {
+		ByteBuffer[] data = videoTrak.getExtraData();
+		ByteBuffer[] buf = new ByteBuffer[data.length + 1];
+		System.arraycopy(data, 0, buf, 1, data.length);
 		buf[0] = ByteBufferFactory.allocate(5);
 		buf[0].put(new byte[]{0x17, 0x00, 0x00, 0x00, 0x00});
+		buf[0].flip();
 		return buf;
 	}
 
-	public ByteBuffer[] getAudioHeaderTag() {
+	public ByteBuffer[] createAudioHeaderTag() {
+		//TODO
 		ByteBuffer[] buf = new ByteBuffer[1]; 
 		buf[0] = ByteBufferFactory.allocate(2);
 		buf[0].put(new byte[]{(byte)0xaf, 0x00});
+		buf[0].flip();
 		return buf;
 	}
 	
-	public ByteBuffer[] getVideoTag(Mp4Sample sample) throws IOException {
+	public ByteBuffer[] createVideoTag(Mp4Sample sample) throws IOException {
 		ByteBuffer[] data = readSampleData(sample);
 		ByteBuffer[] buf = new ByteBuffer[data.length + 1];
 		System.arraycopy(data, 0, buf, 1, data.length);
 		buf[0] = ByteBufferFactory.allocate(5);
-		if (sample.isKeyframe()) {
-			buf[0].put(new byte[]{0x17, 0x01, 0x00, 0x00, 0x00});
-		} else {
-			buf[0].put(new byte[]{0x27, 0x01, 0x00, 0x00, 0x00});
-		}
+
+		long time = 1000 * sample.getTimeStamp() / getVideoTimeScale();
+		byte type = (byte) (sample.isKeyframe() ? 0x17 : 0x27);
+		buf[0].put(new byte[]{type, 0x01, (byte) ((time & 0xFF0000) >>> 16), (byte) ((time & 0xFF00) >>> 8), (byte) (time & 0xFF)});
+		buf[0].flip();
 		return buf;
 	}
 
-	public ByteBuffer[] getAudioTag(Mp4Sample sample) throws IOException {
+	public ByteBuffer[] createAudioTag(Mp4Sample sample) throws IOException {
 		ByteBuffer[] data = readSampleData(sample);
 		ByteBuffer[] buf = new ByteBuffer[data.length + 1];
 		System.arraycopy(data, 0, buf, 1, data.length);
 		buf[0] = ByteBufferFactory.allocate(2);
 		buf[0].put(new byte[]{(byte)0xaf, 0x01});
+		buf[0].flip();
 		return buf;
 	}
 	

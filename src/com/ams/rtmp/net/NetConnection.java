@@ -275,7 +275,7 @@ public class NetConnection {
 				break;
 			case RtmpMessage.MESSAGE_USER_CONTROL:
 				RtmpMessageUserControl userControl = (RtmpMessageUserControl)message;
-				//System.out.println("read message USER_CONTROL:" + userControl.getEvent() + ":" + userControl.getStreamId() + ":" + userControl.getTimestamp());
+				System.out.println("read message USER_CONTROL:" + userControl.getEvent() + ":" + userControl.getStreamId() + ":" + userControl.getTimestamp());
 				break;
 			case RtmpMessage.MESSAGE_SHARED_OBJECT:
 				System.out.println("read message SHARED OBJECT:");
@@ -289,11 +289,11 @@ public class NetConnection {
 				break;
 			case RtmpMessage.MESSAGE_ACK:
 				RtmpMessageAck ack = (RtmpMessageAck)message;
-				//System.out.println("read message ACK:" + ack.getBytes());
+				System.out.println("read message ACK:" + ack.getBytes());
 				break;
 			case RtmpMessage.MESSAGE_WINDOW_ACK_SIZE:
 				RtmpMessageWindowAckSize ackSize = (RtmpMessageWindowAckSize)message;
-				//System.out.println("read message window ack size:" + ackSize.getSize());
+				System.out.println("read message window ack size:" + ackSize.getSize());
 				break;
 			case RtmpMessage.MESSAGE_PEER_BANDWIDTH:
 				System.out.println("read message peer bandwidth:");

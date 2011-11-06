@@ -92,8 +92,9 @@ public final class TRAK {
 		int sampleIndex = 0;
 		int prevFirstChunk = 0;
 		int prevSamplesPerChunk = 0;
+		int prevSampleDescIndex = 0;		
 		for (STSCRecord entry : stsc.getEntries()) {
-			for (int chunk = prevFirstChunk; chunk < entry.firstChunk; chunk++) {
+			for (int chunk = prevFirstChunk; chunk < entry.firstChunk - 1; chunk++) {
 				// chunk offset
 				long sampleOffset = getChunkOffset(chunk);
 				for (int i = 0; i < prevSamplesPerChunk; i++ ) {
@@ -104,15 +105,33 @@ public final class TRAK {
 					// keyframe
 					boolean keyframe = isKeyFrameSample(sampleIndex);
 					// description index
-					int sampleDescIndex = entry.sampleDescIndex;
+					int sampleDescIndex = prevSampleDescIndex;
 					list.add(new Mp4Sample(sampleOffset, sampleSize, timeStamp, keyframe, sampleDescIndex));
+					
 					sampleOffset += sampleSize;
 					sampleIndex++;	
 				}
 			}
-			prevFirstChunk = entry.firstChunk;
+			prevFirstChunk = entry.firstChunk - 1;
 			prevSamplesPerChunk = entry.samplesPerChunk;
+			prevSampleDescIndex = entry.sampleDescIndex;
 		}
+		
+		long sampleOffset = getChunkOffset(prevFirstChunk);
+		for (int i = 0; i < prevSamplesPerChunk; i++ ) {
+			// sample size
+			int sampleSize = getSampleSize(sampleIndex);
+			// time stamp
+			long timeStamp = getSampleTimeStamp(sampleIndex);
+			// keyframe
+			boolean keyframe = isKeyFrameSample(sampleIndex);
+			// description index
+			int sampleDescIndex = prevSampleDescIndex;
+			list.add(new Mp4Sample(sampleOffset, sampleSize, timeStamp, keyframe, sampleDescIndex));
+			sampleOffset += sampleSize;
+			sampleIndex++;	
+		}
+
 		return list.toArray(new Mp4Sample[list.size()]); 
 	}
 	
@@ -120,11 +139,15 @@ public final class TRAK {
 		SampleDescription desc = stsd.getDescriptions()[0];
 		ByteBufferOutputStream bos = new ByteBufferOutputStream();
 		if ("avc1".equalsIgnoreCase(desc.type)) {
-			int pos = 78; // start avcC
-			bos.write(desc.description, pos, desc.description.length - pos);
+			int pos = 78; // read avcC box
+			byte[] b = desc.description;
+			int size = ((b[pos] & 0xFF) << 24) | ((b[pos + 1] & 0xFF) << 16) | ((b[pos + 2] & 0xFF) << 8) | (b[pos + 3] & 0xFF);
+			//video decoder config
+			bos.write(b, pos + 8, size - 8);
 			return bos.toByteBufferArray();
 		} else if ("mp4a".equalsIgnoreCase(desc.type)) {
 			//TODO
+			
 		}
 		return null;
 	}

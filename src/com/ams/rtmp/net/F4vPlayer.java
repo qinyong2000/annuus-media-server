@@ -50,24 +50,24 @@ public class F4vPlayer implements IPlayer{
 		Mp4Sample audioSample = samples[1];
 
 		if (videoSample != null) {
-			readMsgQueue.offer(new MediaMessage(0, new RtmpMessageVideo(deserializer.getVideoHeaderTag())));
+			readMsgQueue.offer(new MediaMessage(0, new RtmpMessageVideo(deserializer.createVideoHeaderTag())));
 
-			long time = videoSample.getTimeStamp() / deserializer.getVideoTimeScale();
-			ByteBuffer[] data = deserializer.getVideoTag(videoSample);
+			long time = 1000 * videoSample.getTimeStamp() / deserializer.getVideoTimeScale();
+			ByteBuffer[] data = deserializer.createVideoTag(videoSample);
 			if(videoPlaying) {
 				readMsgQueue.offer(new MediaMessage(time, new RtmpMessageVideo(data)));
 			}
 		}
 
-		if (audioSample != null) {
-			readMsgQueue.offer(new MediaMessage(0, new RtmpMessageAudio(deserializer.getAudioHeaderTag())));
-
-			long time = audioSample.getTimeStamp() / deserializer.getAudioTimeScale();
-			ByteBuffer[] data = deserializer.getAudioTag(audioSample);
-			if(audioPlaying) {
-				readMsgQueue.offer(new MediaMessage(time, new RtmpMessageAudio(data)));
-			}
-		}
+//		if (audioSample != null) {
+//			readMsgQueue.offer(new MediaMessage(0, new RtmpMessageAudio(deserializer.createAudioHeaderTag())));
+//
+//			long time = 1000 * audioSample.getTimeStamp() / deserializer.getAudioTimeScale();
+//			ByteBuffer[] data = deserializer.createAudioTag(audioSample);
+//			if(audioPlaying) {
+//				readMsgQueue.offer(new MediaMessage(time, new RtmpMessageAudio(data)));
+//			}
+//		}
 	}
 	
 
@@ -96,7 +96,6 @@ public class F4vPlayer implements IPlayer{
 		
 		long relativeTime = now - startTime;
 		while(relativeTime > currentTime) {
-
 			Mp4Sample[] samples = deserializer.readNext();
 			if( samples[0] == null && samples[1] == null) {	// eof
 				stream.setPlayer(null);
@@ -109,20 +108,20 @@ public class F4vPlayer implements IPlayer{
 			if (videoSample != null) {
 				long time = 1000 * videoSample.getTimeStamp() / deserializer.getVideoTimeScale();
 				currentTime = time;
-				ByteBuffer[] data = deserializer.getVideoTag(videoSample);
+				ByteBuffer[] data = deserializer.createVideoTag(videoSample);
 				if(videoPlaying) {
-					readMsgQueue.offer(new MediaMessage(time, new RtmpMessageVideo(data)));
+					stream.writeMessage(time, new RtmpMessageVideo(data));
 				}
 			}
 
-			if (audioSample != null) {
-				long time = 1000 * audioSample.getTimeStamp() / deserializer.getAudioTimeScale();
-				ByteBuffer[] data = deserializer.getAudioTag(audioSample);
-				if(audioPlaying) {
-					readMsgQueue.offer(new MediaMessage(time, new RtmpMessageAudio(data)));
-				}
-			}
-			
+//			if (audioSample != null) {
+//				long time = 1000 * audioSample.getTimeStamp() / deserializer.getAudioTimeScale();
+//				ByteBuffer[] data = deserializer.createAudioTag(audioSample);
+//				if(audioPlaying) {
+//					stream.writeMessage(time, new RtmpMessageAudio(data));
+//				}
+//			}
+//			
 
 			if( stream.isWriteBlocking() ) {
 				blockedTime = now;

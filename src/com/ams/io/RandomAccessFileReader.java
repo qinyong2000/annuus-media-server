@@ -127,8 +127,8 @@ public class RandomAccessFileReader implements IByteBufferReader {
 				return;
 			}
 		}
-		file.seek(position);
 		position = startPosition;
+		file.seek(position);
 		this.buffer = null;
 		this.eof = false;
 	}
