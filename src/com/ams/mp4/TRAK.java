@@ -131,20 +131,28 @@ public final class TRAK {
 			sampleOffset += sampleSize;
 			sampleIndex++;	
 		}
-
+		
+		int[] sizeTable = stsz.getSizeTable();
+		while(sampleIndex < sizeTable.length) {
+			// sample size
+			int sampleSize = getSampleSize(sampleIndex);
+			// time stamp
+			long timeStamp = getSampleTimeStamp(sampleIndex);
+			// keyframe
+			boolean keyframe = isKeyFrameSample(sampleIndex);
+			// description index
+			int sampleDescIndex = prevSampleDescIndex;
+			list.add(new Mp4Sample(sampleOffset, sampleSize, timeStamp, keyframe, sampleDescIndex));
+			sampleOffset += sampleSize;
+			sampleIndex++;	
+		}
 		return list.toArray(new Mp4Sample[list.size()]); 
 	}
 	
 	public ByteBuffer[] getExtraData() throws IOException {
 		SampleDescription desc = stsd.getDescriptions()[0];
-		ByteBufferOutputStream bos = new ByteBufferOutputStream();
 		if ("avc1".equalsIgnoreCase(desc.type)) {
-			int pos = 78; // read avcC box
-			byte[] b = desc.description;
-			int size = ((b[pos] & 0xFF) << 24) | ((b[pos + 1] & 0xFF) << 16) | ((b[pos + 2] & 0xFF) << 8) | (b[pos + 3] & 0xFF);
-			//video decoder config
-			bos.write(b, pos + 8, size - 8);
-			return bos.toByteBufferArray();
+			return STSD.getVideoDecoderConfigure(desc);
 		} else if ("mp4a".equalsIgnoreCase(desc.type)) {
 			//TODO
 			
