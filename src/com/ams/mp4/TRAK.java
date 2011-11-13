@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
-import com.ams.io.ByteBufferOutputStream;
 import com.ams.mp4.STSC.STSCRecord;
 import com.ams.mp4.STSD.SampleDescription;
 import com.ams.mp4.STTS.STTSRecord;
@@ -116,36 +115,27 @@ public final class TRAK {
 			prevSamplesPerChunk = entry.samplesPerChunk;
 			prevSampleDescIndex = entry.sampleDescIndex;
 		}
-		
-		long sampleOffset = getChunkOffset(prevFirstChunk);
-		for (int i = 0; i < prevSamplesPerChunk; i++ ) {
-			// sample size
-			int sampleSize = getSampleSize(sampleIndex);
-			// time stamp
-			long timeStamp = getSampleTimeStamp(sampleIndex);
-			// keyframe
-			boolean keyframe = isKeyFrameSample(sampleIndex);
-			// description index
-			int sampleDescIndex = prevSampleDescIndex;
-			list.add(new Mp4Sample(sampleOffset, sampleSize, timeStamp, keyframe, sampleDescIndex));
-			sampleOffset += sampleSize;
-			sampleIndex++;	
+
+		int chunkSize = this.stco.getOffsets().length;
+		for (int chunk = prevFirstChunk; chunk < chunkSize; chunk++) {
+			// chunk offset
+			long sampleOffset = getChunkOffset(chunk);
+			for (int i = 0; i < prevSamplesPerChunk; i++ ) {
+				// sample size
+				int sampleSize = getSampleSize(sampleIndex);
+				// time stamp
+				long timeStamp = getSampleTimeStamp(sampleIndex);
+				// keyframe
+				boolean keyframe = isKeyFrameSample(sampleIndex);
+				// description index
+				int sampleDescIndex = prevSampleDescIndex;
+				list.add(new Mp4Sample(sampleOffset, sampleSize, timeStamp, keyframe, sampleDescIndex));
+				
+				sampleOffset += sampleSize;
+				sampleIndex++;	
+			}
 		}
 		
-		int[] sizeTable = stsz.getSizeTable();
-		while(sampleIndex < sizeTable.length) {
-			// sample size
-			int sampleSize = getSampleSize(sampleIndex);
-			// time stamp
-			long timeStamp = getSampleTimeStamp(sampleIndex);
-			// keyframe
-			boolean keyframe = isKeyFrameSample(sampleIndex);
-			// description index
-			int sampleDescIndex = prevSampleDescIndex;
-			list.add(new Mp4Sample(sampleOffset, sampleSize, timeStamp, keyframe, sampleDescIndex));
-			sampleOffset += sampleSize;
-			sampleIndex++;	
-		}
 		return list.toArray(new Mp4Sample[list.size()]); 
 	}
 	
