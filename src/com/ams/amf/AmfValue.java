@@ -18,51 +18,65 @@ public class AmfValue {
 
 	protected int kind = 0;
 	protected Object value;
-
+	protected boolean ecmaArray = false;
+	
 	public AmfValue() {
 		this.kind = AMF_UNDEFINED;
 	}
+
+	public AmfValue(Object value) {
+		if (value == null) 	
+			this.kind = AMF_NULL;
+		else if (value instanceof Integer)
+			this.kind  = AMF_INT;
+		else if (value instanceof Double)
+			this.kind  = AMF_NUMBER;
+		else if (value instanceof Boolean)
+			this.kind  = AMF_BOOL;
+		else if (value instanceof String)
+			this.kind  = AMF_STRING;
+		else if (value instanceof HashMap)
+			this.kind  = AMF_OBJECT;
+		else if (value instanceof Object[])
+			this.kind  = AMF_ARRAY;
+		else if (value instanceof Date)
+			this.kind  = AMF_DATE;
 		
-	public AmfValue(int value) {
-		this.kind  = AMF_INT;
-		this.value = value; 
-	}
-
-	public AmfValue(double value) {
-		this.kind  = AMF_NUMBER;
-		this.value = value; 
-	}
-
-	public AmfValue(boolean value) {
-		this.kind  = AMF_BOOL;
-		this.value = value; 
-	}
-
-	public AmfValue(String value) {
-		this.kind  = AMF_STRING;
 		this.value = value; 
 	}
 	
-	public AmfValue(HashMap<String, AmfValue> value) {
-		this.kind  = AMF_OBJECT;
-		this.value = value; 
+	public AmfValue put(String key, Object v) {
+		object().put(key, v instanceof AmfValue ? (AmfValue) v : new AmfValue(v));
+		return this;
 	}
 
-	public AmfValue(ArrayList<AmfValue> value) {
-		this.kind  = AMF_ARRAY;
-		this.value = value; 
+	public static AmfValue newObject() {
+		return new AmfValue(new HashMap<String, AmfValue>());
+	}
+
+	public static AmfValue newArray(Object ...values) {
+		AmfValue[] array = new AmfValue[values.length];
+		for(int i = 0; i < values.length; i++) {
+			Object v = values[i];
+			array[i] = v instanceof AmfValue ? (AmfValue) v : new AmfValue(v);  
+		}
+		return new AmfValue(array);
 	}
 	
-	public AmfValue(Date value) {
-		this.kind  = AMF_DATE;
-		this.value = value; 
+	public static AmfValue[] array(Object ...values) {
+		AmfValue[] array = new AmfValue[values.length];
+		for(int i = 0; i < values.length; i++) {
+			Object v = values[i];
+			array[i] = v instanceof AmfValue ? (AmfValue) v : new AmfValue(v);  
+		}
+		return array;
 	}
-	
+
 	public int getKind() {
 		return kind;
 	}
 
-	public int integer() {
+	public Integer integer() {
 		if( value == null ) {
 			throw new NullPointerException("parameter is null");
 		}
@@ -72,7 +86,7 @@ public class AmfValue {
 		return ((Number)value).intValue();
 	}
 
-	public double number() {
+	public Double number() {
 		if( value == null ) {
 			throw new NullPointerException("parameter is null");
 		}
@@ -82,7 +96,7 @@ public class AmfValue {
 		return ((Number)value).doubleValue();
 	}
 
-	public boolean bool() {
+	public Boolean bool() {
 		if( value == null ) {
 			throw new NullPointerException("parameter is null");
 		}
@@ -102,18 +116,16 @@ public class AmfValue {
 		return (String)value;
 	}
 
-	@SuppressWarnings("unchecked")
-	public ArrayList<AmfValue> array() {
+	public AmfValue[] array() {
 		if( value == null ) {
 			throw new NullPointerException("parameter is null");
 		}
 		if( kind != AmfValue.AMF_ARRAY ) {
 			throw new IllegalArgumentException("parameter is not a Amf Array");
 		}
-		return (ArrayList<AmfValue>)value;
+		return (AmfValue[])value;
 	}
 	
-	@SuppressWarnings("unchecked")
 	public HashMap<String, AmfValue> object() {
 		if( value == null ) {
 			throw new NullPointerException("parameter is null");
@@ -175,12 +187,12 @@ public class AmfValue {
 			result += "}";
 			return result;
 		case AmfValue.AMF_ARRAY:
-			ArrayList<AmfValue> array = array();
+			AmfValue[] array = array();
 			result = "[";
 			first = true;
-			int len = array.size();
+			int len = array.length;
 			for(int i = 0; i < len; i++) {
-				result += (first ? " " : ", ") + array.get(i).toString();
+				result += (first ? " " : ", ") + array[i].toString();
 				first = false;
 			}
 			result += "]";
@@ -195,5 +207,13 @@ public class AmfValue {
 			return "undefined";
 		}
 		return "";
+	}
+
+	public boolean isEcmaArray() {
+		return ecmaArray;
+	}
+
+	public void setEcmaArray(boolean ecmaArray) {
+		this.ecmaArray = ecmaArray;
 	}
 }

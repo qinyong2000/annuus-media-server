@@ -43,7 +43,7 @@ public class Amf0Deserializer {
 			break;
 		case 0x05:
 			//This specifies the data in the AMF packet is a NULL value.
-			amfValue = new AmfNull();
+			amfValue = new AmfValue(null);
 			break;
 		case 0x06:
 			//This specifies the data in the AMF packet is a undefined.
@@ -57,9 +57,9 @@ public class Amf0Deserializer {
 		case 0x08:
 			//This specifies the data in the AMF packet is a ECMA array.
 			HashMap<String, AmfValue> hash = new HashMap<String, AmfValue>();
-			boolean ismixed = (type == 0x08);
+			boolean isEcmaArray = (type == 0x08);
 			int size = -1;
-			if(ismixed) {
+			if(isEcmaArray) {
 				size = in.readInt();		// 32bit read
 			}
 			while(true) {

@@ -8,7 +8,6 @@ import com.ams.message.MediaMessage;
 import com.ams.rtmp.message.*;
 import com.ams.rtmp.*;
 import com.ams.server.replicator.ReplicateCluster;
-import com.ams.util.Log;
 
 public class NetConnection {
 	private RtmpHandShake handshake;
@@ -93,18 +92,17 @@ public class NetConnection {
 		rtmp.writeProtocolControlMessage(new RtmpMessagePeerBandwidth(128*1024, (byte)2));
 		rtmp.writeProtocolControlMessage(new RtmpMessageUserControl(RtmpMessageUserControl.EVT_STREAM_BEGIN, header.getStreamId()));
 		
-		HashMap<String, AmfValue> value = new HashMap<String, AmfValue>();
-		value.put("level", new AmfValue("status"));
-		value.put("code", new AmfValue("NetConnection.Connect.Success"));
-		value.put("description", new AmfValue("Connection succeeded."));
+		AmfValue value = AmfValue.newObject();
+		value.put("level", "status")
+			 .put("code", "NetConnection.Connect.Success")
+			 .put("description", "Connection succeeded.");
 		AmfValue objectEncoding = obj.get("objectEncoding");
 		if (objectEncoding != null) {
 			value.put("objectEncoding", objectEncoding);
 		}
 		
-		AmfValue[] argsMessageCommand = { new AmfNull(), new AmfValue(value)};
 		rtmp.writeRtmpMessage(header.getChunkStreamId(), -1, -1,
-				  new RtmpMessageCommand("_result", command.getTransactionId(), argsMessageCommand));
+				  new RtmpMessageCommand("_result", command.getTransactionId(), AmfValue.array(null, value)));
 
 	}
 
@@ -203,9 +201,8 @@ public class NetConnection {
 	
 	private void onCreateStream(RtmpHeader header, RtmpMessageCommand command) throws IOException {
 		NetStream stream = createStream();
-		AmfValue[] argsMessageCommand = { new AmfNull(), new AmfValue(stream.getStreamId()) };
 		rtmp.writeRtmpMessage(header.getChunkStreamId(), -1, -1, 
-						new RtmpMessageCommand("_result", command.getTransactionId(), argsMessageCommand));
+						new RtmpMessageCommand("_result", command.getTransactionId(), AmfValue.array(null, stream.getStreamId())));
 		
 	}
 
@@ -235,13 +232,12 @@ public class NetConnection {
 	
 	
 	public void writeError(int chunkStreamId, int streamId, int transactionId, String code, String msg) throws IOException {
-		HashMap<String, AmfValue> value = new HashMap<String, AmfValue>();
-		value.put("level", new AmfValue("error"));
-		value.put("code", new AmfValue());
-		value.put("details", new AmfValue(msg));
-		AmfValue[] argsMessageCommand = { new AmfNull(), new AmfValue(value) };
+		AmfValue value = AmfValue.newObject();
+		value.put("level", "error")
+			 .put("code", code)
+			 .put("details", msg);
 		rtmp.writeRtmpMessage(chunkStreamId, streamId, -1, 
-				  new RtmpMessageCommand("onStatus", transactionId, argsMessageCommand));
+				  new RtmpMessageCommand("onStatus", transactionId, AmfValue.array(null, value)));
 	}
 
 	public void netConnectionError(int chunkStreamId, int streamId, int transactionId, String msg) throws IOException {

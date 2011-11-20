@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import com.ams.amf.AmfException;
-import com.ams.amf.AmfNull;
 import com.ams.amf.AmfValue;
 import com.ams.rtmp.message.RtmpMessage;
 import com.ams.rtmp.message.RtmpMessageCommand;
@@ -92,9 +91,7 @@ public class RtmpClient implements Runnable {
 	}
 	
 	private void connect() throws IOException {
-		HashMap<String, AmfValue> value = new HashMap<String, AmfValue>();
-		value.put("app", new AmfValue(""));
-		AmfValue[] args = {new AmfValue(value)};
+		AmfValue[] args = {AmfValue.newObject().put("app", "")};
 		RtmpMessage message = new RtmpMessageCommand("connect", TANSACTION_ID_CONNECT, args);
 		rtmp.writeRtmpMessage(CHANNEL_RTMP_COMMAND, 0, System.currentTimeMillis(), message);
 	}
@@ -120,7 +117,7 @@ public class RtmpClient implements Runnable {
 	}
 	
 	private void createStream() throws IOException {
-		AmfValue[] args = {new AmfNull()};
+		AmfValue[] args = {new AmfValue(null)};
 		RtmpMessage message = new RtmpMessageCommand("createStream", TANSACTION_ID_CREATE_STREAM, args);
 		rtmp.writeRtmpMessage(CHANNEL_RTMP_COMMAND, 0, System.currentTimeMillis(), message);
 	}
@@ -135,7 +132,7 @@ public class RtmpClient implements Runnable {
 	}
 
 	private void publish(String publishName, int streamId) throws IOException {
-		AmfValue[] args = {new AmfNull(), new AmfValue(publishName), new AmfValue("live")};
+		AmfValue[] args = AmfValue.array(null, publishName, "live");
 		RtmpMessage message = new RtmpMessageCommand("publish", TANSACTION_ID_PUBLISH, args);
 		rtmp.writeRtmpMessage(CHANNEL_RTMP_PUBLISH, streamId, System.currentTimeMillis(), message);
 	}
@@ -157,7 +154,7 @@ public class RtmpClient implements Runnable {
 	}
 	
 	private void closeStream(int streamId) throws IOException {
-		AmfValue[] args = {new AmfNull()};
+		AmfValue[] args = {new AmfValue(null)};
 		RtmpMessage message = new RtmpMessageCommand("closeStream", 0, args);
 		rtmp.writeRtmpMessage(CHANNEL_RTMP_COMMAND, streamId, System.currentTimeMillis(), message);
 	}

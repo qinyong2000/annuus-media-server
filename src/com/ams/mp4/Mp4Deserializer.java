@@ -76,6 +76,30 @@ public class Mp4Deserializer {
 		return buf;
 	}
 
+	public ByteBuffer[] createVideoHeaderTag1() throws IOException {
+		ByteBuffer[] buf = new ByteBuffer[1];
+		buf[0] = ByteBufferFactory.allocate(5);
+		buf[0].put(new byte[]{0x52, 0x00});
+		buf[0].flip();
+		return buf;
+	}
+	
+	public ByteBuffer[] createVideoHeaderTag2() throws IOException {
+		ByteBuffer[] buf = new ByteBuffer[1];
+		buf[0] = ByteBufferFactory.allocate(5);
+		buf[0].put(new byte[]{0x17, 0x02, 0x00, 0x00, 0x00});
+		buf[0].flip();
+		return buf;
+	}
+
+	public ByteBuffer[] createVideoHeaderTag3() throws IOException {
+		ByteBuffer[] buf = new ByteBuffer[1];
+		buf[0] = ByteBufferFactory.allocate(5);
+		buf[0].put(new byte[]{0x52, 0x01});
+		buf[0].flip();
+		return buf;
+	}
+	
 	public ByteBuffer[] createAudioHeaderTag() {
 		//TODO
 		ByteBuffer[] buf = new ByteBuffer[1]; 
@@ -93,7 +117,9 @@ public class Mp4Deserializer {
 
 		long time = 1000 * sample.getTimeStamp() / getVideoTimeScale();
 		byte type = (byte) (sample.isKeyframe() ? 0x17 : 0x27);
-		buf[0].put(new byte[]{type, 0x01, (byte) ((time & 0xFF0000) >>> 16), (byte) ((time & 0xFF00) >>> 8), (byte) (time & 0xFF)});
+		//buf[0].put(new byte[]{type, 0x01, (byte) (time & 0xFF), (byte) ((time & 0xFF00) >>> 8), (byte) ((time & 0xFF0000) >>> 16)});
+		buf[0].put(new byte[]{type, 0x01, 0, 0, 0});
+
 		buf[0].flip();
 		return buf;
 	}

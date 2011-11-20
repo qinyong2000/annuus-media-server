@@ -1,8 +1,7 @@
 package com.ams.rtmp.net;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.HashMap;
-
 import com.ams.amf.*;
 import com.ams.flv.FlvException;
 import com.ams.flv.FlvSerializer;
@@ -26,27 +25,39 @@ public class NetStream {
 	}
 	
 	public void writeMessage(long timestamp, RtmpMessage message) throws IOException {
-		rtmp.writeRtmpMessage(chunkStreamId, streamId, timestamp, message);
+		if (message instanceof RtmpMessageAudio)
+			rtmp.writeRtmpMessage(6, streamId, timestamp, message);
+		else if (message instanceof RtmpMessageVideo)	
+			rtmp.writeRtmpMessage(7, streamId, timestamp, message);
+		else
+			rtmp.writeRtmpMessage(chunkStreamId, streamId, timestamp, message);
 	}
 
-	public void writeStatusMessage(String status, HashMap<String, AmfValue> info) throws IOException {
-		info.put("level", new AmfValue("status"));
-		info.put("code", new AmfValue(status));
-		AmfValue[] argsMessageCommand = { new AmfNull(), new AmfValue(info) };
-		rtmp.writeRtmpMessage(chunkStreamId, streamId, -1, 
-						new RtmpMessageCommand("onStatus", transactionId, argsMessageCommand));
+	public void writeStatusMessage(String status, AmfValue info) throws IOException {
+		info.put("level", "status")
+			.put("code", status);
+		writeMessage(-1, new RtmpMessageCommand("onStatus", transactionId, AmfValue.array(null, info)));
 	}
 
 	public void writeErrorMessage(String msg) throws IOException {
-		HashMap<String, AmfValue> value = new HashMap<String, AmfValue>();
-		value.put("level", new AmfValue("error"));
-		value.put("code", new AmfValue("NetStream.Error"));
-		value.put("details", new AmfValue(msg));
-		AmfValue[] argsMessageCommand = { new AmfNull(), new AmfValue(value) };
-		rtmp.writeRtmpMessage(chunkStreamId, streamId, -1, 
-				  		new RtmpMessageCommand("onStatus", transactionId, argsMessageCommand));
+		AmfValue value = AmfValue.newObject();
+		value.put("level", "error")
+			 .put("code", "NetStream.Error")
+			 .put("details", msg);
+		writeMessage(-1, new RtmpMessageCommand("onStatus", transactionId, AmfValue.array(null, value)));
 	}
-	
+
+	public void writeDataMessage(AmfValue[] values) throws IOException {
+		ByteBufferOutputStream out = new ByteBufferOutputStream();
+		Amf0Serializer serializer = new Amf0Serializer(new DataOutputStream(out));
+		for(int i = 0; i < values.length; i++) {
+			serializer.write(values[i]);
+		}
+		writeMessage(-1, new RtmpMessageData(out.toByteBufferArray()));
+	}
+	public void xxx() throws IOException {
+	rtmp.writeProtocolControlMessage(new RtmpMessageUserControl(32, streamId));
+	}
 	public synchronized void close() throws IOException {
 		if(player != null) {
 			player.close();
@@ -94,13 +105,32 @@ public class NetStream {
 		}
 		// set chunk size
 		rtmp.writeProtocolControlMessage(new RtmpMessageChunkSize(1024));
+
+		//NetStream.Play.Reset
+		writeStatusMessage("NetStream.Play.Reset",		
+							AmfValue.newObject()
+								.put("description", "Resetting " + streamName + ".")
+								.put("details", streamName)
+								.put("clientId", streamId));
 		
 		// clear
 		rtmp.writeProtocolControlMessage(new RtmpMessageUserControl(RtmpMessageUserControl.EVT_STREAM_IS_RECORDED, streamId));
 		rtmp.writeProtocolControlMessage(new RtmpMessageUserControl(RtmpMessageUserControl.EVT_STREAM_BEGIN, streamId));
+
+		//NetStream.Play.Start
+		writeStatusMessage("NetStream.Play.Start", 
+							AmfValue.newObject()
+								.put("description", "Start playing " + streamName + ".")
+								.put("clientId", streamId));								
+		
+		//|RtmpSampleAccess
+		writeDataMessage(AmfValue.array("|RtmpSampleAccess", false, false));
+		//writeMessage(0, new RtmpMessageAudio(null));
+		
+		//NetStream.Data.Start
+		writeDataMessage(AmfValue.array("onStatus", AmfValue.newObject().put("code", "NetStream.Data.Start")));
 		
 		String app = context.getAttribute("app");
-		
 		switch(start) {
 		case -1:		// live only
 				{
@@ -145,17 +175,7 @@ public class NetStream {
 				player = createPlayer(type, path);
 				player.seek(start);
 		}
-
-		HashMap<String, AmfValue> status = new HashMap<String, AmfValue>();
-		status.put("description", new AmfValue("Resetting " + streamName + "."));
-		status.put("details", new AmfValue(streamName));
-		status.put("clientId", new AmfValue(streamId));
-		writeStatusMessage("NetStream.Play.Reset", status);
 		
-		status = new HashMap<String, AmfValue>();
-		status.put("description", new AmfValue("Start playing " + streamName + "."));
-		status.put("clientId", new AmfValue(streamId));
-		writeStatusMessage("NetStream.Play.Start", status);
 	}
 	
 	private IPlayer createPlayer(String type, String file) throws IOException {
@@ -176,17 +196,13 @@ public class NetStream {
 		}
 		
 		player.seek(offset);
-		
-		HashMap<String, AmfValue> value = new HashMap<String, AmfValue>();
-		value.put("level", new AmfValue("status"));
-		value.put("code", new AmfValue("NetStream.Seek.Notify"));
 
-		AmfValue[] argsMessageCommand = { new AmfNull(), new AmfValue(value) };
-		writeMessage(-1, new RtmpMessageCommand("_result", transactionId, argsMessageCommand));
+		AmfValue value = AmfValue.newObject();
+		value.put("level", "status")
+			 .put("code", "NetStream.Seek.Notify");
+		writeMessage(-1, new RtmpMessageCommand("_result", transactionId, AmfValue.array(null, value)));
 		
-		HashMap<String, AmfValue> status = new HashMap<String, AmfValue>();
-		status.put("time", new AmfValue(offset));
-		writeStatusMessage("NetStream.Play.Start", status);
+		writeStatusMessage("NetStream.Play.Start", AmfValue.newObject().put("time", offset));
 	}
 	
 	public void pause(boolean pause, long time) throws IOException, NetConnectionException, FlvException {
@@ -202,13 +218,11 @@ public class NetStream {
 			rtmp.writeProtocolControlMessage(new RtmpMessageUserControl(RtmpMessageUserControl.EVT_STREAM_EOF, streamId));
 		}	
 
-		HashMap<String, AmfValue> value = new HashMap<String, AmfValue>();
-		value.put("level", new AmfValue("status"));
-		value.put("code", new AmfValue(pause ? "NetStream.Pause.Notify" : "NetStream.Unpause.Notify"));
-		
-		AmfValue[] argsMessageCommand = { new AmfNull(), new AmfValue(value) };
+		AmfValue value = AmfValue.newObject();
+		value.put("level", "status")
+			 .put("code", (pause ? "NetStream.Pause.Notify" : "NetStream.Unpause.Notify"));
 		rtmp.writeRtmpMessage(chunkStreamId, -1, -1,  
-				  new RtmpMessageCommand("_result", transactionId, argsMessageCommand));
+				  new RtmpMessageCommand("_result", transactionId, AmfValue.array(null, value)));
 		
 	}
 	
@@ -230,9 +244,7 @@ public class NetStream {
 		}
 		PublisherManager.addPublisher(publisher);
 		
-		HashMap<String, AmfValue> status = new HashMap<String, AmfValue>();
-		status.put("details", new AmfValue(name));
-		writeStatusMessage("NetStream.Publish.Start", status);
+		writeStatusMessage("NetStream.Publish.Start", AmfValue.newObject().put("details", name));
 	}
 
 	public void receiveAudio(boolean flag) throws IOException {

@@ -105,7 +105,7 @@ public class Amf3Deserializer {
 			break;
 		case 0x01:
 			//This specifies the data in the AMF packet is a NULL value.
-			amfValue = new AmfNull();
+			amfValue = new AmfValue(null);
 			break;
 		case 0x02:
 			//This specifies the data in the AMF packet is a false boolean value.

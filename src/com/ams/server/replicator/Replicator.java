@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.ams.amf.AmfNull;
 import com.ams.amf.AmfValue;
 import com.ams.message.MediaMessage;
 import com.ams.rtmp.message.RtmpMessage;
@@ -66,13 +65,13 @@ class Replicator implements Runnable {
 		}
 		
 		public void publish() throws IOException {
-			AmfValue[] args = {new AmfNull(), new AmfValue(publishName), new AmfValue("live")};
+			AmfValue[] args = AmfValue.array(null, publishName, "live");
 			RtmpMessage message = new RtmpMessageCommand("publish", 1, args);
 			rtmp.writeRtmpMessage(CHANNEL_RTMP_COMMAND, streamId, System.currentTimeMillis(), message);
 		}
 		
 		public void closeStream() throws IOException {
-			AmfValue[] args = {new AmfNull()};
+			AmfValue[] args = {new AmfValue(null)};
 			RtmpMessage message = new RtmpMessageCommand("closeStream", 0, args);
 			rtmp.writeRtmpMessage(CHANNEL_RTMP_COMMAND, streamId, System.currentTimeMillis(), message);
 		}

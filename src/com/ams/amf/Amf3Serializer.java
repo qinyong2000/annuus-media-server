@@ -111,13 +111,13 @@ public class Amf3Serializer {
 			}
 		}
 		
-		ArrayList<AmfValue> array = amfValue.array();
-		int len = array.size();
+		AmfValue[] array = amfValue.array();
+		int len = array.length;
 		writeAmf3ValueInt(len);
 		
 		writeAmf3EmptyString();
 		for(int i = 0; i < len; i++) {
-			write((AmfValue) array.get(i));
+			write((AmfValue) array[i]);
 		}
 		objectRefTable.add(amfValue);
 	}

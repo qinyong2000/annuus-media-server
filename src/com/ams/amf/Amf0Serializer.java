@@ -41,7 +41,12 @@ public class Amf0Serializer {
 			}
 			break;
 		case AmfValue.AMF_OBJECT:
-			out.writeByte(0x03);	// only support Flash object
+			if (amfValue.isEcmaArray()) {
+				out.writeByte(0x08);	// ECMA Array
+				out.writeInt(0);
+			} else {
+				out.writeByte(0x03);
+			}
 			HashMap<String, AmfValue> v = amfValue.object();
 			for(String key : v.keySet()) {
 				out.writeUTF(key);
@@ -54,11 +59,11 @@ public class Amf0Serializer {
 			break;
 		case AmfValue.AMF_ARRAY:
 			out.writeByte(0x0A);
-			ArrayList<AmfValue> array = amfValue.array();
-			int len = array.size();
+			AmfValue[] array = amfValue.array();
+			int len = array.length;
 			out.writeInt(len);
 			for(int i = 0; i < len; i++) {
-				write((AmfValue) array.get(i));
+				write((AmfValue) array[i]);
 			}
 			break;
 		case AmfValue.AMF_DATE:
