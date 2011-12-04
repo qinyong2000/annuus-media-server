@@ -83,11 +83,10 @@ public class F4vPlayer implements IPlayer{
 		readMsgQueue.clear();
 
 		onMetaData();
-		stream.xxx();
 
-		stream.writeMessage(0, new RtmpMessageVideo(deserializer.createVideoHeaderTag1()));			
-		stream.writeMessage(0, new RtmpMessageVideo(deserializer.createVideoHeaderTag2()));			
-		stream.writeMessage(0, new RtmpMessageVideo(deserializer.createVideoHeaderTag3()));			
+//		stream.writeMessage(0, new RtmpMessageVideo(deserializer.createVideoHeaderTag1()));			
+//		stream.writeMessage(0, new RtmpMessageVideo(deserializer.createVideoHeaderTag2()));			
+//		stream.writeMessage(0, new RtmpMessageVideo(deserializer.createVideoHeaderTag3()));			
 		
 		Mp4Sample[] samples = deserializer.seek(seekTime);
 		Mp4Sample videoSample = samples[0];

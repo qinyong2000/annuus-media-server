@@ -25,21 +25,20 @@ public class FlvDeserializer {
 			if( flvTag == null ) {
 				return null;
 			}
-			long time = flvTag.getTimestamp();
-			if( time < seekTime ) {
+			if( flvTag.getTimestamp() < seekTime ) {
 				continue;
 			}
-
-			switch( flvTag.getTagType() ) {
-			case FlvTag.FLV_AUDIO:
+			
+			if (flvTag.isAudioTag()) {
 				hasAudio = false;
-				break;
-			case FlvTag.FLV_VIDEO:
+			} 
+			if (flvTag.isVideoTag() && flvTag.isVideoKeyFrame()) {
 				hasVideo = false;
-				break;
-			case FlvTag.FLV_META:
-				break;
 			}
+			if (flvTag.isVideoTag()) {
+			hasVideo = false;
+		}
+
 		}
 		return flvTag;
 	}

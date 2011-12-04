@@ -13,9 +13,9 @@ public class FlvTag {
 	public static final int FLV_VIDEO = 1;
 	public static final int FLV_META = 2;
 
-	private int tagType;
-	private ByteBuffer[] data;
-	private long timestamp;
+	protected int tagType;
+	protected ByteBuffer[] data;
+	protected long timestamp;
 
 	public FlvTag(int tagType, ByteBuffer[] data, long timestamp) {
 		super();
@@ -62,11 +62,11 @@ public class FlvTag {
 
 		switch (tagType) {
 		case 0x08:
-			return new FlvTag(FlvTag.FLV_AUDIO, data, timestamp);
+			return new AudioTag(data, timestamp);
 		case 0x09:
-			return new FlvTag(FlvTag.FLV_VIDEO, data, timestamp);
+			return new VideoTag(data, timestamp);
 		case 0x12:
-			return new FlvTag(FlvTag.FLV_META, data, timestamp);
+			return new MetaTag(data, timestamp);
 		default:
 			throw new FlvException("Invalid FLV tag " + tagType);
 		}
@@ -110,4 +110,18 @@ public class FlvTag {
 		return (data[0].get(0) >>> 4) == 1;
 	}
 
+	public boolean isAudioTag() {
+		return tagType == FLV_AUDIO;
+	}
+	
+	public boolean isVideoTag() {
+		return tagType == FLV_VIDEO;
+	}
+
+	public boolean isMetaTag() {
+		return tagType == FLV_META;
+	}
+
+	public void getParameters() throws IOException {
+	}
 }

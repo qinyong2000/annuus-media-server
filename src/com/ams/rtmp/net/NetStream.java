@@ -55,9 +55,7 @@ public class NetStream {
 		}
 		writeMessage(-1, new RtmpMessageData(out.toByteBufferArray()));
 	}
-	public void xxx() throws IOException {
-	rtmp.writeProtocolControlMessage(new RtmpMessageUserControl(32, streamId));
-	}
+
 	public synchronized void close() throws IOException {
 		if(player != null) {
 			player.close();
@@ -98,6 +96,28 @@ public class NetStream {
 		return publisher;
 	}
 
+	public void seek(int offset) throws NetConnectionException, IOException, FlvException {
+		if (player == null) {
+			writeErrorMessage("Invalid 'Seek' stream id " + streamId);
+			return;
+		}
+System.out.println("seek:" + offset);
+		// clear
+		rtmp.writeProtocolControlMessage(new RtmpMessageUserControl(RtmpMessageUserControl.EVT_STREAM_EOF, streamId));
+		rtmp.writeProtocolControlMessage(new RtmpMessageUserControl(RtmpMessageUserControl.EVT_STREAM_IS_RECORDED, streamId));
+		rtmp.writeProtocolControlMessage(new RtmpMessageUserControl(RtmpMessageUserControl.EVT_STREAM_BEGIN, streamId));
+		
+		AmfValue value = AmfValue.newObject();
+		value.put("level", "status")
+			 .put("code", "NetStream.Seek.Notify");
+		writeMessage(-1, new RtmpMessageCommand("_result", transactionId, AmfValue.array(null, value)));
+		
+		writeStatusMessage("NetStream.Play.Start", AmfValue.newObject().put("time", offset));
+
+		player.seek(offset);
+	}
+	
+	
 	public void play(NetContext context, String streamName, int start, int len) throws NetConnectionException, IOException, FlvException {
 		if (player != null) {
 			writeErrorMessage("This channel is already playing");
@@ -122,13 +142,6 @@ public class NetStream {
 							AmfValue.newObject()
 								.put("description", "Start playing " + streamName + ".")
 								.put("clientId", streamId));								
-		
-		//|RtmpSampleAccess
-		writeDataMessage(AmfValue.array("|RtmpSampleAccess", false, false));
-		//writeMessage(0, new RtmpMessageAudio(null));
-		
-		//NetStream.Data.Start
-		writeDataMessage(AmfValue.array("onStatus", AmfValue.newObject().put("code", "NetStream.Data.Start")));
 		
 		String app = context.getAttribute("app");
 		switch(start) {
@@ -187,22 +200,6 @@ public class NetStream {
 			return new F4vPlayer(file, this);
 		}
 		return new FlvPlayer(file, this);
-	}
-	
-	public void seek(int offset) throws NetConnectionException, IOException, FlvException {
-		if (player == null) {
-			writeErrorMessage("Invalid 'Seek' stream id " + streamId);
-			return;
-		}
-		
-		player.seek(offset);
-
-		AmfValue value = AmfValue.newObject();
-		value.put("level", "status")
-			 .put("code", "NetStream.Seek.Notify");
-		writeMessage(-1, new RtmpMessageCommand("_result", transactionId, AmfValue.array(null, value)));
-		
-		writeStatusMessage("NetStream.Play.Start", AmfValue.newObject().put("time", offset));
 	}
 	
 	public void pause(boolean pause, long time) throws IOException, NetConnectionException, FlvException {

@@ -58,6 +58,8 @@ public class NetConnection {
 			onDeleteStream(header, command);
 		} else if ("closeStream".equals(cmdName)) {
 			onCloseStream(header, command);
+		} else if ("getStreamLength".equals(cmdName)) {
+			onGetStreamLength(header, command);
 		} else if ("play".equals(cmdName)) {
 			onPlay(header, command);
 		} else if ("play2".equals(cmdName)) {
@@ -105,7 +107,15 @@ public class NetConnection {
 				  new RtmpMessageCommand("_result", command.getTransactionId(), AmfValue.array(null, value)));
 
 	}
+	
 
+	private void onGetStreamLength(RtmpHeader header, RtmpMessageCommand command) throws IOException, NetConnectionException, FlvException {
+		AmfValue[] args = command.getArgs();
+		String streamName = args[1].string();
+//		rtmp.writeRtmpMessage(header.getChunkStreamId(), -1, -1, 
+//				new RtmpMessageCommand("_result", command.getTransactionId(), AmfValue.array(null, 233.935)));
+	}
+	
 	private void onPlay(RtmpHeader header, RtmpMessageCommand command) throws IOException, NetConnectionException, FlvException {
 		AmfValue[] args = command.getArgs();
 		String streamName = args[1].string();

@@ -24,24 +24,8 @@ public class FlvSerializer {
 		FlvTag flvTag = new FlvTag(type, data, time);
 		FlvTag.write(out, flvTag);
 		out.flush();
-/*
-		if (type == FlvTag.FLV_VIDEO && Flv.isVideoKeyFrame(data)) {	
-			// add meta tag for http pseudo streaming
-			HashMap<String, AmfValue> metaData = new HashMap<String, AmfValue>();
-			metaData.put("duration", new AmfValue((double)time / 1000));
-	
-			HashMap<String, AmfValue> onMetaData = new HashMap<String, AmfValue>();
-			onMetaData.put("onMetaData", new AmfValue(metaData));
-	
-			ByteBufferOutputStream bos = new ByteBufferOutputStream();
-			AmfSerializer serializer = new Amf0Serializer(new DataOutputStream(bos));
-			serializer.write(new AmfValue(onMetaData));
-	
-			FlvTag metaTag = new FlvTag(FlvTag.FLV_META, bos.toByteBufferArray(), time);
-			Flv.writeFlvTag(outputStream, metaTag);
-		}
-*/
 	}
+
 	public synchronized void close() {
 		try {
 			out.close();

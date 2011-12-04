@@ -151,6 +151,7 @@ public class RtmpMessageSerializer {
 		
 		// write packet header + data
 		headerSerializer.write(header);
+		if (data == null) return;
 		
 		ByteBufferInputStream ds = new ByteBufferInputStream(data);
 		ByteBuffer[] packet = null;

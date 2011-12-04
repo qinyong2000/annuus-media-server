@@ -17,6 +17,7 @@ public final class ByteBufferHelper {
 	}
 	
 	public static int size(ByteBuffer[] buffers) {
+		if (buffers == null) return 0;
 		int dataSize = 0;
 		for(ByteBuffer buf : buffers) {
 			dataSize += buf.remaining();
