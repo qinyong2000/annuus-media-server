@@ -2,20 +2,20 @@ package com.ams.flv;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 
 import com.ams.io.ByteBufferInputStream;
 import com.ams.io.ByteBufferOutputStream;
 import com.ams.util.ByteBufferHelper;
 
-public class FlvTag {
+public class FlvTag extends Sample {
 	public static final int FLV_AUDIO = 0;
 	public static final int FLV_VIDEO = 1;
 	public static final int FLV_META = 2;
 
 	protected int tagType;
-	protected ByteBuffer[] data;
-	protected long timestamp;
+	protected ByteBuffer[] data = null;
 
 	public FlvTag(int tagType, ByteBuffer[] data, long timestamp) {
 		super();
@@ -24,12 +24,17 @@ public class FlvTag {
 		this.timestamp = timestamp;
 	}
 
+	public FlvTag(int tagType, long offset, int size, boolean keyframe, long timestamp) {
+		super();
+		this.tagType = tagType;
+		this.offset = offset;
+		this.size = size;
+		this.keyframe = keyframe;
+		this.timestamp = timestamp;
+	}
+	
 	public ByteBuffer[] getData() {
 		return data;
-	}
-
-	public long getTimestamp() {
-		return timestamp;
 	}
 
 	public int getTagType() {
@@ -49,16 +54,9 @@ public class FlvTag {
 		timestamp |= (in.readByte() & 0xFF) << 24; // time stamp extended
 
 		int streamId = in.read24Bit(); // 24Bit read
-		// if( streamId != 0 ) {
-		// throw new FlvException("Invalid stream Id: " + streamId);
-		// }
 		ByteBuffer[] data = in.readByteBuffer(dataSize);
 
 		int previousTagSize = (int) in.read32Bit();
-		// if( previousTagSize != 0 && previousTagSize != dataSize + 11 ) {
-		// throw new FlvException("Invalid previous tag size (" + dataSize +
-		// " != " + previousTagSize + ")");
-		// }
 
 		switch (tagType) {
 		case 0x08:
@@ -72,6 +70,42 @@ public class FlvTag {
 		}
 	}
 
+	private static int read24Bit(RandomAccessFile in) throws IOException {
+		byte[] b = new byte[3];
+		in.read(b, 0, 3); // 24Bit read
+		return ((b[0] & 0xFF) << 16) | ((b[1] & 0xFF) << 8) | (b[2] & 0xFF);
+	}
+
+	public static FlvTag read(RandomAccessFile in) throws IOException, FlvException {
+		int tagType;
+		try {
+			tagType = in.readByte() & 0xFF;
+		} catch (EOFException e) {
+			return null;
+		}
+		int dataSize = read24Bit(in); // 24Bit read
+		long timestamp = read24Bit(in); // 24Bit read
+		timestamp |= (in.readByte() & 0xFF) << 24; // time stamp extended
+		
+		int streamId = read24Bit(in); // 24Bit read
+		long offset = in.getFilePointer();
+		
+		byte header = in.readByte();
+		boolean keyframe = (header >>> 4) == 1;
+		in.seek(offset + dataSize);
+		int previousTagSize = (int) in.readInt();
+		switch (tagType) {
+		case 0x08:
+			return new AudioTag(offset, dataSize, timestamp);
+		case 0x09:
+			return new VideoTag(offset, dataSize, keyframe, timestamp);
+		case 0x12:
+			return new MetaTag(offset, dataSize, timestamp);
+		default:
+			throw new FlvException("Invalid FLV tag " + tagType);
+		}
+}
+	
 	public static void write(ByteBufferOutputStream out, FlvTag flvTag)
 			throws IOException {
 		byte tagType = -1;

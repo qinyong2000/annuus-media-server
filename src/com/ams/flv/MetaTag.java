@@ -17,6 +17,10 @@ public class MetaTag extends FlvTag {
 	public MetaTag(ByteBuffer[] data, long timestamp) {
 		super(FlvTag.FLV_META, data, timestamp);
 	}
+
+	public MetaTag(long offset, int size, long timestamp) {
+		super(FlvTag.FLV_META, offset, size, false, timestamp);
+	}
 	
 	public void getParameters() throws IOException {
 		ByteBufferInputStream bi = new ByteBufferInputStream(ByteBufferHelper.duplicate(data));

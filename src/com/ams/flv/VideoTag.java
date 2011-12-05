@@ -7,7 +7,6 @@ import com.ams.io.ByteBufferInputStream;
 import com.ams.util.ByteBufferHelper;
 
 public class VideoTag extends FlvTag {
-	private boolean isKeyFrame = false;
 	private int codecId = -1;
 	private int width = -1, height = -1;
 	
@@ -15,10 +14,14 @@ public class VideoTag extends FlvTag {
 		super(FlvTag.FLV_VIDEO, data, timestamp);
 	}
 
+	public VideoTag(long offset, int size, boolean keyframe, long timestamp) {
+		super(FlvTag.FLV_VIDEO, offset, size, keyframe, timestamp);
+	}
+	
 	public void getParameters() throws IOException {
 		ByteBufferInputStream bi = new ByteBufferInputStream(ByteBufferHelper.duplicate(data));
 		byte b = bi.readByte();
-		isKeyFrame = (b >>> 4) == 1;
+		keyframe = (b >>> 4) == 1;
 		codecId = b & 0x0F;
 	    byte[] videoData = new byte[9];
 	    bi.read(videoData);
@@ -56,10 +59,6 @@ public class VideoTag extends FlvTag {
 	    }
 	}
 	
-	public boolean isKeyFrame() {
-		return isKeyFrame;
-	}
-
 	public int getCodecId() {
 		return codecId;
 	}

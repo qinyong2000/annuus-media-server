@@ -115,7 +115,7 @@ public class Mp4Deserializer {
 		System.arraycopy(data, 0, buf, 1, data.length);
 		buf[0] = ByteBufferFactory.allocate(5);
 
-		long time = 1000 * sample.getTimeStamp() / getVideoTimeScale();
+		long time = 1000 * sample.getTimestamp() / getVideoTimeScale();
 		byte type = (byte) (sample.isKeyframe() ? 0x17 : 0x27);
 		//buf[0].put(new byte[]{type, 0x01, (byte) (time & 0xFF), (byte) ((time & 0xFF00) >>> 8), (byte) ((time & 0xFF0000) >>> 16)});
 		buf[0].put(new byte[]{type, 0x01, 0, 0, 0});

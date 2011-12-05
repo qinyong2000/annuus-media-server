@@ -16,6 +16,10 @@ public class AudioTag extends FlvTag {
 		super(FlvTag.FLV_AUDIO, data, timestamp);
 	}
 
+	public AudioTag(long offset, int size, long timestamp) {
+		super(FlvTag.FLV_AUDIO, offset, size, true, timestamp);
+	}
+	
 	public void getParameters() throws IOException {
 		ByteBufferInputStream bi = new ByteBufferInputStream(ByteBufferHelper.duplicate(data));
 		byte b = bi.readByte();

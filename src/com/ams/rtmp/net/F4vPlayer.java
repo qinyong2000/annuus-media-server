@@ -95,7 +95,7 @@ public class F4vPlayer implements IPlayer{
 		if (videoSample != null) {
 			stream.writeMessage(0, new RtmpMessageVideo(deserializer.createVideoHeaderTag()));			
 
-			long time = 1000 * videoSample.getTimeStamp() / deserializer.getVideoTimeScale();
+			long time = 1000 * videoSample.getTimestamp() / deserializer.getVideoTimeScale();
 			ByteBuffer[] data = deserializer.createVideoTag(videoSample);
 			if(videoPlaying) {
 				readMsgQueue.offer(new MediaMessage(time, new RtmpMessageVideo(data)));
@@ -149,7 +149,7 @@ public class F4vPlayer implements IPlayer{
 			Mp4Sample audioSample = samples[1];
 
 			if (videoSample != null) {
-				long time = 1000 * videoSample.getTimeStamp() / deserializer.getVideoTimeScale();
+				long time = 1000 * videoSample.getTimestamp() / deserializer.getVideoTimeScale();
 				currentTime = time;
 				ByteBuffer[] data = deserializer.createVideoTag(videoSample);
 				if(videoPlaying) {
