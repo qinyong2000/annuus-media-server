@@ -41,17 +41,7 @@ public class FlvPlayer implements IPlayer{
 		//NetStream.Data.Start
 		stream.writeDataMessage(AmfValue.array("onStatus", AmfValue.newObject().put("code", "NetStream.Data.Start")));
 		
-		AmfValue value = AmfValue.newObject();
-		value.setEcmaArray(true);
-		value.put("duration", 137.2)
-			.put("width", 480)
-			.put("height", 270)
-			.put("videodatarate", 800)
-			.put("canSeekToEnd", true)
-			.put("videocodecid", 4)
-			.put("audiodatarate", 64)
-			.put("audiocodecid", 2)
-			.put("framerate", 24);
+		AmfValue value = deserializer.onMetaData();
 		stream.writeDataMessage(AmfValue.array("onMetaData", value));
 	}
 	
@@ -93,7 +83,6 @@ public class FlvPlayer implements IPlayer{
 
 				ByteBuffer[] data = flvTag.getData();
 				long timeStamp = flvTag.getTimestamp();
-System.out.println("time:" + timeStamp);				
 				currentTime = timeStamp;
 				if (flvTag.isAudioTag() && audioPlaying) {
 					stream.writeMessage(timeStamp, new RtmpMessageAudio(data));

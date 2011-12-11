@@ -39,7 +39,16 @@ public class RandomAccessFileReader implements IByteBufferReader {
 		file.seek(startPosition);
 		position = startPosition;
 	}
+	
+	public int readByte() throws IOException {
+		byte[] one = new byte[1];
 
+		// read 1 byte
+		int amount = read(one, 0, 1);
+		// return EOF / the byte
+		return (amount < 0) ? -1 : one[0] & 0xff;
+	}
+	
 	public int read(byte[] data, int offset, int size) throws IOException {
 		// throw an exception if eof
 		if (eof) {
@@ -143,5 +152,9 @@ public class RandomAccessFileReader implements IByteBufferReader {
 
 	public void close() throws IOException {
 		file.close();
+	}
+
+	public long getPosition() {
+		return position;
 	}
 }

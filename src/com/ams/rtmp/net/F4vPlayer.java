@@ -3,7 +3,6 @@ package com.ams.rtmp.net;
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
 import java.util.LinkedList;
 import com.ams.amf.AmfValue;
 import com.ams.io.*;

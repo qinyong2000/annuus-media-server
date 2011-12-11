@@ -2,11 +2,11 @@ package com.ams.flv;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 
 import com.ams.io.ByteBufferInputStream;
 import com.ams.io.ByteBufferOutputStream;
+import com.ams.io.RandomAccessFileReader;
 import com.ams.util.ByteBufferHelper;
 
 public class FlvTag extends Sample {
@@ -70,30 +70,25 @@ public class FlvTag extends Sample {
 		}
 	}
 
-	private static int read24Bit(RandomAccessFile in) throws IOException {
-		byte[] b = new byte[3];
-		in.read(b, 0, 3); // 24Bit read
-		return ((b[0] & 0xFF) << 16) | ((b[1] & 0xFF) << 8) | (b[2] & 0xFF);
-	}
-
-	public static FlvTag read(RandomAccessFile in) throws IOException, FlvException {
+	public static FlvTag read(RandomAccessFileReader reader) throws IOException, FlvException {
 		int tagType;
+		ByteBufferInputStream in = new ByteBufferInputStream(reader);
 		try {
 			tagType = in.readByte() & 0xFF;
 		} catch (EOFException e) {
 			return null;
 		}
-		int dataSize = read24Bit(in); // 24Bit read
-		long timestamp = read24Bit(in); // 24Bit read
+		int dataSize = in.read24Bit(); // 24Bit read
+		long timestamp = in.read24Bit(); // 24Bit read
 		timestamp |= (in.readByte() & 0xFF) << 24; // time stamp extended
 		
-		int streamId = read24Bit(in); // 24Bit read
-		long offset = in.getFilePointer();
+		int streamId = in.read24Bit(); // 24Bit read
+		long offset = reader.getPosition();
 		
-		byte header = in.readByte();
+		int header = in.readByte();
 		boolean keyframe = (header >>> 4) == 1;
-		in.seek(offset + dataSize);
-		int previousTagSize = (int) in.readInt();
+		reader.seek(offset + dataSize);
+		int previousTagSize = (int) in.read32Bit();
 		switch (tagType) {
 		case 0x08:
 			return new AudioTag(offset, dataSize, timestamp);
@@ -104,7 +99,12 @@ public class FlvTag extends Sample {
 		default:
 			throw new FlvException("Invalid FLV tag " + tagType);
 		}
-}
+	}
+	
+	public void readData(RandomAccessFileReader reader) throws IOException {
+		reader.seek(offset);
+		data = reader.read(size);
+	}
 	
 	public static void write(ByteBufferOutputStream out, FlvTag flvTag)
 			throws IOException {
@@ -138,10 +138,6 @@ public class FlvTag extends Sample {
 		out.writeByteBuffer(data);
 		// previousTagSize
 		out.write32Bit(dataSize + 11);
-	}
-
-	public boolean isVideoKeyFrame() {
-		return (data[0].get(0) >>> 4) == 1;
 	}
 
 	public boolean isAudioTag() {
