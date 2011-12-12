@@ -8,8 +8,8 @@ import com.ams.util.ByteBufferHelper;
 
 public class AudioTag extends FlvTag {
 	private int soundFormat = -1;
-	private int soundRate = -1;
-	private int soundSize = -1;
+	private int soundRate = 0;
+	private int soundSize = 0;
 	private int soundType = -1;
 	
 	public AudioTag(ByteBuffer[] data, long timestamp) {

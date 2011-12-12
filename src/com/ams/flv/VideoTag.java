@@ -8,7 +8,7 @@ import com.ams.util.ByteBufferHelper;
 
 public class VideoTag extends FlvTag {
 	private int codecId = -1;
-	private int width = -1, height = -1;
+	private int width = 0, height = 0;
 	
 	public VideoTag(ByteBuffer[] data, long timestamp) {
 		super(FlvTag.FLV_VIDEO, data, timestamp);

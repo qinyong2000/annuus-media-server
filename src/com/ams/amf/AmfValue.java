@@ -24,11 +24,11 @@ public class AmfValue {
 	}
 
 	public AmfValue(Object value) {
-		if (value == null) 	
+		if (value == null)
 			this.kind = AMF_NULL;
-		else if (value instanceof Integer)
+		else if (value instanceof Integer || value instanceof Long)
 			this.kind  = AMF_INT;
-		else if (value instanceof Double)
+		else if (value instanceof Float || value instanceof Double)
 			this.kind  = AMF_NUMBER;
 		else if (value instanceof Boolean)
 			this.kind  = AMF_BOOL;
@@ -168,11 +168,10 @@ public class AmfValue {
 		boolean first;
 		switch(kind) {
 		case AmfValue.AMF_INT:
-			return ((Integer)value).toString();
 		case AmfValue.AMF_NUMBER:
-			return ((Number)value).toString();
 		case AmfValue.AMF_BOOL:
-			return ((Boolean)value).toString();
+		case AmfValue.AMF_DATE:
+			return value.toString();
 		case AmfValue.AMF_STRING:
 			return "'" + (String)value + "'";
 		case AmfValue.AMF_OBJECT:
@@ -196,8 +195,6 @@ public class AmfValue {
 			}
 			result += "]";
 			return result;
-		case AmfValue.AMF_DATE:
-			return ((Date)value).toString();
 		case AmfValue.AMF_XML:
 			return (String)value;
 		case AmfValue.AMF_NULL:

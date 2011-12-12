@@ -75,21 +75,22 @@ public class FlvDeserializer {
 	}
 
 	public AmfValue onMetaData() {
-		if (firstMetaTag != null && "onMetaData".equals(firstMetaTag.getEvent())) {
+		if (firstMetaTag != null && "onMetaData".equals(firstMetaTag.getEvent()) && firstMetaTag.getMetaData() != null) {
 			return firstMetaTag.getMetaData();
 		}
 		AmfValue value = AmfValue.newObject();
+		float duration = (float)lastTimestamp / 1000;
 		value.setEcmaArray(true);
-		value.put("duration", lastTimestamp / 1000)
+		value.put("duration", duration)
 			.put("width", firstVideoTag.getWidth())
 			.put("height", firstVideoTag.getHeight())
-			.put("videodatarate", videoDataSize * 8 / lastTimestamp / 1000 / 1024) //kBits/sec
+			.put("videodatarate", (float)videoDataSize * 8 / duration / 1024) //kBits/sec
 			.put("canSeekToEnd", lastVideoTag.isKeyframe())
 			.put("videocodecid", firstVideoTag.getCodecId())
-			.put("audiodatarate", audioDataSize * 8 / lastTimestamp / 1000 / 1024) //kBits/sec
+			.put("audiodatarate", (float)audioDataSize * 8 / duration / 1024) //kBits/sec
 			.put("audiocodecid", firstAudioTag.getSoundFormat())
-			.put("framerate", videoFrames / lastTimestamp / 1000);
-		
+			.put("framerate", (float)videoFrames / duration);
+System.out.println(value.toString());		
 		return value;
 	}
 	
@@ -102,7 +103,7 @@ public class FlvDeserializer {
 			}
 		}
 		if (flvTag != null) {
-			reader.seek(flvTag.offset);
+			reader.seek(flvTag.offset - 11);
 		}
 		return flvTag;
 	}
