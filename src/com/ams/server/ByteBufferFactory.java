@@ -11,6 +11,5 @@ public final class ByteBufferFactory {
 
 	public static void setPageSize(int pageSize) {
 		allocator.setPageSize(pageSize);
-		allocator.init();
 	}
 }

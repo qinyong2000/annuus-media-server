@@ -167,7 +167,7 @@ public final class ByteBufferAllocator {
 		logFactor = Math.log(factor);
 	}
 	
-	public void init() {
+	private void init() {
 		// Initialize Slabs
 		slabs = new ArrayList<Slab>();
 		int size = minChunkSize;
@@ -202,6 +202,9 @@ public final class ByteBufferAllocator {
 	}
 	
 	public synchronized ByteBuffer allocate(int size) {
+		if (slabs == null) {
+			init();
+		}
 		// find a slab to allocate
 		ByteBuffer buf = null;
 		Slab slab = null;

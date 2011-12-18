@@ -126,7 +126,7 @@ public class NetConnection {
 			streamError(header.getChunkStreamId(), header.getStreamId(), command.getTransactionId(), "Invalid 'Play' stream id "+ header.getStreamId());
 			return;
 		}
-		stream.setChunkStreamId(header.getChunkStreamId());
+		//stream.setChunkStreamId(header.getChunkStreamId());
 		stream.setTransactionId(command.getTransactionId());
 		stream.play(context, streamName, start, duration);
 	}
@@ -182,7 +182,7 @@ public class NetConnection {
 			return;
 		}
 
-		stream.setChunkStreamId(header.getChunkStreamId());
+		//stream.setChunkStreamId(header.getChunkStreamId());
 		stream.setTransactionId(command.getTransactionId());
 		stream.publish(context, publishName, type);
 	}
@@ -295,7 +295,7 @@ public class NetConnection {
 				break;
 			case RtmpMessage.MESSAGE_ACK:
 				RtmpMessageAck ack = (RtmpMessageAck)message;
-				System.out.println("read message ACK:" + ack.getBytes());
+				//System.out.println("read message ACK:" + ack.getBytes());
 				break;
 			case RtmpMessage.MESSAGE_WINDOW_ACK_SIZE:
 				RtmpMessageWindowAckSize ackSize = (RtmpMessageWindowAckSize)message;

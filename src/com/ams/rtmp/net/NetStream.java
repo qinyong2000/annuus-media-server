@@ -12,7 +12,7 @@ import com.ams.rtmp.message.*;
 
 public class NetStream {
 	private RtmpConnection rtmp;
-	private int chunkStreamId = -1;
+	private int chunkStreamId = 5;
 	private int streamId;
 	private int transactionId = 0;
 	
@@ -71,9 +71,9 @@ public class NetStream {
 		return rtmp.getConnector().isWriteBlocking();
 	}
 	
-	public void setChunkStreamId(int chunkStreamId) {
-		this.chunkStreamId = chunkStreamId;
-	}
+//	public void setChunkStreamId(int chunkStreamId) {
+//		this.chunkStreamId = chunkStreamId;
+//	}
 
 	public void setTransactionId(int transactionId) {
 		this.transactionId = transactionId;
@@ -101,7 +101,6 @@ public class NetStream {
 			writeErrorMessage("Invalid 'Seek' stream id " + streamId);
 			return;
 		}
-System.out.println("seek:" + offset);
 		// clear
 		rtmp.writeProtocolControlMessage(new RtmpMessageUserControl(RtmpMessageUserControl.EVT_STREAM_EOF, streamId));
 		rtmp.writeProtocolControlMessage(new RtmpMessageUserControl(RtmpMessageUserControl.EVT_STREAM_IS_RECORDED, streamId));

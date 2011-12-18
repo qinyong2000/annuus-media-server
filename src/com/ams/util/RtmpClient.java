@@ -79,7 +79,7 @@ public class RtmpClient implements Runnable {
 			String publishName = publishResult(msg);
 			if (publishName != null) {
 				NetStream stream = new NetStream(rtmp, streamId);
-				stream.setChunkStreamId(CHANNEL_RTMP_PUBLISH);
+				//stream.setChunkStreamId(CHANNEL_RTMP_PUBLISH);
 				player = new FlvPlayer(fileName, stream);
 				player.seek(0);
 				Log.logger.info("rtmp stream published.");

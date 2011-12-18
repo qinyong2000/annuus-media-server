@@ -79,8 +79,8 @@ public class FlvDeserializer {
 			return firstMetaTag.getMetaData();
 		}
 		AmfValue value = AmfValue.newObject();
-		float duration = (float)lastTimestamp / 1000;
 		value.setEcmaArray(true);
+		float duration = (float)lastTimestamp / 1000;
 		value.put("duration", duration)
 			.put("width", firstVideoTag.getWidth())
 			.put("height", firstVideoTag.getHeight())
@@ -90,21 +90,18 @@ public class FlvDeserializer {
 			.put("audiodatarate", (float)audioDataSize * 8 / duration / 1024) //kBits/sec
 			.put("audiocodecid", firstAudioTag.getSoundFormat())
 			.put("framerate", (float)videoFrames / duration);
-System.out.println(value.toString());		
 		return value;
 	}
 	
 	public FlvTag seek(long seekTime) throws IOException, FlvException {
-		FlvTag flvTag = null;
+		FlvTag flvTag = firstVideoTag;
 		for(FlvTag tag : samples) {
-			if( tag.getTimestamp() >= seekTime ) {
-				flvTag = tag;
+			if( tag.getTimestamp() > seekTime ) {
 				break;
 			}
+			flvTag = tag;
 		}
-		if (flvTag != null) {
-			reader.seek(flvTag.offset - 11);
-		}
+		reader.seek(flvTag.offset - 11);
 		return flvTag;
 	}
 	
