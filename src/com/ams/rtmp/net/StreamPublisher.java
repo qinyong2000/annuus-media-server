@@ -32,17 +32,17 @@ public class StreamPublisher implements IMsgPublisher {
 		case RtmpMessage.MESSAGE_AUDIO:
 			RtmpMessageAudio audio = (RtmpMessageAudio) message;
 			data = audio.getData();
-			type = FlvTag.FLV_AUDIO;
+			type = Sample.SAMPLE_AUDIO;
 			break;
 		case RtmpMessage.MESSAGE_VIDEO:
 			RtmpMessageVideo video = (RtmpMessageVideo) message;
 			data = video.getData();
-			type = FlvTag.FLV_VIDEO;
+			type = Sample.SAMPLE_VIDEO;
 			break;
 		case RtmpMessage.MESSAGE_AMF0_DATA:
 			RtmpMessageData meta = (RtmpMessageData) message;
 			data = meta.getData();
-			type = FlvTag.FLV_META;
+			type = Sample.SAMPLE_META;
 			break;
 		}
 

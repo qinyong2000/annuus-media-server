@@ -1,13 +1,14 @@
 package com.ams.flv;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import com.ams.amf.AmfValue;
 import com.ams.io.ByteBufferInputStream;
 import com.ams.io.RandomAccessFileReader;
 
-public class FlvDeserializer {
+public class FlvDeserializer implements SampleDeserializer {
 	private RandomAccessFileReader reader;
 	private ArrayList<FlvTag> samples = new ArrayList<FlvTag>();
 	private long videoFrames = 0, audioFrames = 0;
@@ -74,7 +75,7 @@ public class FlvDeserializer {
 		}
 	}
 
-	public AmfValue onMetaData() {
+	public AmfValue metaData() {
 		if (firstMetaTag != null && "onMetaData".equals(firstMetaTag.getEvent()) && firstMetaTag.getMetaData() != null) {
 			return firstMetaTag.getMetaData();
 		}
@@ -92,11 +93,19 @@ public class FlvDeserializer {
 			.put("framerate", (float)videoFrames / duration);
 		return value;
 	}
+
+	public ByteBuffer[] videoHeaderData() {
+		return null;
+	}
+
+	public ByteBuffer[] audioHeaderData() {
+		return null;
+	}
 	
-	public FlvTag seek(long seekTime) throws IOException, FlvException {
+	public FlvTag seek(long seekTime) throws IOException {
 		FlvTag flvTag = firstVideoTag;
 		for(FlvTag tag : samples) {
-			if( tag.getTimestamp() > seekTime ) {
+			if( tag.getTimestamp() >= seekTime ) {
 				break;
 			}
 			flvTag = tag;
@@ -105,8 +114,17 @@ public class FlvDeserializer {
 		return flvTag;
 	}
 	
-	public FlvTag readNext() throws IOException, FlvException {
-		return FlvTag.read(new ByteBufferInputStream(reader));
+	public FlvTag readNext() throws IOException {
+		try {
+			return FlvTag.read(new ByteBufferInputStream(reader));
+		} catch (FlvException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public void close() throws IOException {
+		reader.close();
 	}
 
 }

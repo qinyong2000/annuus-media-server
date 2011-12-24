@@ -86,7 +86,7 @@ public final class TRAK {
 		return true;
 	}
 		
-	public Mp4Sample[] getAllSamples() {
+	public Mp4Sample[] getAllSamples(int sampleType) {
 		ArrayList<Mp4Sample> list = new ArrayList<Mp4Sample>();
 		int sampleIndex = 0;
 		int prevFirstChunk = 0;
@@ -105,7 +105,7 @@ public final class TRAK {
 					boolean keyframe = isKeyFrameSample(sampleIndex);
 					// description index
 					int sampleDescIndex = prevSampleDescIndex;
-					list.add(new Mp4Sample(sampleOffset, sampleSize, timeStamp, keyframe, sampleDescIndex));
+					list.add(new Mp4Sample(sampleType, sampleOffset, sampleSize, timeStamp, keyframe, sampleDescIndex));
 					
 					sampleOffset += sampleSize;
 					sampleIndex++;	
@@ -129,7 +129,7 @@ public final class TRAK {
 				boolean keyframe = isKeyFrameSample(sampleIndex);
 				// description index
 				int sampleDescIndex = prevSampleDescIndex;
-				list.add(new Mp4Sample(sampleOffset, sampleSize, timeStamp, keyframe, sampleDescIndex));
+				list.add(new Mp4Sample(sampleType, sampleOffset, sampleSize, timeStamp, keyframe, sampleDescIndex));
 				
 				sampleOffset += sampleSize;
 				sampleIndex++;	

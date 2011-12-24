@@ -13,11 +13,11 @@ public class AudioTag extends FlvTag {
 	private int soundType = -1;
 	
 	public AudioTag(ByteBuffer[] data, long timestamp) {
-		super(FlvTag.FLV_AUDIO, data, timestamp);
+		super(Sample.SAMPLE_AUDIO, data, timestamp);
 	}
 
 	public AudioTag(long offset, int size, long timestamp) {
-		super(FlvTag.FLV_AUDIO, offset, size, true, timestamp);
+		super(Sample.SAMPLE_AUDIO, offset, size, true, timestamp);
 	}
 	
 	public void getParameters() throws IOException {

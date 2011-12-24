@@ -4,14 +4,12 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import com.ams.amf.AmfValue;
 import com.ams.flv.*;
-import com.ams.io.*;
 import com.ams.rtmp.message.*;
 
 public class FlvPlayer implements IPlayer{
-	private static int BUFFER_TIME = 5 * 1000; // x seconds of buffering
+	private static int BUFFER_TIME = 3 * 1000; // x seconds of buffering
 	private NetStream stream = null;
-	private RandomAccessFileReader reader;
-	private FlvDeserializer deserializer;
+	private SampleDeserializer deserializer;
 	private long startTime = -1;
 	private long currentTime = 0;
 	private long bufferTime = BUFFER_TIME;
@@ -19,14 +17,13 @@ public class FlvPlayer implements IPlayer{
 	private boolean audioPlaying = true;
 	private boolean videoPlaying = true;
 
-	public FlvPlayer(String fileName, NetStream stream) throws IOException {
+	public FlvPlayer(SampleDeserializer deserializer, NetStream stream) throws IOException {
+		this.deserializer = deserializer;
 		this.stream = stream;
-		this.reader = new RandomAccessFileReader(fileName, 0);
-		this.deserializer = new FlvDeserializer(reader);
 	}
-
+	
 	public void close() throws IOException {
-		reader.close();
+		deserializer.close();
 	}
 	
 	public void writeStartData() throws IOException {
@@ -36,19 +33,26 @@ public class FlvPlayer implements IPlayer{
 		//NetStream.Data.Start
 		stream.writeDataMessage(AmfValue.array("onStatus", AmfValue.newObject().put("code", "NetStream.Data.Start")));
 		
-		AmfValue value = deserializer.onMetaData();
-		stream.writeDataMessage(AmfValue.array("onMetaData", value));
+		AmfValue value = deserializer.metaData();
+		if (value != null) {
+			stream.writeDataMessage(AmfValue.array("onMetaData", value));
+		}
+		
+		ByteBuffer[] headerData = deserializer.videoHeaderData();
+		if (headerData != null) {
+			stream.writeMessage(0, new RtmpMessageVideo(deserializer.videoHeaderData()));
+		}
+		headerData = deserializer.audioHeaderData();
+		if (headerData != null) {
+			stream.writeMessage(0, new RtmpMessageAudio(deserializer.audioHeaderData()));
+		}
+		
 	}
 	
 	public void seek(long seekTime) throws IOException {
-		FlvTag flvTag = null;
-		try {
-			flvTag = deserializer.seek(seekTime);
-		} catch(FlvException e) {
-			throw new IOException(e.getMessage());
-		}
-		if (flvTag == null) return;
-		currentTime = flvTag.getTimestamp();
+		Sample sample = deserializer.seek(seekTime);
+		if (sample == null) return;
+		currentTime = sample.getTimestamp();
 		startTime =  System.currentTimeMillis() - bufferTime - currentTime;
 		writeStartData();
 	}
@@ -57,29 +61,26 @@ public class FlvPlayer implements IPlayer{
 	public void play() throws IOException {
 		if (pause) return;
 
-		long time = System.currentTimeMillis() - startTime;
-		try {
-			while(currentTime < time ) {
-				FlvTag flvTag = deserializer.readNext();
-				if( flvTag == null ) {	// eof
-					stream.setPlayer(null);
-					break;
-				}
-				currentTime = flvTag.getTimestamp();
-				ByteBuffer[] data = flvTag.getData();
-				if (flvTag.isAudioTag() && audioPlaying) {
-					stream.writeMessage(currentTime, new RtmpMessageAudio(data));
-				}
-				if (flvTag.isVideoTag() && videoPlaying) {
-					stream.writeMessage(currentTime, new RtmpMessageVideo(data));
-				}
-				if (flvTag.isMetaTag()) {
-					stream.writeMessage(currentTime, new RtmpMessageData(data));
-				}
-	
+		long relativeTime = System.currentTimeMillis() - startTime;
+		while(currentTime < relativeTime ) {
+			Sample sample = deserializer.readNext();
+			if( sample == null ) {	// eof
+				stream.setPlayer(null);
+				break;
 			}
-		} catch(FlvException e) {
-			throw new IOException(e.getMessage());
+			currentTime = sample.getTimestamp();
+
+			ByteBuffer[] data = sample.getData();
+			if (sample.isAudioTag() && audioPlaying) {
+				stream.writeMessage(currentTime, new RtmpMessageAudio(data));
+			}
+			if (sample.isVideoTag() && videoPlaying) {
+				stream.writeMessage(currentTime, new RtmpMessageVideo(data));
+			}
+			if (sample.isMetaTag()) {
+				stream.writeMessage(currentTime, new RtmpMessageData(data));
+			}
+
 		}
 	}
 	

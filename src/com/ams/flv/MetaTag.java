@@ -15,11 +15,11 @@ public class MetaTag extends FlvTag {
 	private AmfValue metaData = null;
 	
 	public MetaTag(ByteBuffer[] data, long timestamp) {
-		super(FlvTag.FLV_META, data, timestamp);
+		super(Sample.SAMPLE_META, data, timestamp);
 	}
 
 	public MetaTag(long offset, int size, long timestamp) {
-		super(FlvTag.FLV_META, offset, size, false, timestamp);
+		super(Sample.SAMPLE_META, offset, size, false, timestamp);
 	}
 	
 	public void getParameters() throws IOException {

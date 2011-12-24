@@ -4,17 +4,28 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+
+import com.ams.amf.AmfValue;
+import com.ams.flv.Sample;
+import com.ams.flv.SampleDeserializer;
 import com.ams.io.RandomAccessFileReader;
 import com.ams.server.ByteBufferFactory;
 
-public class Mp4Deserializer {
+public class Mp4Deserializer implements SampleDeserializer {
 	private RandomAccessFileReader reader;
 	private TRAK videoTrak = null;
 	private TRAK audioTrak = null;
-	private Mp4Sample[] videoSamples = null;
-	private Mp4Sample[] audioSamples = null;
-	private int videoSampleIndex = 0;
-	private int audioSampleIndex = 0;	
+	private ArrayList<Mp4Sample> samples = new ArrayList<Mp4Sample>();
+	private int sampleIndex = 0;
+	
+	private class SampleTimestampComparator implements java.util.Comparator {
+		public int compare(Object s, Object t) {
+			return (int)((Mp4Sample) s).getTimestamp() - (int)((Mp4Sample) t).getTimestamp();
+		}
+	};
 	
 	public Mp4Deserializer(RandomAccessFileReader reader) {
 		this.reader = reader;
@@ -22,13 +33,17 @@ public class Mp4Deserializer {
 		TRAK trak = moov.getVideoTrak();
 		if (trak != null) {
 			videoTrak = trak;
-			videoSamples = trak.getAllSamples();
+			Mp4Sample[] videoSamples = trak.getAllSamples(Sample.SAMPLE_VIDEO);
+			samples.addAll(Arrays.asList(videoSamples));
 		}
 		trak = moov.getAudioTrak();
 		if (trak != null) {
 			audioTrak = trak;
-			audioSamples = trak.getAllSamples();
+			Mp4Sample[] audioSamples = trak.getAllSamples(Sample.SAMPLE_AUDIO);
+			samples.addAll(Arrays.asList(audioSamples));
 		}
+		
+		Collections.sort(samples, new SampleTimestampComparator());
 	}
 	
 	private MOOV readMoov(RandomAccessFileReader reader) {
@@ -66,8 +81,13 @@ public class Mp4Deserializer {
 		return reader.read(sample.getSize());
 	}
 
-	public ByteBuffer[] createVideoHeaderTag() throws IOException {
-		ByteBuffer[] data = videoTrak.getExtraData();
+	public ByteBuffer[] videoHeaderData() {
+		ByteBuffer[] data;
+		try {
+			data = videoTrak.getExtraData();
+		} catch (IOException e) {
+			return null;
+		}
 		ByteBuffer[] buf = new ByteBuffer[data.length + 1];
 		System.arraycopy(data, 0, buf, 1, data.length);
 		buf[0] = ByteBufferFactory.allocate(5);
@@ -75,33 +95,8 @@ public class Mp4Deserializer {
 		buf[0].flip();
 		return buf;
 	}
-
-	public ByteBuffer[] createVideoHeaderTag1() throws IOException {
-		ByteBuffer[] buf = new ByteBuffer[1];
-		buf[0] = ByteBufferFactory.allocate(5);
-		buf[0].put(new byte[]{0x52, 0x00});
-		buf[0].flip();
-		return buf;
-	}
 	
-	public ByteBuffer[] createVideoHeaderTag2() throws IOException {
-		ByteBuffer[] buf = new ByteBuffer[1];
-		buf[0] = ByteBufferFactory.allocate(5);
-		buf[0].put(new byte[]{0x17, 0x02, 0x00, 0x00, 0x00});
-		buf[0].flip();
-		return buf;
-	}
-
-	public ByteBuffer[] createVideoHeaderTag3() throws IOException {
-		ByteBuffer[] buf = new ByteBuffer[1];
-		buf[0] = ByteBufferFactory.allocate(5);
-		buf[0].put(new byte[]{0x52, 0x01});
-		buf[0].flip();
-		return buf;
-	}
-	
-	public ByteBuffer[] createAudioHeaderTag() {
-		//TODO
+	public ByteBuffer[] audioHeaderData() {
 		ByteBuffer[] buf = new ByteBuffer[1]; 
 		buf[0] = ByteBufferFactory.allocate(2);
 		buf[0].put(new byte[]{(byte)0xaf, 0x00});
@@ -109,7 +104,7 @@ public class Mp4Deserializer {
 		return buf;
 	}
 	
-	public ByteBuffer[] createVideoTag(Mp4Sample sample) throws IOException {
+	private ByteBuffer[] createVideoTag(Mp4Sample sample) throws IOException {
 		ByteBuffer[] data = readSampleData(sample);
 		ByteBuffer[] buf = new ByteBuffer[data.length + 1];
 		System.arraycopy(data, 0, buf, 1, data.length);
@@ -124,7 +119,7 @@ public class Mp4Deserializer {
 		return buf;
 	}
 
-	public ByteBuffer[] createAudioTag(Mp4Sample sample) throws IOException {
+	private ByteBuffer[] createAudioTag(Mp4Sample sample) throws IOException {
 		ByteBuffer[] data = readSampleData(sample);
 		ByteBuffer[] buf = new ByteBuffer[data.length + 1];
 		System.arraycopy(data, 0, buf, 1, data.length);
@@ -134,25 +129,33 @@ public class Mp4Deserializer {
 		return buf;
 	}
 	
-	public Mp4Sample[] seek(long seekTime) {
-		if (videoTrak != null) {
-			videoSampleIndex = videoTrak.getSampleIndex(seekTime);
+	public Sample seek(long seekTime) {
+		Mp4Sample seekSample = null;
+		int i = 0;
+		for(Mp4Sample sample : samples) {
+			if (sample.isVideoTag() && sample.isKeyframe()) {
+				if( sample.getTimestamp() >= seekTime ) {
+					break;
+				}
+				seekSample = sample;
+			}
+			i++;
 		}
-		if (audioTrak != null) {
-			audioSampleIndex = audioTrak.getSampleIndex(seekTime);
-		}
-		return readNext();
+		sampleIndex = i; 
+		return seekSample;
 	}
 	
-	public Mp4Sample[] readNext() {
-		Mp4Sample[] samples = {null, null};
-		if (videoSamples != null && videoSampleIndex < videoSamples.length) {
-			samples[0] = videoSamples[videoSampleIndex++];
+	public Sample readNext() throws IOException {
+		if (sampleIndex < samples.size()) {
+			Mp4Sample sample = samples.get(sampleIndex ++);
+			if (sample.isVideoTag()) {
+				return new Sample(Sample.SAMPLE_VIDEO, createVideoTag(sample), sample.getTimestamp());
+			}
+			if (sample.isAudioTag()) {
+				return new Sample(Sample.SAMPLE_AUDIO, createAudioTag(sample), sample.getTimestamp());
+			}
 		}
-		if (audioSamples != null && audioSampleIndex < audioSamples.length) {
-			samples[1] = audioSamples[audioSampleIndex++];
-		}
-		return samples;
+		return null;
 	}
 
 	public int getVideoTimeScale() {
@@ -161,6 +164,45 @@ public class Mp4Deserializer {
 
 	public int getAudioTimeScale() {
 		return audioTrak.getTimeScale();
+	}
+
+	public AmfValue metaData() {
+		AmfValue track1 = AmfValue.newObject();
+		track1.put("length", 233935)
+			  .put("timescale", 1000)				
+			  .put("language", "eng")
+			  .put("sampledescription", AmfValue.newArray(AmfValue.newObject().put("sampletype", "avc1")));
+
+		AmfValue track2 = AmfValue.newObject();
+		track2.put("length", 10314725)
+			  .put("timescale", 44100)				
+			  .put("language", "eng")
+			  .put("sampledescription", AmfValue.newArray(AmfValue.newObject().put("sampletype", "mp4a")));
+		
+		AmfValue value = AmfValue.newObject();
+		value.setEcmaArray(true);
+		value.put("duration", 233.935)
+			 .put("moovPosition", 32)
+			.put("width", 640)
+			.put("height", 360)
+			.put("framewidth", 640)
+			.put("frameheight", 360)
+			.put("displaywidth", 640)
+			.put("displayheight", 360)
+			.put("videocodecid", "avc1")
+//			.put("audiocodecid", "mp4a")
+			.put("avcprofile", 66)
+			.put("avclevel", 30)
+			.put("aacaot", 2)
+			.put("videoframerate", 30.3030303030303)
+//			.put("audiosamplerate", 44100)
+//			.put("audiochannels", 2)
+			.put("trackinfo", AmfValue.newArray(track1));
+		return value;
+	}
+
+	public void close() throws IOException {
+		reader.close();
 	}
 
 }

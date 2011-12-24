@@ -11,11 +11,11 @@ public class VideoTag extends FlvTag {
 	private int width = 0, height = 0;
 	
 	public VideoTag(ByteBuffer[] data, long timestamp) {
-		super(FlvTag.FLV_VIDEO, data, timestamp);
+		super(Sample.SAMPLE_VIDEO, data, timestamp);
 	}
 
 	public VideoTag(long offset, int size, boolean keyframe, long timestamp) {
-		super(FlvTag.FLV_VIDEO, offset, size, keyframe, timestamp);
+		super(Sample.SAMPLE_VIDEO, offset, size, keyframe, timestamp);
 	}
 	
 	public void getParameters() throws IOException {

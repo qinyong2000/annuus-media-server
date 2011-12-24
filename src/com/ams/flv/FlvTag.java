@@ -10,35 +10,13 @@ import com.ams.io.RandomAccessFileReader;
 import com.ams.util.ByteBufferHelper;
 
 public class FlvTag extends Sample {
-	public static final int FLV_AUDIO = 0;
-	public static final int FLV_VIDEO = 1;
-	public static final int FLV_META = 2;
-
-	protected int tagType;
-	protected ByteBuffer[] data = null;
 
 	public FlvTag(int tagType, ByteBuffer[] data, long timestamp) {
-		super();
-		this.tagType = tagType;
-		this.data = data;
-		this.timestamp = timestamp;
+		super(tagType, data, timestamp);
 	}
 
 	public FlvTag(int tagType, long offset, int size, boolean keyframe, long timestamp) {
-		super();
-		this.tagType = tagType;
-		this.offset = offset;
-		this.size = size;
-		this.keyframe = keyframe;
-		this.timestamp = timestamp;
-	}
-	
-	public ByteBuffer[] getData() {
-		return data;
-	}
-
-	public int getTagType() {
-		return tagType;
+		super(tagType, offset, size, keyframe, timestamp);
 	}
 
 	public static FlvTag read(ByteBufferInputStream in) throws IOException,
@@ -87,6 +65,7 @@ public class FlvTag extends Sample {
 		
 		int header = in.readByte();
 		boolean keyframe = (header >>> 4) == 1;
+		
 		reader.seek(offset + dataSize);
 		int previousTagSize = (int) in.read32Bit();
 		switch (tagType) {
@@ -109,14 +88,14 @@ public class FlvTag extends Sample {
 	public static void write(ByteBufferOutputStream out, FlvTag flvTag)
 			throws IOException {
 		byte tagType = -1;
-		switch (flvTag.getTagType()) {
-		case FlvTag.FLV_AUDIO:
+		switch (flvTag.getSampleType()) {
+		case Sample.SAMPLE_AUDIO:
 			tagType = 0x08;
 			break;
-		case FlvTag.FLV_VIDEO:
+		case Sample.SAMPLE_VIDEO:
 			tagType = 0x09;
 			break;
-		case FlvTag.FLV_META:
+		case Sample.SAMPLE_META:
 			tagType = 0x12;
 			break;
 		}
@@ -138,18 +117,6 @@ public class FlvTag extends Sample {
 		out.writeByteBuffer(data);
 		// previousTagSize
 		out.write32Bit(dataSize + 11);
-	}
-
-	public boolean isAudioTag() {
-		return tagType == FLV_AUDIO;
-	}
-	
-	public boolean isVideoTag() {
-		return tagType == FLV_VIDEO;
-	}
-
-	public boolean isMetaTag() {
-		return tagType == FLV_META;
 	}
 
 	public void getParameters() throws IOException {

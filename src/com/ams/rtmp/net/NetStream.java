@@ -3,10 +3,13 @@ package com.ams.rtmp.net;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import com.ams.amf.*;
+import com.ams.flv.FlvDeserializer;
 import com.ams.flv.FlvException;
 import com.ams.flv.FlvSerializer;
+import com.ams.flv.SampleDeserializer;
 import com.ams.io.*;
 import com.ams.message.*;
+import com.ams.mp4.Mp4Deserializer;
 import com.ams.rtmp.RtmpConnection;
 import com.ams.rtmp.message.*;
 
@@ -191,14 +194,19 @@ public class NetStream {
 	}
 	
 	private IPlayer createPlayer(String type, String file) throws IOException {
+		RandomAccessFileReader reader = new RandomAccessFileReader(file, 0);
+		SampleDeserializer sampleDeserializer = null;
 		if ("mp4".equalsIgnoreCase(type)) {
-			return new F4vPlayer(file, this);
+			sampleDeserializer = new Mp4Deserializer(reader);
 		}
 		String ext = file.substring(file.lastIndexOf('.') + 1);
 		if ("f4v".equalsIgnoreCase(ext) || "mp4".equalsIgnoreCase(ext)) {
-			return new F4vPlayer(file, this);
+			sampleDeserializer = new Mp4Deserializer(reader);
+		} else {
+			sampleDeserializer = new FlvDeserializer(reader);
 		}
-		return new FlvPlayer(file, this);
+		
+		return new FlvPlayer(sampleDeserializer, this);
 	}
 	
 	public void pause(boolean pause, long time) throws IOException, NetConnectionException, FlvException {

@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import com.ams.amf.AmfException;
 import com.ams.amf.AmfValue;
+import com.ams.flv.FlvDeserializer;
+import com.ams.io.RandomAccessFileReader;
 import com.ams.rtmp.message.RtmpMessage;
 import com.ams.rtmp.message.RtmpMessageCommand;
 import com.ams.rtmp.net.FlvPlayer;
@@ -80,7 +82,8 @@ public class RtmpClient implements Runnable {
 			if (publishName != null) {
 				NetStream stream = new NetStream(rtmp, streamId);
 				//stream.setChunkStreamId(CHANNEL_RTMP_PUBLISH);
-				player = new FlvPlayer(fileName, stream);
+				RandomAccessFileReader reader = new RandomAccessFileReader(fileName, 0);
+				player = new FlvPlayer(new FlvDeserializer(reader), stream);
 				player.seek(0);
 				Log.logger.info("rtmp stream published.");
 			} else {
