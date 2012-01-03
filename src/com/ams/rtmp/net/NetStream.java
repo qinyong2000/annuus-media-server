@@ -198,14 +198,14 @@ public class NetStream {
 		SampleDeserializer sampleDeserializer = null;
 		if ("mp4".equalsIgnoreCase(type)) {
 			sampleDeserializer = new Mp4Deserializer(reader);
-		}
-		String ext = file.substring(file.lastIndexOf('.') + 1);
-		if ("f4v".equalsIgnoreCase(ext) || "mp4".equalsIgnoreCase(ext)) {
-			sampleDeserializer = new Mp4Deserializer(reader);
 		} else {
-			sampleDeserializer = new FlvDeserializer(reader);
+			String ext = file.substring(file.lastIndexOf('.') + 1);
+			if ("f4v".equalsIgnoreCase(ext) || "mp4".equalsIgnoreCase(ext)) {
+				sampleDeserializer = new Mp4Deserializer(reader);
+			} else {
+				sampleDeserializer = new FlvDeserializer(reader);
+			}
 		}
-		
 		return new FlvPlayer(sampleDeserializer, this);
 	}
 	

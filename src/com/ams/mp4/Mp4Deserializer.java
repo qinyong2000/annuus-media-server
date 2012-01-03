@@ -12,14 +12,19 @@ import com.ams.amf.AmfValue;
 import com.ams.flv.Sample;
 import com.ams.flv.SampleDeserializer;
 import com.ams.io.RandomAccessFileReader;
+import com.ams.mp4.STSD.AudioSampleDescription;
+import com.ams.mp4.STSD.VideoSampleDescription;
 import com.ams.server.ByteBufferFactory;
 
 public class Mp4Deserializer implements SampleDeserializer {
 	private RandomAccessFileReader reader;
 	private TRAK videoTrak = null;
 	private TRAK audioTrak = null;
+	private Mp4Sample[] videoSamples;
+	private Mp4Sample[] audioSamples;
 	private ArrayList<Mp4Sample> samples = new ArrayList<Mp4Sample>();
 	private int sampleIndex = 0;
+	private long moovPosition = 0;
 	
 	private class SampleTimestampComparator implements java.util.Comparator {
 		public int compare(Object s, Object t) {
@@ -33,13 +38,13 @@ public class Mp4Deserializer implements SampleDeserializer {
 		TRAK trak = moov.getVideoTrak();
 		if (trak != null) {
 			videoTrak = trak;
-			Mp4Sample[] videoSamples = trak.getAllSamples(Sample.SAMPLE_VIDEO);
+			videoSamples = trak.getAllSamples(Sample.SAMPLE_VIDEO);
 			samples.addAll(Arrays.asList(videoSamples));
 		}
 		trak = moov.getAudioTrak();
 		if (trak != null) {
 			audioTrak = trak;
-			Mp4Sample[] audioSamples = trak.getAllSamples(Sample.SAMPLE_AUDIO);
+			audioSamples = trak.getAllSamples(Sample.SAMPLE_AUDIO);
 			samples.addAll(Arrays.asList(audioSamples));
 		}
 		
@@ -60,6 +65,7 @@ public class Mp4Deserializer implements SampleDeserializer {
 				reader.read(b, 0, 4);
 				String box = new String(b);
 				if ("moov".equalsIgnoreCase(box)) {
+					moovPosition = reader.getPosition() - 4;
 					b = new byte[size - 8];
 					reader.read(b, 0, size - 8);
 					DataInputStream bin = new DataInputStream(new ByteArrayInputStream(b));
@@ -82,12 +88,8 @@ public class Mp4Deserializer implements SampleDeserializer {
 	}
 
 	public ByteBuffer[] videoHeaderData() {
-		ByteBuffer[] data;
-		try {
-			data = videoTrak.getExtraData();
-		} catch (IOException e) {
-			return null;
-		}
+		ByteBuffer[] data = videoTrak.getVideoDecoderConfigData();
+		if (data == null) return null;
 		ByteBuffer[] buf = new ByteBuffer[data.length + 1];
 		System.arraycopy(data, 0, buf, 1, data.length);
 		buf[0] = ByteBufferFactory.allocate(5);
@@ -97,7 +99,10 @@ public class Mp4Deserializer implements SampleDeserializer {
 	}
 	
 	public ByteBuffer[] audioHeaderData() {
-		ByteBuffer[] buf = new ByteBuffer[1]; 
+		ByteBuffer[] data = audioTrak.getVideoDecoderConfigData();
+		if (data == null) return null;
+		ByteBuffer[] buf = new ByteBuffer[data.length + 1];
+		System.arraycopy(data, 0, buf, 1, data.length);
 		buf[0] = ByteBufferFactory.allocate(2);
 		buf[0].put(new byte[]{(byte)0xaf, 0x00});
 		buf[0].flip();
@@ -110,7 +115,7 @@ public class Mp4Deserializer implements SampleDeserializer {
 		System.arraycopy(data, 0, buf, 1, data.length);
 		buf[0] = ByteBufferFactory.allocate(5);
 
-		long time = 1000 * sample.getTimestamp() / getVideoTimeScale();
+		long time = 1000 * sample.getTimestamp() / videoTrak.getTimeScale();
 		byte type = (byte) (sample.isKeyframe() ? 0x17 : 0x27);
 		//buf[0].put(new byte[]{type, 0x01, (byte) (time & 0xFF), (byte) ((time & 0xFF00) >>> 8), (byte) ((time & 0xFF0000) >>> 16)});
 		buf[0].put(new byte[]{type, 0x01, 0, 0, 0});
@@ -130,7 +135,7 @@ public class Mp4Deserializer implements SampleDeserializer {
 	}
 	
 	public Sample seek(long seekTime) {
-		Mp4Sample seekSample = null;
+		Mp4Sample seekSample = videoSamples[0];
 		int i = 0;
 		for(Mp4Sample sample : samples) {
 			if (sample.isVideoTag() && sample.isKeyframe()) {
@@ -158,46 +163,40 @@ public class Mp4Deserializer implements SampleDeserializer {
 		return null;
 	}
 
-	public int getVideoTimeScale() {
-		return videoTrak.getTimeScale();
-	}
-
-	public int getAudioTimeScale() {
-		return audioTrak.getTimeScale();
-	}
-
 	public AmfValue metaData() {
 		AmfValue track1 = AmfValue.newObject();
-		track1.put("length", 233935)
-			  .put("timescale", 1000)				
-			  .put("language", "eng")
-			  .put("sampledescription", AmfValue.newArray(AmfValue.newObject().put("sampletype", "avc1")));
+		track1.put("length", videoTrak.getDuration())
+			  .put("timescale", videoTrak.getTimeScale())				
+			  .put("language", videoTrak.getLanguage())
+			  .put("sampledescription", AmfValue.newArray(AmfValue.newObject().put("sampletype", videoTrak.getType())));
 
 		AmfValue track2 = AmfValue.newObject();
-		track2.put("length", 10314725)
-			  .put("timescale", 44100)				
-			  .put("language", "eng")
-			  .put("sampledescription", AmfValue.newArray(AmfValue.newObject().put("sampletype", "mp4a")));
+		track2.put("length", audioTrak.getDuration())
+			  .put("timescale", audioTrak.getTimeScale())				
+			  .put("language", audioTrak.getLanguage())
+			  .put("sampledescription", AmfValue.newArray(AmfValue.newObject().put("sampletype", audioTrak.getType())));
 		
 		AmfValue value = AmfValue.newObject();
 		value.setEcmaArray(true);
-		value.put("duration", 233.935)
-			 .put("moovPosition", 32)
-			.put("width", 640)
-			.put("height", 360)
-			.put("framewidth", 640)
-			.put("frameheight", 360)
-			.put("displaywidth", 640)
-			.put("displayheight", 360)
-			.put("videocodecid", "avc1")
-//			.put("audiocodecid", "mp4a")
-			.put("avcprofile", 66)
-			.put("avclevel", 30)
-			.put("aacaot", 2)
-			.put("videoframerate", 30.3030303030303)
-//			.put("audiosamplerate", 44100)
-//			.put("audiochannels", 2)
-			.put("trackinfo", AmfValue.newArray(track1));
+		VideoSampleDescription videoSd = videoTrak.getVideoSampleDescription();
+		AudioSampleDescription audioSd = audioTrak.getAudioSampleDescription();
+		value.put("duration", (float)videoTrak.getDuration() / 1000)
+			 .put("moovPosition", moovPosition)
+			 .put("width", videoSd.width)
+			 .put("height", videoSd.height)
+			 .put("framewidth", videoSd.width)
+			 .put("frameheight", videoSd.height)
+			 .put("displaywidth", videoSd.width)
+			 .put("displayheight", videoSd.height)
+			 .put("videocodecid", videoTrak.getType())
+			 .put("audiocodecid", audioTrak.getType())
+//			 .put("avcprofile", 66)
+//			 .put("avclevel", 30)
+//			 .put("aacaot", 2)
+			 .put("videoframerate", (float)videoSamples.length / videoTrak.getDuration() * 1000)
+			 .put("audiosamplerate", audioSd.sampleRate)
+			 .put("audiochannels", audioSd.channelCount)
+			 .put("trackinfo", AmfValue.newArray(track1, track2));
 		return value;
 	}
 

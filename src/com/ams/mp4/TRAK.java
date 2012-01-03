@@ -1,12 +1,14 @@
 package com.ams.mp4;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import com.ams.mp4.STSC.STSCRecord;
+import com.ams.mp4.STSD.AudioSampleDescription;
 import com.ams.mp4.STSD.SampleDescription;
+import com.ams.mp4.STSD.VideoSampleDescription;
 import com.ams.mp4.STTS.STTSRecord;
+import com.ams.server.ByteBufferFactory;
 
 public final class TRAK {
 	private MDHD mdhd;
@@ -139,15 +141,32 @@ public final class TRAK {
 		return list.toArray(new Mp4Sample[list.size()]); 
 	}
 	
-	public ByteBuffer[] getExtraData() throws IOException {
-		SampleDescription desc = stsd.getDescriptions()[0];
-		if ("avc1".equalsIgnoreCase(desc.type)) {
-			return STSD.getVideoDecoderConfigure(desc);
-		} else if ("mp4a".equalsIgnoreCase(desc.type)) {
-			//TODO
-			
-		}
-		return null;
+	public ByteBuffer[] getVideoDecoderConfigData() {
+		if (stsd.getVideoSampleDescription() == null) return null;
+		byte[] b = stsd.getVideoSampleDescription().configBytes;
+		ByteBuffer[] buf = new ByteBuffer[1]; 
+		buf[0] = ByteBufferFactory.allocate(b.length);
+		buf[0].put(b);
+		buf[0].flip();
+		return buf;
+	}
+
+	public ByteBuffer[] getAudioDecoderConfigData() {
+		if (stsd.getAudioSampleDescription() == null) return null;
+		byte[] b = stsd.getAudioSampleDescription().decoderSpecificConfig;
+		ByteBuffer[] buf = new ByteBuffer[1]; 
+		buf[0] = ByteBufferFactory.allocate(b.length);
+		buf[0].put(b);
+		buf[0].flip();
+		return buf;
+	}
+	
+	public VideoSampleDescription getVideoSampleDescription() {
+		return stsd.getVideoSampleDescription();
+	}
+
+	public AudioSampleDescription getAudioSampleDescription() {
+		return stsd.getAudioSampleDescription();
 	}
 	
 	public int getTimeScale() {
@@ -158,6 +177,10 @@ public final class TRAK {
 		return mdhd.getDuration();
 	}
 
+	public String getLanguage() {
+		return mdhd.getLanguage();
+	}
+	
 	public String getType() {
 		SampleDescription desc = stsd.getDescriptions()[0];
 		return desc.type;
