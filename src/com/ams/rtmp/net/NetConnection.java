@@ -295,7 +295,7 @@ public class NetConnection {
 				break;
 			case RtmpMessage.MESSAGE_ACK:
 				RtmpMessageAck ack = (RtmpMessageAck)message;
-				//System.out.println("read message ACK:" + ack.getBytes());
+				System.out.println("read message ACK:" + ack.getBytes());
 				break;
 			case RtmpMessage.MESSAGE_WINDOW_ACK_SIZE:
 				RtmpMessageWindowAckSize ackSize = (RtmpMessageWindowAckSize)message;

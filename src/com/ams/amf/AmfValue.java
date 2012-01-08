@@ -26,7 +26,7 @@ public class AmfValue {
 	public AmfValue(Object value) {
 		if (value == null)
 			this.kind = AMF_NULL;
-		else if (value instanceof Integer || value instanceof Long)
+		else if (value instanceof Byte || value instanceof Short || value instanceof Integer || value instanceof Long)
 			this.kind  = AMF_INT;
 		else if (value instanceof Float || value instanceof Double)
 			this.kind  = AMF_NUMBER;

@@ -31,8 +31,8 @@ public final class STSD {
 		public String compressorName;
 		public short depth;
 		public short preDefined5;
-		public byte[] configType;
-		public byte[] configBytes;
+		public String configType;
+		public byte[] decoderConfig;
 		
 		public void read(DataInputStream in) throws IOException {
 			in.skipBytes(6); // reserved
@@ -56,10 +56,11 @@ public final class STSD {
 			depth = in.readShort();
 			preDefined5 = in.readShort();
 			int configSize = in.readInt();
-			configType = new byte[4];
-			in.read(configType);
-			configBytes = new byte[configSize - 8];
-			in.read(configBytes);			
+			byte[] b = new byte[4];
+			in.read(b);
+			configType = new String(b);	// avcC
+			decoderConfig = new byte[configSize - 8];
+			in.read(decoderConfig);		
 		}	
 	}
 

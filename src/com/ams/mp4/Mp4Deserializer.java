@@ -89,9 +89,13 @@ public class Mp4Deserializer implements SampleDeserializer {
 
 	public ByteBuffer[] videoHeaderData() {
 		ByteBuffer[] data = videoTrak.getVideoDecoderConfigData();
-		if (data == null) return null;
-		ByteBuffer[] buf = new ByteBuffer[data.length + 1];
-		System.arraycopy(data, 0, buf, 1, data.length);
+		ByteBuffer[] buf = null;
+		if (data != null) {
+			buf = new ByteBuffer[data.length + 1];
+			System.arraycopy(data, 0, buf, 1, data.length);
+		} else {
+			buf = new ByteBuffer[1];
+		}
 		buf[0] = ByteBufferFactory.allocate(5);
 		buf[0].put(new byte[]{0x17, 0x00, 0x00, 0x00, 0x00});
 		buf[0].flip();
@@ -99,10 +103,14 @@ public class Mp4Deserializer implements SampleDeserializer {
 	}
 	
 	public ByteBuffer[] audioHeaderData() {
-		ByteBuffer[] data = audioTrak.getVideoDecoderConfigData();
-		if (data == null) return null;
-		ByteBuffer[] buf = new ByteBuffer[data.length + 1];
-		System.arraycopy(data, 0, buf, 1, data.length);
+		ByteBuffer[] data = audioTrak.getAudioDecoderConfigData();
+		ByteBuffer[] buf = null;
+		if (data != null) {
+			buf = new ByteBuffer[data.length + 1];
+			System.arraycopy(data, 0, buf, 1, data.length);
+		} else {
+			buf = new ByteBuffer[1];
+		}
 		buf[0] = ByteBufferFactory.allocate(2);
 		buf[0].put(new byte[]{(byte)0xaf, 0x00});
 		buf[0].flip();
@@ -197,6 +205,7 @@ public class Mp4Deserializer implements SampleDeserializer {
 			 .put("audiosamplerate", audioSd.sampleRate)
 			 .put("audiochannels", audioSd.channelCount)
 			 .put("trackinfo", AmfValue.newArray(track1, track2));
+
 		return value;
 	}
 

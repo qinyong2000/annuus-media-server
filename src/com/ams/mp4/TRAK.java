@@ -143,7 +143,8 @@ public final class TRAK {
 	
 	public ByteBuffer[] getVideoDecoderConfigData() {
 		if (stsd.getVideoSampleDescription() == null) return null;
-		byte[] b = stsd.getVideoSampleDescription().configBytes;
+		byte[] b = stsd.getVideoSampleDescription().decoderConfig;
+		if (b == null) return null;
 		ByteBuffer[] buf = new ByteBuffer[1]; 
 		buf[0] = ByteBufferFactory.allocate(b.length);
 		buf[0].put(b);
@@ -154,6 +155,7 @@ public final class TRAK {
 	public ByteBuffer[] getAudioDecoderConfigData() {
 		if (stsd.getAudioSampleDescription() == null) return null;
 		byte[] b = stsd.getAudioSampleDescription().decoderSpecificConfig;
+		if (b == null) return null;
 		ByteBuffer[] buf = new ByteBuffer[1]; 
 		buf[0] = ByteBufferFactory.allocate(b.length);
 		buf[0].put(b);
