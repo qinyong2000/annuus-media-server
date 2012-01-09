@@ -109,7 +109,9 @@ public final class STSD {
 			sampleSize = in.readShort();
 			compressionId = in.readShort();
 			packetSize = in.readShort();
-			sampleRate = in.readInt();
+			byte[] b = new byte[4];
+			in.read(b);
+			sampleRate = ((b[0] & 0xFF) << 8) | (b[1] & 0xFF);
 			if (innerVersion != 0) {
 				samplesPerPacket = in.readInt();
 				bytesPerPacket = in.readInt();
@@ -119,8 +121,7 @@ public final class STSD {
 			
 			//read MP4Descriptor(in);
 			int size = in.readInt();
-			byte[] name = new byte[4];
-			in.read(name); 	// "esds"
+			in.read(new byte[4]); 	// "esds"
 			in.readInt(); 	// version and flags
 			int tag = readDescriptor(in);
 			if (tag == ES_TAG) {

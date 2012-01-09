@@ -65,7 +65,7 @@ public class Mp4Deserializer implements SampleDeserializer {
 				reader.read(b, 0, 4);
 				String box = new String(b);
 				if ("moov".equalsIgnoreCase(box)) {
-					moovPosition = reader.getPosition() - 4;
+					moovPosition = reader.getPosition();
 					b = new byte[size - 8];
 					reader.read(b, 0, size - 8);
 					DataInputStream bin = new DataInputStream(new ByteArrayInputStream(b));
@@ -88,31 +88,27 @@ public class Mp4Deserializer implements SampleDeserializer {
 	}
 
 	public ByteBuffer[] videoHeaderData() {
-		ByteBuffer[] data = videoTrak.getVideoDecoderConfigData();
-		ByteBuffer[] buf = null;
-		if (data != null) {
-			buf = new ByteBuffer[data.length + 1];
-			System.arraycopy(data, 0, buf, 1, data.length);
-		} else {
-			buf = new ByteBuffer[1];
-		}
-		buf[0] = ByteBufferFactory.allocate(5);
+		byte[] data = videoTrak.getVideoDecoderConfigData();
+		int dataSize = (data != null) ? data.length : 0;
+		ByteBuffer[] buf = new ByteBuffer[1];
+		buf[0] = ByteBufferFactory.allocate(5 + dataSize);
 		buf[0].put(new byte[]{0x17, 0x00, 0x00, 0x00, 0x00});
+		if (data != null) {
+			buf[0].put(data);
+		}
 		buf[0].flip();
 		return buf;
 	}
 	
 	public ByteBuffer[] audioHeaderData() {
-		ByteBuffer[] data = audioTrak.getAudioDecoderConfigData();
-		ByteBuffer[] buf = null;
-		if (data != null) {
-			buf = new ByteBuffer[data.length + 1];
-			System.arraycopy(data, 0, buf, 1, data.length);
-		} else {
-			buf = new ByteBuffer[1];
-		}
-		buf[0] = ByteBufferFactory.allocate(2);
+		byte[] data = audioTrak.getAudioDecoderConfigData();
+		int dataSize = (data != null) ? data.length : 0;
+		ByteBuffer[] buf = new ByteBuffer[1];
+		buf[0] = ByteBufferFactory.allocate(5 + dataSize);
 		buf[0].put(new byte[]{(byte)0xaf, 0x00});
+		if (data != null) {
+			buf[0].put(data);
+		}
 		buf[0].flip();
 		return buf;
 	}
@@ -123,10 +119,10 @@ public class Mp4Deserializer implements SampleDeserializer {
 		System.arraycopy(data, 0, buf, 1, data.length);
 		buf[0] = ByteBufferFactory.allocate(5);
 
-		long time = 1000 * sample.getTimestamp() / videoTrak.getTimeScale();
 		byte type = (byte) (sample.isKeyframe() ? 0x17 : 0x27);
-		//buf[0].put(new byte[]{type, 0x01, (byte) (time & 0xFF), (byte) ((time & 0xFF00) >>> 8), (byte) ((time & 0xFF0000) >>> 16)});
-		buf[0].put(new byte[]{type, 0x01, 0, 0, 0});
+		long time = 1000 * sample.getTimestamp() / videoTrak.getTimeScale();
+		buf[0].put(new byte[]{type, 0x01, (byte) ((time & 0xFF0000) >>> 16), (byte) ((time & 0xFF00) >>> 8), (byte) (time & 0xFF)});
+		//buf[0].put(new byte[]{type, 0x01, 0, 0, 0});
 
 		buf[0].flip();
 		return buf;
@@ -192,17 +188,17 @@ public class Mp4Deserializer implements SampleDeserializer {
 			 .put("moovPosition", moovPosition)
 			 .put("width", videoSd.width)
 			 .put("height", videoSd.height)
-			 .put("framewidth", videoSd.width)
-			 .put("frameheight", videoSd.height)
-			 .put("displaywidth", videoSd.width)
-			 .put("displayheight", videoSd.height)
+//			 .put("framewidth", videoSd.width)
+//			 .put("frameheight", videoSd.height)
+//			 .put("displaywidth", videoSd.width)
+//			 .put("displayheight", videoSd.height)
 			 .put("videocodecid", videoTrak.getType())
 			 .put("audiocodecid", audioTrak.getType())
-//			 .put("avcprofile", 66)
-//			 .put("avclevel", 30)
-//			 .put("aacaot", 2)
+			 .put("avcprofile", 66)
+			 .put("avclevel", 30)
+			 .put("aacaot", 1)
 			 .put("videoframerate", (float)videoSamples.length / videoTrak.getDuration() * 1000)
-			 .put("audiosamplerate", audioSd.sampleRate)
+			 .put("audiosamplerate", 44100) //audioSd.sampleRate)
 			 .put("audiochannels", audioSd.channelCount)
 			 .put("trackinfo", AmfValue.newArray(track1, track2));
 

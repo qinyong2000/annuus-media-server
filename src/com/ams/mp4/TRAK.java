@@ -141,26 +141,14 @@ public final class TRAK {
 		return list.toArray(new Mp4Sample[list.size()]); 
 	}
 	
-	public ByteBuffer[] getVideoDecoderConfigData() {
+	public byte[] getVideoDecoderConfigData() {
 		if (stsd.getVideoSampleDescription() == null) return null;
-		byte[] b = stsd.getVideoSampleDescription().decoderConfig;
-		if (b == null) return null;
-		ByteBuffer[] buf = new ByteBuffer[1]; 
-		buf[0] = ByteBufferFactory.allocate(b.length);
-		buf[0].put(b);
-		buf[0].flip();
-		return buf;
+		return stsd.getVideoSampleDescription().decoderConfig;
 	}
 
-	public ByteBuffer[] getAudioDecoderConfigData() {
+	public byte[] getAudioDecoderConfigData() {
 		if (stsd.getAudioSampleDescription() == null) return null;
-		byte[] b = stsd.getAudioSampleDescription().decoderSpecificConfig;
-		if (b == null) return null;
-		ByteBuffer[] buf = new ByteBuffer[1]; 
-		buf[0] = ByteBufferFactory.allocate(b.length);
-		buf[0].put(b);
-		buf[0].flip();
-		return buf;
+		return stsd.getAudioSampleDescription().decoderSpecificConfig;
 	}
 	
 	public VideoSampleDescription getVideoSampleDescription() {
