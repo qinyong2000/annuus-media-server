@@ -34,6 +34,14 @@ public final class STSD {
 		public String configType;
 		public byte[] decoderConfig;
 		
+		public byte getAvcProfile() {
+			return decoderConfig[1];
+		}
+
+		public byte getAvcLevel() {
+			return decoderConfig[3];
+		}
+
 		public void read(DataInputStream in) throws IOException {
 			in.skipBytes(6); // reserved
 			index = in.readShort();
@@ -83,13 +91,34 @@ public final class STSD {
 		public int samplesPerFrame;
 		public byte[] decoderSpecificConfig;
 		
+		public int getAudioCodecType() {
+			int audioCodecType;
+		    switch(decoderSpecificConfig[0]) {
+		    	case 0x12:
+		    	default:
+		    		//AAC LC - 12 10
+		    		audioCodecType = 1;
+		    		break;
+		    	case 0x0a:
+		    		//AAC Main - 0A 10
+		    		audioCodecType = 0;
+		    		break;
+		    	case 0x11:
+		    	case 0x13:
+		    		//AAC LC SBR - 11 90 & 13 xx
+		    		audioCodecType = 2;
+		    		break;
+		    }
+		    return audioCodecType;
+		}
+		
 		private int readDescriptor(DataInputStream in) throws IOException {
 			int tag = in.readByte();
 			int size = 0;
 			int c = 0;
 			do {
 				c = in.readByte();
-				size = (size << 7) | ( c & 0x7f);
+				size = (size << 7) | (c & 0x7f);
 			} while ((c & 0x80) == 0x80);
 			
 			if (tag == DECODER_SPECIFIC_CONFIG_TAG) {
@@ -131,7 +160,7 @@ public final class STSD {
 			}
 			tag = readDescriptor(in);
 			if (tag == DECODER_CONFIG_TAG) {
-				in.skipBytes(14);
+				in.skipBytes(13);
 				// DECODER_SPECIFIC_CONFIG_TAG
 				tag = readDescriptor(in);
 			}
