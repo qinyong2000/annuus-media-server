@@ -3,9 +3,13 @@ package com.ams.mp4;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-public final class STSZ {
+public final class STSZ extends BOX {
 	private int constantSize;
 	private int[] sizeTable;
+	
+	public STSZ(int version) {
+		super(version);
+	}
 	
 	public void read(DataInputStream in) throws IOException {
 		constantSize = in.readInt();

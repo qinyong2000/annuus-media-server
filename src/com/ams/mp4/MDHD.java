@@ -3,25 +3,46 @@ package com.ams.mp4;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-public final class MDHD {
-	private int crationTime;
-	private int modificationTime;
+public final class MDHD extends BOX {
+	private long creationTime;
+	private long modificationTime;
 	private int timeScale;
-	private int duration;
+	private long duration;
 	private String language;
 
+	public MDHD(int version) {
+		super(version);
+	}
+	
 	public void read(DataInputStream in) throws IOException {
-		crationTime = in.readInt();
-		modificationTime = in.readInt();
+		if (version == 0) {
+			creationTime = in.readInt();
+			modificationTime = in.readInt();
+		} else {
+			creationTime = in.readLong();
+			modificationTime = in.readLong();
+		}
 		timeScale = in.readInt();
-		duration = in.readInt();
+		if (version == 0) {
+			duration = in.readInt();
+		} else {
+			duration = in.readLong();
+		}
+		short l = in.readShort();
+		byte[] b = new byte[3];
+		b[0] = (byte) (0x60 + (l & 0x1F));
+		l >>>=5;
+		b[1] = (byte) (0x60 + (l & 0x1F));
+		l >>>=5;
+		b[2] = (byte) (0x60 + (l & 0x1F));
+		language = new String(b);
 	}
 
-	public int getCrationTime() {
-		return crationTime;
+	public long getCreationTime() {
+		return creationTime;
 	}
 
-	public int getModificationTime() {
+	public long getModificationTime() {
 		return modificationTime;
 	}
 
@@ -29,7 +50,7 @@ public final class MDHD {
 		return timeScale;
 	}
 
-	public int getDuration() {
+	public long getDuration() {
 		return duration;
 	}
 

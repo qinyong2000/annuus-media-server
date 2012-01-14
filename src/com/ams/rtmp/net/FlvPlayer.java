@@ -7,7 +7,7 @@ import com.ams.flv.*;
 import com.ams.rtmp.message.*;
 
 public class FlvPlayer implements IPlayer{
-	private static int BUFFER_TIME = 5 * 1000; // x seconds of buffering
+	private static int BUFFER_TIME = 3 * 1000; // x seconds of buffering
 	private NetStream stream = null;
 	private SampleDeserializer deserializer;
 	private long startTime = -1;
@@ -28,10 +28,10 @@ public class FlvPlayer implements IPlayer{
 	
 	public void writeStartData() throws IOException {
 		//|RtmpSampleAccess
-		stream.writeDataMessage(AmfValue.array("|RtmpSampleAccess", false, false));
+		//stream.writeDataMessage(AmfValue.array("|RtmpSampleAccess", false, false));
 		
 		//NetStream.Data.Start
-		stream.writeDataMessage(AmfValue.array("onStatus", AmfValue.newObject().put("code", "NetStream.Data.Start")));
+		//stream.writeDataMessage(AmfValue.array("onStatus", AmfValue.newObject().put("code", "NetStream.Data.Start")));
 		
 		AmfValue value = deserializer.metaData();
 		if (value != null) {

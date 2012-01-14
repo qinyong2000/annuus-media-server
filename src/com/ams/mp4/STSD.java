@@ -4,7 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-public final class STSD {
+public final class STSD extends BOX {
 	private SampleDescription[] descriptions;
 	
 	private VideoSampleDescription videoSampleDescription = null;
@@ -167,6 +167,10 @@ public final class STSD {
 		}
 	}
 	
+	public STSD(int version) {
+		super(version);
+	}
+	
 	public void read(DataInputStream in) throws IOException {
 		int count = in.readInt();
 		descriptions = new SampleDescription[count];
@@ -182,17 +186,31 @@ public final class STSD {
 			descriptions[i].description = description; 
 		}
 		
-		SampleDescription desc = descriptions[0];
-		if ("avc1".equalsIgnoreCase(desc.type)) {
+		SampleDescription desc = getDescription();
+		if (isVideoSampleDescription(desc)) {
 			videoSampleDescription = getVideoSampleDescription(desc);
-		} else if ("mp4a".equalsIgnoreCase(desc.type)) {
+		} else if (isAudioSampleDescription(desc)) {
 			audioSampleDescription = getAudioSampleDescription(desc);
 		}
 		
 	}
+	
+	public boolean isVideoSampleDescription(SampleDescription desc) {
+		if ("avc1".equalsIgnoreCase(desc.type)) {
+			return true;
+		}
+		return false;
+	}
 
-	public SampleDescription[] getDescriptions() {
-		return descriptions;
+	public boolean isAudioSampleDescription(SampleDescription desc) {
+		if ("mp4a".equalsIgnoreCase(desc.type)) {
+			return true;
+		}
+		return false;
+	}
+
+	public SampleDescription getDescription() {
+		return descriptions[0];
 	}
 	
 	public static VideoSampleDescription getVideoSampleDescription(SampleDescription desc) throws IOException {

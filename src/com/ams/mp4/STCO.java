@@ -3,9 +3,13 @@ package com.ams.mp4;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-public final class STCO {
+public final class STCO extends BOX {
 	private long[] offsets;
 
+	public STCO(int version) {
+		super(version);
+	}
+	
 	public void read(DataInputStream in) throws IOException {
 		int count = in.readInt();
 		offsets = new long[count];

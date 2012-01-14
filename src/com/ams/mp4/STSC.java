@@ -3,7 +3,7 @@ package com.ams.mp4;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-public final class STSC {
+public final class STSC extends BOX {
 	public final class STSCRecord {
 		public int firstChunk;
 		public int samplesPerChunk;
@@ -11,6 +11,10 @@ public final class STSC {
 	}
 
 	private STSCRecord[] entries;
+
+	public STSC(int version) {
+		super(version);
+	}
 	
 	public void read(DataInputStream in) throws IOException {
 		int count = in.readInt();

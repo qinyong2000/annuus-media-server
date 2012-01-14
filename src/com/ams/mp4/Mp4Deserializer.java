@@ -168,20 +168,19 @@ public class Mp4Deserializer implements SampleDeserializer {
 	}
 
 	public AmfValue metaData() {
-		AmfValue track1 = AmfValue.newObject();
+		AmfValue track1 = AmfValue.newEcmaArray();
 		track1.put("length", videoTrak.getDuration())
 			  .put("timescale", videoTrak.getTimeScale())				
 			  .put("language", videoTrak.getLanguage())
-			  .put("sampledescription", AmfValue.newArray(AmfValue.newObject().put("sampletype", videoTrak.getType())));
+			  .put("sampledescription", AmfValue.newArray(AmfValue.newEcmaArray().put("sampletype", videoTrak.getType())));
 
-		AmfValue track2 = AmfValue.newObject();
+		AmfValue track2 = AmfValue.newEcmaArray();
 		track2.put("length", audioTrak.getDuration())
 			  .put("timescale", audioTrak.getTimeScale())				
 			  .put("language", audioTrak.getLanguage())
-			  .put("sampledescription", AmfValue.newArray(AmfValue.newObject().put("sampletype", audioTrak.getType())));
+			  .put("sampledescription", AmfValue.newArray(AmfValue.newEcmaArray().put("sampletype", audioTrak.getType())));
 		
-		AmfValue value = AmfValue.newObject();
-		value.setEcmaArray(true);
+		AmfValue value = AmfValue.newEcmaArray();
 		VideoSampleDescription videoSd = videoTrak.getVideoSampleDescription();
 		AudioSampleDescription audioSd = audioTrak.getAudioSampleDescription();
 		value.put("duration", (float)videoTrak.getDuration() / 1000)

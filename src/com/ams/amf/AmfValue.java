@@ -53,6 +53,12 @@ public class AmfValue {
 		return new AmfValue(new HashMap<String, AmfValue>());
 	}
 
+	public static AmfValue newEcmaArray() {
+		AmfValue value = new AmfValue(new HashMap<String, AmfValue>());
+		value.setEcmaArray(true);
+		return value;
+	}
+	
 	public static AmfValue newArray(Object ...values) {
 		AmfValue[] array = new AmfValue[values.length];
 		for(int i = 0; i < values.length; i++) {

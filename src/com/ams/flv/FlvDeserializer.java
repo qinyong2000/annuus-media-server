@@ -79,8 +79,7 @@ public class FlvDeserializer implements SampleDeserializer {
 		if (firstMetaTag != null && "onMetaData".equals(firstMetaTag.getEvent()) && firstMetaTag.getMetaData() != null) {
 			return firstMetaTag.getMetaData();
 		}
-		AmfValue value = AmfValue.newObject();
-		value.setEcmaArray(true);
+		AmfValue value = AmfValue.newEcmaArray();
 		float duration = (float)lastTimestamp / 1000;
 		value.put("duration", duration)
 			.put("width", firstVideoTag.getWidth())

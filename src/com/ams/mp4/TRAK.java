@@ -1,6 +1,5 @@
 package com.ams.mp4;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import com.ams.mp4.STSC.STSCRecord;
@@ -8,7 +7,6 @@ import com.ams.mp4.STSD.AudioSampleDescription;
 import com.ams.mp4.STSD.SampleDescription;
 import com.ams.mp4.STSD.VideoSampleDescription;
 import com.ams.mp4.STTS.STTSRecord;
-import com.ams.server.ByteBufferFactory;
 
 public final class TRAK {
 	private MDHD mdhd;
@@ -163,7 +161,7 @@ public final class TRAK {
 		return mdhd.getTimeScale();
 	}
 
-	public int getDuration() {
+	public long getDuration() {
 		return mdhd.getDuration();
 	}
 
@@ -172,8 +170,18 @@ public final class TRAK {
 	}
 	
 	public String getType() {
-		SampleDescription desc = stsd.getDescriptions()[0];
+		SampleDescription desc = stsd.getDescription();
 		return desc.type;
 	}
 	
+	public boolean isVideoTrack() {
+		SampleDescription desc = stsd.getDescription();
+		return stsd.isVideoSampleDescription(desc);
+	}
+
+	public boolean isAudioTrack() {
+		SampleDescription desc = stsd.getDescription();
+		return stsd.isAudioSampleDescription(desc);
+	}
+
 }
