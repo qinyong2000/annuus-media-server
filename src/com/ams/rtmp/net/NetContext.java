@@ -29,9 +29,13 @@ public final class NetContext {
 			: "unkown/unkown";
 	}
 
-	public String getRealPath(String app, String path) {
+	public String getRealPath(String app, String path, String type) {
 		if ("unkown/unkown".equals(getMimeType(path))) {
-			path += ".flv";
+			if (type == null || "".equals(type)) {
+				path += ".flv";
+			} else {
+				path += "." + type;
+			}
 		}
 		if (app !=null && app.length() > 0) {
 			return new File(contextRoot,  app + File.separatorChar + path).getAbsolutePath();

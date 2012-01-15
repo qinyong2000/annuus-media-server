@@ -172,7 +172,7 @@ public class NetStream {
 							type = tokens[0];
 							file = tokens[1];
 						}
-						String path = context.getRealPath(app, file);
+						String path = context.getRealPath(app, file, type);
 						player = createPlayer(type, path);
 						player.seek(0);
 					}
@@ -186,7 +186,7 @@ public class NetStream {
 					type = tokens[0];
 					file = tokens[1];
 				}
-				String path = context.getRealPath(app, file);
+				String path = context.getRealPath(app, file, type);
 				player = createPlayer(type, path);
 				player.seek(start);
 		}
@@ -236,11 +236,11 @@ public class NetStream {
 		//save to share or file
 		publisher = new StreamPublisher(name);
 		if ("record".equals(type)) {
-			String file = context.getRealPath(app, name);
+			String file = context.getRealPath(app, name, "");
 			RandomAccessFileWriter writer = new RandomAccessFileWriter(file, false); 
 			publisher.setRecorder(new FlvSerializer(writer));
 		} else if ("append".equals(type)) {
-			String file = context.getRealPath(app, name);
+			String file = context.getRealPath(app, name, "");
 			RandomAccessFileWriter writer = new RandomAccessFileWriter(file, true); 
 			publisher.setRecorder(new FlvSerializer(writer));
 		} else if ("live".equals(type)) {
