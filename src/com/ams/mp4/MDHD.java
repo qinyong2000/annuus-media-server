@@ -30,11 +30,11 @@ public final class MDHD extends BOX {
 		}
 		short l = in.readShort();
 		byte[] b = new byte[3];
-		b[0] = (byte) (0x60 + (l & 0x1F));
+		b[2] = (byte) (0x60 + (l & 0x1F));
 		l >>>=5;
 		b[1] = (byte) (0x60 + (l & 0x1F));
 		l >>>=5;
-		b[2] = (byte) (0x60 + (l & 0x1F));
+		b[0] = (byte) (0x60 + (l & 0x1F));
 		language = new String(b);
 	}
 

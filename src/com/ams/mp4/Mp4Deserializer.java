@@ -120,9 +120,9 @@ public class Mp4Deserializer implements SampleDeserializer {
 		buf[0] = ByteBufferFactory.allocate(5);
 
 		byte type = (byte) (sample.isKeyframe() ? 0x17 : 0x27);
-		long time = 1000 * sample.getTimestamp() / videoTrak.getTimeScale();
-		buf[0].put(new byte[]{type, 0x01, (byte) ((time & 0xFF0000) >>> 16), (byte) ((time & 0xFF00) >>> 8), (byte) (time & 0xFF)});
-		//buf[0].put(new byte[]{type, 0x01, 0, 0, 0});
+		long time = sample.getTimestamp();
+		//buf[0].put(new byte[]{type, 0x01, (byte) ((time & 0xFF0000) >>> 16), (byte) ((time & 0xFF00) >>> 8), (byte) (time & 0xFF)});
+		buf[0].put(new byte[]{type, 0x01, 0, 0, 0x21});
 
 		buf[0].flip();
 		return buf;
