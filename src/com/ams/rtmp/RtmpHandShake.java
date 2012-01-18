@@ -49,6 +49,7 @@ public class RtmpHandShake {
         try {
             hmacSHA256 = Mac.getInstance("HmacSHA256");
 	    } catch (Exception e) {
+	    	e.printStackTrace();
 		}
 	}
 	
@@ -90,20 +91,24 @@ public class RtmpHandShake {
         	hmacSHA256.init(new SecretKeySpec(key, "HmacSHA256"));
             out = hmacSHA256.doFinal(in);
         } catch (Exception e) {
+	    	e.printStackTrace();
         }
         return out;
     }
     
 	private byte[] getHandshake(byte[] b) {
-		int index = ((b[0]&0x0ff) + (b[1]&0x0ff) + (b[2]&0x0ff) + (b[3]&0x0ff)) % 728 + 12;
+		int index = ((b[0] & 0x0ff) + (b[1] & 0x0ff) + (b[2] & 0x0ff) + (b[3] & 0x0ff)) % 728 + 12;
 		byte[] part = new byte[32];
 		System.arraycopy(b, index, part, 0, 32);
 		byte[] newKey = calculateHmacSHA256(part, SECRET_KEY);
 		
-		byte[] newHandShake = new byte[HANDSHAKE_SIZE - 8];
+		byte[] hash = new byte[HANDSHAKE_SIZE - 8 - 32];
 		Random rnd = new Random();
-		rnd.nextBytes(newHandShake);
-		byte[] newPart = calculateHmacSHA256(newHandShake, newKey);
+		rnd.nextBytes(hash);
+		byte[] newHandShake = new byte[HANDSHAKE_SIZE - 8];
+		System.arraycopy(hash, 0, newHandShake, 0, hash.length);
+
+		byte[] newPart = calculateHmacSHA256(hash, newKey);
 		System.arraycopy(newPart, 0, newHandShake, newHandShake.length - 32, 32);
 		return newHandShake;
 	}
