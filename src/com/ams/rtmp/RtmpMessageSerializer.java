@@ -141,13 +141,7 @@ public class RtmpMessageSerializer {
 		}
 
 		int dataSize = ByteBufferHelper.size(data);
-		RtmpHeader header = new RtmpHeader(
-				chunkStreamId,
-				(timestamp != -1)? timestamp : 0,
-				dataSize,
-				msgType,
-				(streamId != -1)? streamId : 0
-				);
+		RtmpHeader header = new RtmpHeader(	chunkStreamId, timestamp, dataSize,	msgType, streamId);
 		
 		// write packet header + data
 		headerSerializer.write(header);

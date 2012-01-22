@@ -28,10 +28,10 @@ public class FlvPlayer implements IPlayer{
 	
 	public void writeStartData() throws IOException {
 		//|RtmpSampleAccess
-		//stream.writeDataMessage(AmfValue.array("|RtmpSampleAccess", false, false));
+		stream.writeDataMessage(AmfValue.array("|RtmpSampleAccess", false, false));
 		
 		//NetStream.Data.Start
-		//stream.writeDataMessage(AmfValue.array("onStatus", AmfValue.newObject().put("code", "NetStream.Data.Start")));
+		stream.writeDataMessage(AmfValue.array("onStatus", AmfValue.newObject().put("code", "NetStream.Data.Start")));
 		
 		AmfValue value = deserializer.metaData();
 		if (value != null) {
@@ -68,19 +68,19 @@ public class FlvPlayer implements IPlayer{
 				stream.setPlayer(null);
 				break;
 			}
-			currentTime = sample.getTimestamp();
-
+			long timestamp = sample.getTimestamp();
+			long timestampDelta = timestamp - currentTime;
 			ByteBuffer[] data = sample.getData();
 			if (sample.isAudioTag() && audioPlaying) {
-				stream.writeMessage(currentTime, new RtmpMessageAudio(data));
+				stream.writeAudioMessage(timestampDelta, new RtmpMessageAudio(data));
 			}
 			if (sample.isVideoTag() && videoPlaying) {
-				stream.writeMessage(currentTime, new RtmpMessageVideo(data));
+				stream.writeVideoMessage(timestampDelta, new RtmpMessageVideo(data));
 			}
 			if (sample.isMetaTag()) {
-				stream.writeMessage(currentTime, new RtmpMessageData(data));
+				stream.writeMessage(timestamp, new RtmpMessageData(data));
 			}
-
+			currentTime = timestamp;
 		}
 	}
 	

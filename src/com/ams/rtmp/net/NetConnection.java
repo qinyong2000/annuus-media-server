@@ -90,8 +90,8 @@ public class NetConnection {
 		}
 		context.setAttribute("app", app);
 
-		rtmp.writeProtocolControlMessage(new RtmpMessageWindowAckSize(128*1024));
-		rtmp.writeProtocolControlMessage(new RtmpMessagePeerBandwidth(128*1024, (byte)2));
+		//rtmp.writeProtocolControlMessage(new RtmpMessageWindowAckSize(128*1024));
+		//rtmp.writeProtocolControlMessage(new RtmpMessagePeerBandwidth(128*1024, (byte)2));
 		rtmp.writeProtocolControlMessage(new RtmpMessageUserControl(RtmpMessageUserControl.EVT_STREAM_BEGIN, header.getStreamId()));
 		
 		AmfValue value = AmfValue.newObject();
@@ -103,7 +103,7 @@ public class NetConnection {
 			value.put("objectEncoding", objectEncoding);
 		}
 		
-		rtmp.writeRtmpMessage(header.getChunkStreamId(), -1, -1,
+		rtmp.writeRtmpMessage(header.getChunkStreamId(), 0, 0,
 				  new RtmpMessageCommand("_result", command.getTransactionId(), AmfValue.array(null, value)));
 
 	}
@@ -112,8 +112,8 @@ public class NetConnection {
 	private void onGetStreamLength(RtmpHeader header, RtmpMessageCommand command) throws IOException, NetConnectionException, FlvException {
 		AmfValue[] args = command.getArgs();
 		String streamName = args[1].string();
-//		rtmp.writeRtmpMessage(header.getChunkStreamId(), -1, -1, 
-//				new RtmpMessageCommand("_result", command.getTransactionId(), AmfValue.array(null, 233.935)));
+		rtmp.writeRtmpMessage(header.getChunkStreamId(), 0, 0, 
+				new RtmpMessageCommand("_result", command.getTransactionId(), AmfValue.array(null, 140361)));
 	}
 	
 	private void onPlay(RtmpHeader header, RtmpMessageCommand command) throws IOException, NetConnectionException, FlvException {
@@ -211,7 +211,7 @@ public class NetConnection {
 	
 	private void onCreateStream(RtmpHeader header, RtmpMessageCommand command) throws IOException {
 		NetStream stream = createStream();
-		rtmp.writeRtmpMessage(header.getChunkStreamId(), -1, -1, 
+		rtmp.writeRtmpMessage(header.getChunkStreamId(), 0, 0, 
 						new RtmpMessageCommand("_result", command.getTransactionId(), AmfValue.array(null, stream.getStreamId())));
 		
 	}
@@ -246,7 +246,7 @@ public class NetConnection {
 		value.put("level", "error")
 			 .put("code", code)
 			 .put("details", msg);
-		rtmp.writeRtmpMessage(chunkStreamId, streamId, -1, 
+		rtmp.writeRtmpMessage(chunkStreamId, streamId, 0, 
 				  new RtmpMessageCommand("onStatus", transactionId, AmfValue.array(null, value)));
 	}
 

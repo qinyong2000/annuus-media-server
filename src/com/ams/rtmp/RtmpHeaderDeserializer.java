@@ -18,7 +18,7 @@ public class RtmpHeaderDeserializer {
 	private RtmpHeader getLastHeader(int chunkStreamId) {
 		RtmpHeader h = chunkHeaderMap.get(chunkStreamId);
 		if( h == null ) {
-			h = new RtmpHeader(	chunkStreamId, -1, -1, -1, -1);
+			h = new RtmpHeader(	chunkStreamId, 0, 0, 0, 0);
 			chunkHeaderMap.put(chunkStreamId, h);
 		}
 		return h;
@@ -35,20 +35,20 @@ public class RtmpHeaderDeserializer {
 
 		RtmpHeader lastHeader = getLastHeader(chunkStreamId);
 		int fmt = h >>> 6;
-		if( fmt == 0 || fmt == 1 || fmt == 2) {			// type 0, type 1, type 2 header
+		if (fmt == 0 || fmt == 1 || fmt == 2) {			// type 0, type 1, type 2 header
 			int ts = in.read24Bit();
 			lastHeader.setTimestamp(ts);
 		}
-		if( fmt == 0 || fmt == 1 ) {					// type 0, type 1 header
+		if (fmt == 0 || fmt == 1 ) {					// type 0, type 1 header
 			int size = in.read24Bit();
 			lastHeader.setSize(size);
 			lastHeader.setType(in.readByte() & 0xFF);
 		}
-		if( fmt == 0 ) {								// type 0 header	
+		if (fmt == 0 ) {								// type 0 header	
 			int streamId = (int)in.read32BitLittleEndian();
 			lastHeader.setStreamId(streamId);
 		}
-		if(fmt == 3) {									// type 3
+		if (fmt == 3) {									// type 3
 			// 0 bytes
 		}
 		

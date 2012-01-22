@@ -28,18 +28,21 @@ public class NetStream {
 	}
 	
 	public void writeMessage(long timestamp, RtmpMessage message) throws IOException {
-		if (message instanceof RtmpMessageAudio)
-			rtmp.writeRtmpMessage(6, streamId, timestamp, message);
-		else if (message instanceof RtmpMessageVideo)	
-			rtmp.writeRtmpMessage(7, streamId, timestamp, message);
-		else
-			rtmp.writeRtmpMessage(chunkStreamId, streamId, timestamp, message);
+		rtmp.writeRtmpMessage(chunkStreamId, streamId, timestamp, message);
 	}
 
+	public void writeVideoMessage(long timestampDelta, RtmpMessage message) throws IOException {
+		rtmp.writeRtmpMessage(5, -1, timestampDelta, message);
+	}
+
+	public void writeAudioMessage(long timestampDelta, RtmpMessage message) throws IOException {
+		rtmp.writeRtmpMessage(6, -1, timestampDelta, message);
+	}
+	
 	public void writeStatusMessage(String status, AmfValue info) throws IOException {
 		info.put("level", "status")
 			.put("code", status);
-		writeMessage(-1, new RtmpMessageCommand("onStatus", transactionId, AmfValue.array(null, info)));
+		writeMessage(0, new RtmpMessageCommand("onStatus", transactionId, AmfValue.array(null, info)));
 	}
 
 	public void writeErrorMessage(String msg) throws IOException {
@@ -47,7 +50,7 @@ public class NetStream {
 		value.put("level", "error")
 			 .put("code", "NetStream.Error")
 			 .put("details", msg);
-		writeMessage(-1, new RtmpMessageCommand("onStatus", transactionId, AmfValue.array(null, value)));
+		writeMessage(0, new RtmpMessageCommand("onStatus", transactionId, AmfValue.array(null, value)));
 	}
 
 	public void writeDataMessage(AmfValue[] values) throws IOException {
@@ -56,7 +59,7 @@ public class NetStream {
 		for(int i = 0; i < values.length; i++) {
 			serializer.write(values[i]);
 		}
-		writeMessage(-1, new RtmpMessageData(out.toByteBufferArray()));
+		writeMessage(0, new RtmpMessageData(out.toByteBufferArray()));
 	}
 
 	public synchronized void close() throws IOException {
@@ -225,7 +228,7 @@ public class NetStream {
 		AmfValue value = AmfValue.newObject();
 		value.put("level", "status")
 			 .put("code", (pause ? "NetStream.Pause.Notify" : "NetStream.Unpause.Notify"));
-		rtmp.writeRtmpMessage(chunkStreamId, -1, -1,  
+		rtmp.writeRtmpMessage(chunkStreamId, 0, 0,  
 				  new RtmpMessageCommand("_result", transactionId, AmfValue.array(null, value)));
 		
 	}

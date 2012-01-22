@@ -60,7 +60,7 @@ public class RtmpConnection {
 	}
 	
 	public void writeProtocolControlMessage(RtmpMessage message) throws IOException {
-		messageSerializer.write(2, 0, -1, message);
+		messageSerializer.write(2, 0, 0, message);
 	}
 	
 	public Connector getConnector() {
