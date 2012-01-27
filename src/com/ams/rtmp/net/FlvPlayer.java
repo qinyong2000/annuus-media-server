@@ -61,21 +61,20 @@ public class FlvPlayer implements IPlayer{
 	public void play() throws IOException {
 		if (pause) return;
 
-		long relativeTime = System.currentTimeMillis() - startTime;
-		while(currentTime < relativeTime ) {
+		long durationTime = System.currentTimeMillis() - startTime;
+		while(currentTime < durationTime ) {
 			Sample sample = deserializer.readNext();
 			if( sample == null ) {	// eof
 				stream.setPlayer(null);
 				break;
 			}
 			long timestamp = sample.getTimestamp();
-			long timestampDelta = timestamp - currentTime;
 			ByteBuffer[] data = sample.getData();
 			if (sample.isAudioTag() && audioPlaying) {
-				stream.writeAudioMessage(timestampDelta, new RtmpMessageAudio(data));
+				stream.writeAudioMessage(timestamp, new RtmpMessageAudio(data));
 			}
 			if (sample.isVideoTag() && videoPlaying) {
-				stream.writeVideoMessage(timestampDelta, new RtmpMessageVideo(data));
+				stream.writeVideoMessage(timestamp, new RtmpMessageVideo(data));
 			}
 			if (sample.isMetaTag()) {
 				stream.writeMessage(timestamp, new RtmpMessageData(data));

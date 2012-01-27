@@ -35,6 +35,7 @@ public final class Server implements ConnectionListner {
 	
 	private void initByteBufferFactory(Configuration config) {
 		ByteBufferFactory.setPageSize(config.getSlabPageSize());
+		ByteBufferFactory.init();
 	}
 	
 	public void addTcpListenEndpoint(SocketAddress endpoint, IProtocolHandler handler) throws IOException {

@@ -167,7 +167,7 @@ public final class ByteBufferAllocator {
 		logFactor = Math.log(factor);
 	}
 	
-	private void init() {
+	public void init() {
 		// Initialize Slabs
 		slabs = new ArrayList<Slab>();
 		int size = minChunkSize;

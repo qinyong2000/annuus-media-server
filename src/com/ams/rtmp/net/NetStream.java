@@ -15,7 +15,7 @@ import com.ams.rtmp.message.*;
 
 public class NetStream {
 	private RtmpConnection rtmp;
-	private int chunkStreamId = 5;
+	private int chunkStreamId = 3;
 	private int streamId;
 	private int transactionId = 0;
 	
@@ -31,12 +31,12 @@ public class NetStream {
 		rtmp.writeRtmpMessage(chunkStreamId, streamId, timestamp, message);
 	}
 
-	public void writeVideoMessage(long timestampDelta, RtmpMessage message) throws IOException {
-		rtmp.writeRtmpMessage(5, -1, timestampDelta, message);
+	public void writeVideoMessage(long timestamp, RtmpMessage message) throws IOException {
+		rtmp.writeRtmpMessage(5, streamId, timestamp, message);
 	}
 
-	public void writeAudioMessage(long timestampDelta, RtmpMessage message) throws IOException {
-		rtmp.writeRtmpMessage(6, -1, timestampDelta, message);
+	public void writeAudioMessage(long timestamp, RtmpMessage message) throws IOException {
+		rtmp.writeRtmpMessage(6, streamId, timestamp, message);
 	}
 	
 	public void writeStatusMessage(String status, AmfValue info) throws IOException {
@@ -77,9 +77,9 @@ public class NetStream {
 		return rtmp.getConnector().isWriteBlocking();
 	}
 	
-//	public void setChunkStreamId(int chunkStreamId) {
-//		this.chunkStreamId = chunkStreamId;
-//	}
+	public void setChunkStreamId(int chunkStreamId) {
+		this.chunkStreamId = chunkStreamId;
+	}
 
 	public void setTransactionId(int transactionId) {
 		this.transactionId = transactionId;
