@@ -342,8 +342,6 @@ public class RtmpHandShake {
         (byte) 0xe6, (byte) 0x36, (byte) 0xcf, (byte) 0xeb, (byte) 0x31,
         (byte) 0xae };
 	private int state = STATE_UNINIT;
-	private long handShakeTime;
-	private long clientVersion;
 	private byte[] handShake;
 	
 	private Mac hmacSHA256;
@@ -364,7 +362,7 @@ public class RtmpHandShake {
 	
 	private void readVersion() throws IOException, RtmpException {
 		if( (in.readByte() & 0xFF) != 3 )	//version
-			throw new RtmpException("Invalid Welcome");
+			throw new RtmpException("Invalid version");
 	}
 
 	private void writeVersion() throws IOException {
@@ -372,26 +370,16 @@ public class RtmpHandShake {
 	}
 
 	private void writeHandshake() throws IOException {
-//		out.write32Bit(0);
-//		out.write32Bit(0);
-//		handShake = new byte[HANDSHAKE_SIZE - 8];
-//		Random rnd = new Random();
-//		rnd.nextBytes(handShake);
-//		out.write(handShake, 0, handShake.length);
 		out.write(HANDSHAKE_SERVER_BYTES, 0, HANDSHAKE_SERVER_BYTES.length);
 	}
 	
 	private byte[] readHandshake() throws IOException {
-		handShakeTime = in.read32Bit();
-		clientVersion = in.read32Bit();
-		byte[] b = new byte[HANDSHAKE_SIZE - 8];
+		byte[] b = new byte[HANDSHAKE_SIZE];
 		in.read(b, 0, b.length);
 		return b;
 	}
 	
 	private void writeHandshake(byte[] b) throws IOException {
-		//out.write32Bit(handShakeTime);
-		//out.write32Bit(clientVersion);
 		out.write(b, 0, b.length);
 	}
 
@@ -408,7 +396,7 @@ public class RtmpHandShake {
     
 
     private int GetClientGenuineConstDigestOffset(byte[] b) {
-		return ((b[0] & 0x0ff) + (b[1] & 0x0ff) + (b[2] & 0x0ff) + (b[3] & 0x0ff)) % 728 + 12 - 8;
+		return ((b[8] & 0x0ff) + (b[9] & 0x0ff) + (b[10] & 0x0ff) + (b[11] & 0x0ff)) % 728 + 12;
     }
     
 	private byte[] getHandshake(byte[] b) {
@@ -480,11 +468,11 @@ public class RtmpHandShake {
 		case STATE_VERSION_SENT:
 			if( available < HANDSHAKE_SIZE ) break;
 			byte[] hs1 = readHandshake();	//read C1 message
-//			if (clientVersion == 0) {
-//				writeHandshake(hs1);		//write S2 message
-//			} else {
+			if (hs1[4] == 0) {
+				writeHandshake(hs1);		//write S2 message
+			} else {
 				writeHandshake(getHandshake(hs1));		//write S2 message
-//			}
+			}
 			
 			state = STATE_ACK_SENT;
 			break;

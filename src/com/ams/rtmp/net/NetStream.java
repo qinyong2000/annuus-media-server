@@ -17,6 +17,7 @@ public class NetStream {
 	private RtmpConnection rtmp;
 	private int chunkStreamId = 3;
 	private int streamId;
+	private String streamName;
 	private int transactionId = 0;
 	
 	private StreamPublisher publisher = null;
@@ -112,12 +113,15 @@ public class NetStream {
 		rtmp.writeProtocolControlMessage(new RtmpMessageUserControl(RtmpMessageUserControl.EVT_STREAM_IS_RECORDED, streamId));
 		rtmp.writeProtocolControlMessage(new RtmpMessageUserControl(RtmpMessageUserControl.EVT_STREAM_BEGIN, streamId));
 		
-		AmfValue value = AmfValue.newObject();
-		value.put("level", "status")
-			 .put("code", "NetStream.Seek.Notify");
-		writeMessage(-1, new RtmpMessageCommand("_result", transactionId, AmfValue.array(null, value)));
+		writeStatusMessage("NetStream.Seek.Notify", AmfValue.newObject()
+				.put("description", "Seeking " + offset + ".")
+				.put("details", streamName)
+				.put("clientId", streamId));
+
 		
-		writeStatusMessage("NetStream.Play.Start", AmfValue.newObject().put("time", offset));
+		writeStatusMessage("NetStream.Play.Start", AmfValue.newObject()
+				.put("description", "Start playing " + streamName + ".")
+				.put("clientId", streamId));
 
 		player.seek(offset);
 	}
@@ -128,6 +132,8 @@ public class NetStream {
 			writeErrorMessage("This channel is already playing");
 			return;
 		}
+		this.streamName = streamName;
+		
 		// set chunk size
 		rtmp.writeProtocolControlMessage(new RtmpMessageChunkSize(1024));
 

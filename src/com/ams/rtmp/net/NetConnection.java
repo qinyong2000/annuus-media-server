@@ -112,8 +112,8 @@ public class NetConnection {
 	private void onGetStreamLength(RtmpHeader header, RtmpMessageCommand command) throws IOException, NetConnectionException, FlvException {
 		AmfValue[] args = command.getArgs();
 		String streamName = args[1].string();
-		rtmp.writeRtmpMessage(header.getChunkStreamId(), 0, 0, 
-				new RtmpMessageCommand("_result", command.getTransactionId(), AmfValue.array(null, 140361)));
+//		rtmp.writeRtmpMessage(header.getChunkStreamId(), 0, 0, 
+//				new RtmpMessageCommand("_result", command.getTransactionId(), AmfValue.array(null, 140361)));
 	}
 	
 	private void onPlay(RtmpHeader header, RtmpMessageCommand command) throws IOException, NetConnectionException, FlvException {
