@@ -120,8 +120,6 @@ public class Mp4Deserializer implements SampleDeserializer {
 		buf[0] = ByteBufferFactory.allocate(5);
 
 		byte type = (byte) (sample.isKeyframe() ? 0x17 : 0x27);
-		long time = sample.getTimestamp();
-		//buf[0].put(new byte[]{type, 0x01, (byte) ((time & 0xFF0000) >>> 16), (byte) ((time & 0xFF00) >>> 8), (byte) (time & 0xFF)});
 		buf[0].put(new byte[]{type, 0x01, 0, 0, 0});
 
 		buf[0].flip();
@@ -142,15 +140,12 @@ public class Mp4Deserializer implements SampleDeserializer {
 		Mp4Sample seekSample = videoSamples[0];
 		int idx = Collections.binarySearch(samples, new Mp4Sample(Sample.SAMPLE_VIDEO, 0, 0, seekTime, true, 0) , new SampleTimestampComparator());
 		int i = (idx >= 0) ? idx : -(idx + 1);
-		while(i < samples.size()) {
-			Mp4Sample sample = samples.get(i);
-			if (sample.isVideoTag() && sample.isKeyframe()) {
-				if( sample.getTimestamp() >= seekTime ) {
-					break;
-				}
-				seekSample = sample;
+		while(i > 0) {
+			seekSample = samples.get(i);
+			if (seekSample.isVideoTag() && seekSample.isKeyframe()) {
+				break;
 			}
-			i++;
+			i--;
 		}
 		sampleIndex = i; 
 		return seekSample;

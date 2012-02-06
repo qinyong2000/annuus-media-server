@@ -112,12 +112,12 @@ public class FlvDeserializer implements SampleDeserializer {
 		FlvTag flvTag = firstVideoTag;
 		int idx = Collections.binarySearch(samples, new FlvTag(Sample.SAMPLE_VIDEO, 0, 0, true, seekTime) , new SampleTimestampComparator());
 		int i = (idx >= 0) ? idx : -(idx + 1);
-		while(i < samples.size()) {
-			FlvTag tag = samples.get(i);
-			if( tag.getTimestamp() >= seekTime ) {
+		while(i > 0) {
+			flvTag = samples.get(i);
+			if (flvTag.isVideoTag() && flvTag.isKeyframe()) {
 				break;
 			}
-			flvTag = tag;
+			i--;
 		}
 		reader.seek(flvTag.offset - 11);
 		return flvTag;
