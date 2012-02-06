@@ -3,6 +3,7 @@ package com.ams.flv;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import com.ams.amf.AmfValue;
 import com.ams.io.ByteBufferInputStream;
@@ -20,6 +21,12 @@ public class FlvDeserializer implements SampleDeserializer {
 	private VideoTag lastVideoTag = null;
 	private AudioTag lastAudioTag = null;
 	private MetaTag lastMetaTag = null;
+
+	private class SampleTimestampComparator implements java.util.Comparator {
+		public int compare(Object s, Object t) {
+			return (int)((FlvTag) s).getTimestamp() - (int)((FlvTag) t).getTimestamp();
+		}
+	};
 	
 	public FlvDeserializer(RandomAccessFileReader reader) {
 		this.reader = reader;
@@ -103,7 +110,10 @@ public class FlvDeserializer implements SampleDeserializer {
 	
 	public FlvTag seek(long seekTime) throws IOException {
 		FlvTag flvTag = firstVideoTag;
-		for(FlvTag tag : samples) {
+		int idx = Collections.binarySearch(samples, new FlvTag(Sample.SAMPLE_VIDEO, 0, 0, true, seekTime) , new SampleTimestampComparator());
+		int i = (idx >= 0) ? idx : -(idx + 1);
+		while(i < samples.size()) {
+			FlvTag tag = samples.get(i);
 			if( tag.getTimestamp() >= seekTime ) {
 				break;
 			}

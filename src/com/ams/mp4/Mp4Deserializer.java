@@ -140,8 +140,10 @@ public class Mp4Deserializer implements SampleDeserializer {
 	
 	public Sample seek(long seekTime) {
 		Mp4Sample seekSample = videoSamples[0];
-		int i = 0;
-		for(Mp4Sample sample : samples) {
+		int idx = Collections.binarySearch(samples, new Mp4Sample(Sample.SAMPLE_VIDEO, 0, 0, seekTime, true, 0) , new SampleTimestampComparator());
+		int i = (idx >= 0) ? idx : -(idx + 1);
+		while(i < samples.size()) {
+			Mp4Sample sample = samples.get(i);
 			if (sample.isVideoTag() && sample.isKeyframe()) {
 				if( sample.getTimestamp() >= seekTime ) {
 					break;
