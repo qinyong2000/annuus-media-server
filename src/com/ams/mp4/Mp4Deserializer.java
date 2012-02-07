@@ -180,7 +180,7 @@ public class Mp4Deserializer implements SampleDeserializer {
 		AmfValue value = AmfValue.newEcmaArray();
 		VideoSampleDescription videoSd = videoTrak.getVideoSampleDescription();
 		AudioSampleDescription audioSd = audioTrak.getAudioSampleDescription();
-		value.put("duration", (float)videoTrak.getDuration() / 1000)
+		value.put("duration", (float)videoTrak.getDuration() / videoTrak.getTimeScale())
 			 .put("moovPosition", moovPosition)
 			 .put("width", videoSd.width)
 			 .put("height", videoSd.height)
@@ -190,7 +190,7 @@ public class Mp4Deserializer implements SampleDeserializer {
 			 .put("avcprofile", videoSd.getAvcProfile())
 			 .put("avclevel", videoSd.getAvcLevel())
 			 .put("aacaot", audioSd.getAudioCodecType())
-			 .put("videoframerate", (float)videoSamples.length / videoTrak.getDuration() * 1000)
+			 .put("videoframerate", (float)videoSamples.length / videoTrak.getDuration() * videoTrak.getTimeScale())
 			 .put("audiosamplerate", audioSd.sampleRate)
 			 .put("audiochannels", audioSd.channelCount)
 			 .put("trackinfo", AmfValue.newArray(track1, track2));
