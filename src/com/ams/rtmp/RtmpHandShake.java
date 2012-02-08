@@ -405,7 +405,8 @@ public class RtmpHandShake {
     
 	private byte[] getHandshake(byte[] b) {
 		long schema = ((b[4] & 0xFF) << 24) | ((b[5] & 0xFF) << 16) | ((b[6] & 0xFF) << 8) | (b[7] & 0xFF);
-		int offset = schema < 0x80000302 ? GetClientGenuineConstDigestOffset(b) : GetServerGenuineConstDigestOffset(b);
+		//10.0.32.18
+		int offset = schema < 0x0A002012 ? GetClientGenuineConstDigestOffset(b) : GetServerGenuineConstDigestOffset(b);
 		byte[] digest = new byte[32];
 		System.arraycopy(b, offset, digest, 0, 32);
 		byte[] newKey = calculateHmacSHA256(GenuineFMSConst, digest);
