@@ -399,8 +399,13 @@ public class RtmpHandShake {
 		return ((b[8] & 0x0ff) + (b[9] & 0x0ff) + (b[10] & 0x0ff) + (b[11] & 0x0ff)) % 728 + 12;
     }
     
+    private int GetServerGenuineConstDigestOffset(byte[] b) {
+		return ((b[772] & 0x0ff) + (b[773] & 0x0ff) + (b[774] & 0x0ff) + (b[775] & 0x0ff)) % 728 + 776;
+    }
+    
 	private byte[] getHandshake(byte[] b) {
-		int offset = GetClientGenuineConstDigestOffset(b);
+		long schema = ((b[4] & 0xFF) << 24) | ((b[5] & 0xFF) << 16) | ((b[6] & 0xFF) << 8) | (b[7] & 0xFF);
+		int offset = schema < 0x80000302 ? GetClientGenuineConstDigestOffset(b) : GetServerGenuineConstDigestOffset(b);
 		byte[] digest = new byte[32];
 		System.arraycopy(b, offset, digest, 0, 32);
 		byte[] newKey = calculateHmacSHA256(GenuineFMSConst, digest);
