@@ -165,6 +165,10 @@ public final class TRAK {
 		return mdhd.getDuration();
 	}
 
+	public float getDurationBySecond() {
+		return (float)mdhd.getDuration() / (float)mdhd.getTimeScale();
+	}
+	
 	public String getLanguage() {
 		return mdhd.getLanguage();
 	}

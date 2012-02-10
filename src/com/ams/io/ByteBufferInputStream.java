@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import com.ams.util.ByteBufferHelper;
+import com.ams.util.Utils;
 
 public class ByteBufferInputStream extends InputStream {
 	protected IByteBufferReader reader = null;
@@ -194,42 +195,40 @@ public class ByteBufferInputStream extends InputStream {
 	public int read16Bit() throws IOException {
 		byte[] b = new byte[2];
 		read(b, 0, 2); // 16Bit read
-		return ((b[0] & 0xFF) << 8) | (b[1] & 0xFF);
+		return Utils.from16Bit(b);
 	}
 
 	public int read24Bit() throws IOException {
 		byte[] b = new byte[3];
 		read(b, 0, 3); // 24Bit read
-		return ((b[0] & 0xFF) << 16) | ((b[1] & 0xFF) << 8) | (b[2] & 0xFF);
+		return Utils.from24Bit(b);
 	}
 
 	public long read32Bit() throws IOException {
 		byte[] b = new byte[4];
 		read(b, 0, 4); // 32Bit read
-		return ((b[0] & 0xFF) << 24) | ((b[1] & 0xFF) << 16)
-				| ((b[2] & 0xFF) << 8) | (b[3] & 0xFF);
+		return Utils.from32Bit(b);
 	}
 
 	public int read16BitLittleEndian() throws IOException {
 		byte[] b = new byte[2];
 		read(b, 0, 2);
 		// 16 Bit read, LITTLE-ENDIAN
-		return ((b[1] & 0xFF) << 8) | (b[0] & 0xFF);
+		return Utils.from16BitLittleEndian(b);
 	}
 
 	public int read24BitLittleEndian() throws IOException {
 		byte[] b = new byte[3];
 		read(b, 0, 3);
 		// 24 Bit read, LITTLE-ENDIAN
-		return ((b[2] & 0xFF) << 16) | ((b[1] & 0xFF) << 8) | (b[0] & 0xFF);
+		return Utils.from24BitLittleEndian(b);
 	}
 
 	public long read32BitLittleEndian() throws IOException {
 		byte[] b = new byte[4];
 		read(b, 0, 4);
 		// 32 Bit read, LITTLE-ENDIAN
-		return ((b[3] & 0xFF) << 24) | ((b[2] & 0xFF) << 16)
-				| ((b[1] & 0xFF) << 8) | (b[0] & 0xFF);
+		return Utils.from32BitLittleEndian(b);
 	}
 
 	public ByteBuffer[] readByteBuffer(int size) throws IOException {

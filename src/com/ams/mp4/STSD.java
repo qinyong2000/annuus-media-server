@@ -4,6 +4,8 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 
+import com.ams.util.Utils;
+
 public final class STSD extends BOX {
 	private SampleDescription[] descriptions;
 	
@@ -140,7 +142,7 @@ public final class STSD extends BOX {
 			packetSize = in.readShort();
 			byte[] b = new byte[4];
 			in.read(b);
-			sampleRate = ((b[0] & 0xFF) << 8) | (b[1] & 0xFF);
+			sampleRate = Utils.from16Bit(b);
 			if (innerVersion != 0) {
 				samplesPerPacket = in.readInt();
 				bytesPerPacket = in.readInt();

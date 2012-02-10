@@ -15,6 +15,7 @@ import com.ams.io.RandomAccessFileReader;
 import com.ams.mp4.STSD.AudioSampleDescription;
 import com.ams.mp4.STSD.VideoSampleDescription;
 import com.ams.server.ByteBufferFactory;
+import com.ams.util.Utils;
 
 public class Mp4Deserializer implements SampleDeserializer {
 	private RandomAccessFileReader reader;
@@ -59,8 +60,7 @@ public class Mp4Deserializer implements SampleDeserializer {
 				// find moov box
 				byte[] b = new byte[4];
 				reader.read(b, 0, 4);
-				int size = ((b[0] & 0xFF) << 24) | ((b[1] & 0xFF) << 16)
-							| ((b[2] & 0xFF) << 8) | (b[3] & 0xFF);
+				int size = (int)Utils.from32Bit(b);
 				b = new byte[4];
 				reader.read(b, 0, 4);
 				String box = new String(b);
@@ -180,7 +180,7 @@ public class Mp4Deserializer implements SampleDeserializer {
 		AmfValue value = AmfValue.newEcmaArray();
 		VideoSampleDescription videoSd = videoTrak.getVideoSampleDescription();
 		AudioSampleDescription audioSd = audioTrak.getAudioSampleDescription();
-		value.put("duration", (float)videoTrak.getDuration() / videoTrak.getTimeScale())
+		value.put("duration", videoTrak.getDurationBySecond())
 			 .put("moovPosition", moovPosition)
 			 .put("width", videoSd.width)
 			 .put("height", videoSd.height)
@@ -190,7 +190,7 @@ public class Mp4Deserializer implements SampleDeserializer {
 			 .put("avcprofile", videoSd.getAvcProfile())
 			 .put("avclevel", videoSd.getAvcLevel())
 			 .put("aacaot", audioSd.getAudioCodecType())
-			 .put("videoframerate", (float)videoSamples.length / videoTrak.getDuration() * videoTrak.getTimeScale())
+			 .put("videoframerate", (float)videoSamples.length / videoTrak.getDurationBySecond())
 			 .put("audiosamplerate", audioSd.sampleRate)
 			 .put("audiochannels", audioSd.channelCount)
 			 .put("trackinfo", AmfValue.newArray(track1, track2));

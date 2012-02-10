@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import com.ams.server.ByteBufferFactory;
+import com.ams.util.Utils;
 
 public class ByteBufferOutputStream extends OutputStream {
 	protected static final int WRITE_BUFFER_SIZE = 512;
@@ -83,54 +84,29 @@ public class ByteBufferOutputStream extends OutputStream {
 	}
 
 	public void write16Bit(int v) throws IOException {
-		// 16bit write, LITTLE-ENDIAN
-		byte[] b = new byte[2];
-		b[1] = (byte) (v & 0xFF);
-		b[0] = (byte) ((v & 0xFF00) >>> 8);
-		write(b, 0, 2);
+		write(Utils.to16Bit(v));
 	}
 
 	public void write24Bit(int v) throws IOException {
-		byte[] b = new byte[3];
-		b[2] = (byte) (v & 0xFF);
-		b[1] = (byte) ((v & 0xFF00) >>> 8);
-		b[0] = (byte) ((v & 0xFF0000) >>> 16);
-		write(b, 0, 3); // 24bit
+		write(Utils.to24Bit(v)); // 24bit
 	}
 
 	public void write32Bit(long v) throws IOException {
-		byte[] b = new byte[4];
-		b[3] = (byte) (v & 0xFF);
-		b[2] = (byte) ((v & 0xFF00) >>> 8);
-		b[1] = (byte) ((v & 0xFF0000) >>> 16);
-		b[0] = (byte) ((v & 0xFF000000) >>> 24);
-		write(b, 0, 4); // 32bit
+		write(Utils.to32Bit(v)); // 32bit
 	}
 
 	public void write16BitLittleEndian(int v) throws IOException {
 		// 16bit write, LITTLE-ENDIAN
-		byte[] b = new byte[2];
-		b[0] = (byte) (v & 0xFF);
-		b[1] = (byte) ((v & 0xFF00) >>> 8);
-		write(b, 0, 2);
+		write(Utils.to16BitLittleEndian(v));
 	}
 
 	public void write24BitLittleEndian(int v) throws IOException {
-		byte[] b = new byte[3];
-		b[0] = (byte) (v & 0xFF);
-		b[1] = (byte) ((v & 0xFF00) >>> 8);
-		b[2] = (byte) ((v & 0xFF0000) >>> 16);
-		write(b, 0, 3); // 24bit
+		write(Utils.to24BitLittleEndian(v)); // 24bit
 	}
 
 	public void write32BitLittleEndian(long v) throws IOException {
-		byte[] b = new byte[4];
 		// 32bit write, LITTLE-ENDIAN
-		b[0] = (byte) (v & 0xFF);
-		b[1] = (byte) ((v & 0xFF00) >>> 8);
-		b[2] = (byte) ((v & 0xFF0000) >>> 16);
-		b[3] = (byte) ((v & 0xFF000000) >>> 24);
-		write(b, 0, 4);
+		write(Utils.to32BitLittleEndian(v));
 	}
 
 	public void writeByteBuffer(ByteBuffer[] data) throws IOException {
