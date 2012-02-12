@@ -40,27 +40,27 @@ public class NetStream {
 		rtmp.writeRtmpMessage(6, streamId, timestamp, message);
 	}
 	
-	public void writeStatusMessage(String status, AmfValue info) throws IOException {
+	public void writeStatusMessage(long timestamp, String status, AmfValue info) throws IOException {
 		info.put("level", "status")
 			.put("code", status);
-		writeMessage(0, new RtmpMessageCommand("onStatus", transactionId, AmfValue.array(null, info)));
+		writeMessage(timestamp, new RtmpMessageCommand("onStatus", transactionId, AmfValue.array(null, info)));
 	}
 
-	public void writeErrorMessage(String msg) throws IOException {
+	public void writeErrorMessage(long timestamp, String msg) throws IOException {
 		AmfValue value = AmfValue.newObject();
 		value.put("level", "error")
 			 .put("code", "NetStream.Error")
 			 .put("details", msg);
-		writeMessage(0, new RtmpMessageCommand("onStatus", transactionId, AmfValue.array(null, value)));
+		writeMessage(timestamp, new RtmpMessageCommand("onStatus", transactionId, AmfValue.array(null, value)));
 	}
 
-	public void writeDataMessage(AmfValue[] values) throws IOException {
+	public void writeDataMessage(long timestamp, AmfValue[] values) throws IOException {
 		ByteBufferOutputStream out = new ByteBufferOutputStream();
 		Amf0Serializer serializer = new Amf0Serializer(new DataOutputStream(out));
 		for(int i = 0; i < values.length; i++) {
 			serializer.write(values[i]);
 		}
-		writeMessage(0, new RtmpMessageData(out.toByteBufferArray()));
+		writeMessage(timestamp, new RtmpMessageData(out.toByteBufferArray()));
 	}
 
 	public synchronized void close() throws IOException {
@@ -103,9 +103,9 @@ public class NetStream {
 		return publisher;
 	}
 
-	public void seek(int offset) throws NetConnectionException, IOException, FlvException {
+	public void seek(int time) throws NetConnectionException, IOException, FlvException {
 		if (player == null) {
-			writeErrorMessage("Invalid 'Seek' stream id " + streamId);
+			writeErrorMessage(time, "Invalid 'Seek' stream id " + streamId);
 			return;
 		}
 		// clear
@@ -113,23 +113,23 @@ public class NetStream {
 		rtmp.writeProtocolControlMessage(new RtmpMessageUserControl(RtmpMessageUserControl.EVT_STREAM_IS_RECORDED, streamId));
 		rtmp.writeProtocolControlMessage(new RtmpMessageUserControl(RtmpMessageUserControl.EVT_STREAM_BEGIN, streamId));
 		
-		writeStatusMessage("NetStream.Seek.Notify", AmfValue.newObject()
-				.put("description", "Seeking " + offset + ".")
+		writeStatusMessage(time, "NetStream.Seek.Notify", AmfValue.newObject()
+				.put("description", "Seeking " + time + ".")
 				.put("details", streamName)
 				.put("clientId", streamId));
 
 		
-		writeStatusMessage("NetStream.Play.Start", AmfValue.newObject()
+		writeStatusMessage(time, "NetStream.Play.Start", AmfValue.newObject()
 				.put("description", "Start playing " + streamName + ".")
 				.put("clientId", streamId));
 
-		player.seek(offset);
+		player.seek(time);
 	}
 	
 	
 	public void play(NetContext context, String streamName, int start, int len) throws NetConnectionException, IOException, FlvException {
 		if (player != null) {
-			writeErrorMessage("This channel is already playing");
+			writeErrorMessage(0, "This channel is already playing");
 			return;
 		}
 		this.streamName = streamName;
@@ -138,7 +138,7 @@ public class NetStream {
 		rtmp.writeProtocolControlMessage(new RtmpMessageChunkSize(1024));
 
 		//NetStream.Play.Reset
-		writeStatusMessage("NetStream.Play.Reset",		
+		writeStatusMessage(0, "NetStream.Play.Reset",		
 							AmfValue.newObject()
 								.put("description", "Resetting " + streamName + ".")
 								.put("details", streamName)
@@ -149,7 +149,7 @@ public class NetStream {
 		rtmp.writeProtocolControlMessage(new RtmpMessageUserControl(RtmpMessageUserControl.EVT_STREAM_BEGIN, streamId));
 
 		//NetStream.Play.Start
-		writeStatusMessage("NetStream.Play.Start", 
+		writeStatusMessage(0, "NetStream.Play.Start", 
 							AmfValue.newObject()
 								.put("description", "Start playing " + streamName + ".")
 								.put("clientId", streamId));								
@@ -160,7 +160,7 @@ public class NetStream {
 				{
 					StreamPublisher publisher = (StreamPublisher) PublisherManager.getPublisher(streamName);
 					if (publisher == null) {
-						writeErrorMessage("Unknown shared stream '" + streamName + "'");
+						writeErrorMessage(0, "Unknown shared stream '" + streamName + "'");
 						return;
 					}
 					player = new StreamPlayer(this, publisher);
@@ -220,7 +220,7 @@ public class NetStream {
 	
 	public void pause(boolean pause, long time) throws IOException, NetConnectionException, FlvException {
 		if( player == null ) {
-			writeErrorMessage("This channel is already closed");
+			writeErrorMessage(time, "This channel is already closed");
 			return;
 		}
 		
@@ -257,7 +257,7 @@ public class NetStream {
 		}
 		PublisherManager.addPublisher(publisher);
 		
-		writeStatusMessage("NetStream.Publish.Start", AmfValue.newObject().put("details", name));
+		writeStatusMessage(0, "NetStream.Publish.Start", AmfValue.newObject().put("details", name));
 	}
 
 	public void receiveAudio(boolean flag) throws IOException {
