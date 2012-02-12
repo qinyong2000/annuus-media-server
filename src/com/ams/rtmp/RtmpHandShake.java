@@ -1,7 +1,6 @@
 package com.ams.rtmp;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Random;
 
 import javax.crypto.Mac;
@@ -370,7 +369,12 @@ public class RtmpHandShake {
 	}
 
 	private void writeHandshake() throws IOException {
-		out.write(HANDSHAKE_SERVER_BYTES, 0, HANDSHAKE_SERVER_BYTES.length);
+		out.write32Bit(0);
+		out.write32Bit(0);
+		handShake = new byte[HANDSHAKE_SIZE - 8];
+		Random rnd = new Random();
+		rnd.nextBytes(handShake);
+		out.write(handShake, 0, handShake.length);
 	}
 	
 	private byte[] readHandshake() throws IOException {
@@ -448,9 +452,9 @@ public class RtmpHandShake {
 		case STATE_ACK_SENT:
 			if(available < HANDSHAKE_SIZE)	break;
 			byte[] hs2 = readHandshake();	//read S2 message
-			if(!Arrays.equals(handShake, hs2)) {
-				throw new RtmpException("Invalid Handshake");
-			}
+//			if(!Arrays.equals(handShake, hs2)) {
+//				throw new RtmpException("Invalid Handshake");
+//			}
 			
 			state = STATE_HANDSHAKE_DONE;
 			stateChanged = true;
@@ -467,7 +471,7 @@ public class RtmpHandShake {
 			if( available < 1 ) break;
 			readVersion();					//read C0 message
 			writeVersion();					//write S0 message
-			writeHandshake();				//write S1 message
+			writeHandshake(HANDSHAKE_SERVER_BYTES);				//write S1 message
 			state = STATE_VERSION_SENT;
 			break;
 
