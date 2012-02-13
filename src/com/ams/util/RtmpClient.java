@@ -6,11 +6,9 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import com.ams.amf.AmfException;
 import com.ams.amf.AmfValue;
-import com.ams.flv.FlvDeserializer;
-import com.ams.io.RandomAccessFileReader;
 import com.ams.rtmp.message.RtmpMessage;
 import com.ams.rtmp.message.RtmpMessageCommand;
-import com.ams.rtmp.net.FlvPlayer;
+import com.ams.rtmp.net.IPlayer;
 import com.ams.rtmp.net.NetStream;
 import com.ams.rtmp.RtmpConnection;
 import com.ams.rtmp.RtmpException;
@@ -22,7 +20,7 @@ public class RtmpClient implements Runnable {
 	private SocketConnector conn;
 	private RtmpConnection rtmp;
 	private RtmpHandShake handshake;
-	private FlvPlayer player;
+	private IPlayer player;
 
 	private final static int CMD_CONNECT = 1;
 	private final static int CMD_CREATE_STREAM = 2;
@@ -81,9 +79,7 @@ public class RtmpClient implements Runnable {
 			String publishName = publishResult(msg);
 			if (publishName != null) {
 				NetStream stream = new NetStream(rtmp, streamId);
-				//stream.setChunkStreamId(CHANNEL_RTMP_PUBLISH);
-				RandomAccessFileReader reader = new RandomAccessFileReader(fileName, 0);
-				player = new FlvPlayer(new FlvDeserializer(reader), stream);
+				player = stream.createPlayer(null, fileName);
 				player.seek(0);
 				Log.logger.info("rtmp stream published.");
 			} else {
@@ -162,50 +158,57 @@ public class RtmpClient implements Runnable {
 		rtmp.writeRtmpMessage(CHANNEL_RTMP_COMMAND, streamId, System.currentTimeMillis(), message);
 	}
 	
+	private boolean handShake() {
+		boolean success = true;
+		while (!handshake.isHandshakeDone()) {
+			try {
+				handshake.doClientHandshake();
+				// write to socket channel
+				conn.flush();
+			} catch (Exception e) {
+				Log.logger.warning(e.toString());
+				success = false;
+				break;
+			}
+		}
+		return success;
+	}
+	
 	public void run() {
-		commands.add(CMD_CONNECT);
+		if (!handShake()) return;
 		
+		commands.add(CMD_CONNECT);
 		while (true) {
 			try {
-				if (!handshake.isHandshakeDone()) {
-					handshake.doClientHandshake();
-				} else {
-					Integer cmd = commands.poll();
-					if (cmd != null) {
-						switch(cmd) {
-						case CMD_CONNECT:			connect();break;
-						case CMD_CREATE_STREAM:		createStream();break;
-						case CMD_PUBLISH:			publish(publishName, streamId);break;
-						}
+				Integer cmd = commands.poll();
+				if (cmd != null) {
+					switch(cmd) {
+					case CMD_CONNECT:			connect();break;
+					case CMD_CREATE_STREAM:		createStream();break;
+					case CMD_PUBLISH:			publish(publishName, streamId);break;
 					}
-					if (player != null) {
-						player.play();
-					}
-					readResponse();
 				}
-
+				if (player != null) {
+					player.play();
+				}
+				readResponse();
 				// write to socket channel
 				conn.flush();
 			} catch (EOFException e) {
 				Log.logger.warning("publish end");
 				break;
-			} catch (IOException e) {
-				e.printStackTrace();
+			} catch (Exception e) {
 				Log.logger.warning(e.toString());
 				break;
-			} catch (AmfException e) {
-				e.printStackTrace();
-			} catch (RtmpException e) {
-				e.printStackTrace();
 			}
 			
 		}
 		
 		try {
 			closeStream(streamId);
+			conn.flush();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.logger.warning(e.toString());
 		}
 		
 	}
@@ -229,7 +232,7 @@ public class RtmpClient implements Runnable {
 			client = new RtmpClient(fileName, publishName, host, port);
 			client.run();
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.logger.warning(e.toString());
 		}	
 	}
 }

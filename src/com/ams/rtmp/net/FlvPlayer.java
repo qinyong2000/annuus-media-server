@@ -1,5 +1,6 @@
 package com.ams.rtmp.net;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import com.ams.amf.AmfValue;
@@ -11,7 +12,6 @@ public class FlvPlayer implements IPlayer{
 	private NetStream stream = null;
 	private SampleDeserializer deserializer;
 	private long startTime = -1;
-	private long currentTime = 0;
 	private long bufferTime = BUFFER_TIME;
 	private boolean pause = false;
 	private boolean audioPlaying = true;
@@ -26,25 +26,25 @@ public class FlvPlayer implements IPlayer{
 		deserializer.close();
 	}
 	
-	public void writeStartData(long timestamp) throws IOException {
+	public void writeStartData() throws IOException {
 		//|RtmpSampleAccess
-		stream.writeDataMessage(timestamp, AmfValue.array("|RtmpSampleAccess", false, false));
+		stream.writeDataMessage(AmfValue.array("|RtmpSampleAccess", false, false));
 		
 		//NetStream.Data.Start
-		stream.writeDataMessage(timestamp, AmfValue.array("onStatus", AmfValue.newObject().put("code", "NetStream.Data.Start")));
+		stream.writeDataMessage(AmfValue.array("onStatus", AmfValue.newObject().put("code", "NetStream.Data.Start")));
 		
 		AmfValue value = deserializer.metaData();
 		if (value != null) {
-			stream.writeDataMessage(timestamp, AmfValue.array("onMetaData", value));
+			stream.writeDataMessage(AmfValue.array("onMetaData", value));
 		}
 		
 		ByteBuffer[] headerData = deserializer.videoHeaderData();
 		if (headerData != null) {
-			stream.writeMessage(timestamp, new RtmpMessageVideo(deserializer.videoHeaderData()));
+			stream.writeMessage(new RtmpMessageVideo(deserializer.videoHeaderData()));
 		}
 		headerData = deserializer.audioHeaderData();
 		if (headerData != null) {
-			stream.writeMessage(timestamp, new RtmpMessageAudio(deserializer.audioHeaderData()));
+			stream.writeMessage(new RtmpMessageAudio(deserializer.audioHeaderData()));
 		}
 		
 	}
@@ -52,34 +52,34 @@ public class FlvPlayer implements IPlayer{
 	public void seek(long seekTime) throws IOException {
 		Sample sample = deserializer.seek(seekTime);
 		if (sample == null) return;
-		currentTime = sample.getTimestamp();
+		long currentTime = sample.getTimestamp();
 		startTime =  System.currentTimeMillis() - bufferTime - currentTime;
-		writeStartData(currentTime);
+		stream.setTimeStamp(currentTime);
+		writeStartData();
 	}
 	
 
 	public void play() throws IOException {
 		if (pause) return;
-
 		long durationTime = System.currentTimeMillis() - startTime;
-		while(currentTime < durationTime ) {
+		while(stream.getTimeStamp() < durationTime ) {
 			Sample sample = deserializer.readNext();
 			if( sample == null ) {	// eof
 				stream.setPlayer(null);
-				break;
+				throw new EOFException("End Of Media Stream");
 			}
 			long timestamp = sample.getTimestamp();
+			stream.setTimeStamp(timestamp);
 			ByteBuffer[] data = sample.getData();
 			if (sample.isAudioTag() && audioPlaying) {
-				stream.writeAudioMessage(timestamp, new RtmpMessageAudio(data));
+				stream.writeAudioMessage(new RtmpMessageAudio(data));
 			}
 			if (sample.isVideoTag() && videoPlaying) {
-				stream.writeVideoMessage(timestamp, new RtmpMessageVideo(data));
+				stream.writeVideoMessage(new RtmpMessageVideo(data));
 			}
 			if (sample.isMetaTag()) {
-				stream.writeMessage(timestamp, new RtmpMessageData(data));
+				stream.writeMessage(new RtmpMessageData(data));
 			}
-			currentTime = timestamp;
 		}
 	}
 	

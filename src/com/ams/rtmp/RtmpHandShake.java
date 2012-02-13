@@ -478,7 +478,7 @@ public class RtmpHandShake {
 		case STATE_VERSION_SENT:
 			if( available < HANDSHAKE_SIZE ) break;
 			byte[] hs1 = readHandshake();	//read C1 message
-			if (hs1[4] == 0) {
+			if (hs1[4] == 0) {				// < Flash Player 9.0.115.0(Flash Player 9 update 3)
 				writeHandshake(hs1);		//write S2 message
 			} else {
 				writeHandshake(getHandshake(hs1));		//write S2 message
