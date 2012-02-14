@@ -26,7 +26,7 @@ public class FlvPlayer implements IPlayer{
 		deserializer.close();
 	}
 	
-	public void writeStartData() throws IOException {
+	private void writeStartData() throws IOException {
 		//|RtmpSampleAccess
 		stream.writeDataMessage(AmfValue.array("|RtmpSampleAccess", false, false));
 		
@@ -40,11 +40,11 @@ public class FlvPlayer implements IPlayer{
 		
 		ByteBuffer[] headerData = deserializer.videoHeaderData();
 		if (headerData != null) {
-			stream.writeMessage(new RtmpMessageVideo(deserializer.videoHeaderData()));
+			stream.writeMessage(new RtmpMessageVideo(headerData));
 		}
 		headerData = deserializer.audioHeaderData();
 		if (headerData != null) {
-			stream.writeMessage(new RtmpMessageAudio(deserializer.audioHeaderData()));
+			stream.writeMessage(new RtmpMessageAudio(headerData));
 		}
 		
 	}

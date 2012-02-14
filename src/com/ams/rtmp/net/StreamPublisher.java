@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 
+import com.ams.amf.AmfValue;
 import com.ams.flv.*;
 import com.ams.message.*;
 import com.ams.rtmp.message.*;
@@ -14,6 +15,9 @@ public class StreamPublisher implements IMsgPublisher {
 	private int bytes = 0;
 	private int lastPing = 0;
 	private boolean ping = false;
+	private ByteBuffer[] videoHeaderData = null;
+	private ByteBuffer[] audioHeaderData = null;
+	private ByteBuffer[] metaData = null;
 
 	private LinkedList<IMsgSubscriber> subscribers = new LinkedList<IMsgSubscriber>();
 
@@ -23,6 +27,29 @@ public class StreamPublisher implements IMsgPublisher {
 		this.publishName = publishName;
 	}
 
+	private boolean isH263Packet(ByteBuffer[] data) {
+		return false;
+	}
+	
+	private boolean isH264Packet(ByteBuffer[] data) {
+		return false;
+	}
+	
+	private boolean isAudioHeader(ByteBuffer[] data) {
+		return audioHeaderData == null;
+	}
+
+	private boolean isVideoHeader(ByteBuffer[] data) {
+		return videoHeaderData == null;
+	}
+	
+	public AmfValue metaData() {
+		AmfValue value = AmfValue.newEcmaArray();
+		//value.put("width", firstVideoTag.getWidth())
+		//	.put("height", firstVideoTag.getHeight());
+		return value;
+	}
+	
 	public synchronized void publish(MediaMessage msg) throws IOException {
 		long timestamp = msg.getTimestamp();
 		int type = 0;
@@ -33,15 +60,20 @@ public class StreamPublisher implements IMsgPublisher {
 			RtmpMessageAudio audio = (RtmpMessageAudio) message;
 			data = audio.getData();
 			type = Sample.SAMPLE_AUDIO;
+			if (isAudioHeader(data)) audioHeaderData = data;
+
 			break;
 		case RtmpMessage.MESSAGE_VIDEO:
 			RtmpMessageVideo video = (RtmpMessageVideo) message;
 			data = video.getData();
 			type = Sample.SAMPLE_VIDEO;
+			if (isVideoHeader(data)) videoHeaderData = data;
+			
 			break;
 		case RtmpMessage.MESSAGE_AMF0_DATA:
 			RtmpMessageData meta = (RtmpMessageData) message;
 			data = meta.getData();
+			metaData = data;
 			type = Sample.SAMPLE_META;
 			break;
 		}
@@ -50,7 +82,7 @@ public class StreamPublisher implements IMsgPublisher {
 		if (recorder != null) {
 			recorder.write(type, data, timestamp);
 		}
-
+		
 		// publish packet to other stream subscriber
 		notify(msg);
 
@@ -63,6 +95,9 @@ public class StreamPublisher implements IMsgPublisher {
 			recorder.close();
 		}
 		subscribers.clear();
+		videoHeaderData = null;
+		audioHeaderData = null;
+		metaData = null;
 	}
 
 	private void notify(MediaMessage msg) {
@@ -110,4 +145,16 @@ public class StreamPublisher implements IMsgPublisher {
 		return publishName;
 	}
 
+	public ByteBuffer[] getVideoHeaderData() {
+		return videoHeaderData;
+	}
+
+	public ByteBuffer[] getAudioHeaderData() {
+		return audioHeaderData;
+	}
+	
+	public ByteBuffer[] getMetaData() {
+		return metaData;
+	}
+	
 }
