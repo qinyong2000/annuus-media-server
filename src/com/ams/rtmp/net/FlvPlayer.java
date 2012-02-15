@@ -57,7 +57,6 @@ public class FlvPlayer implements IPlayer{
 		stream.setTimeStamp(currentTime);
 		writeStartData();
 	}
-	
 
 	public void play() throws IOException {
 		if (pause) return;
@@ -69,6 +68,9 @@ public class FlvPlayer implements IPlayer{
 				throw new EOFException("End Of Media Stream");
 			}
 			long timestamp = sample.getTimestamp();
+			if (timestamp - stream.getTimeStamp() > 1000) {
+				throw new EOFException("End Of Media Stream");
+			}
 			stream.setTimeStamp(timestamp);
 			ByteBuffer[] data = sample.getData();
 			if (sample.isAudioTag() && audioPlaying) {

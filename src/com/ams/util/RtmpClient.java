@@ -176,6 +176,7 @@ public class RtmpClient implements Runnable {
 	
 	public void run() {
 		if (!handShake()) return;
+		Log.logger.info("handshake done.");
 		
 		commands.add(CMD_CONNECT);
 		while (true) {
@@ -207,6 +208,7 @@ public class RtmpClient implements Runnable {
 		try {
 			closeStream(streamId);
 			conn.flush();
+			Log.logger.info("stream closed.");
 		} catch (IOException e) {
 			Log.logger.warning(e.toString());
 		}
