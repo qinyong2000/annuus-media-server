@@ -58,14 +58,18 @@ public class StreamPublisher implements IMsgPublisher {
 			RtmpMessageAudio audio = (RtmpMessageAudio) message;
 			data = audio.getData();
 			type = Sample.SAMPLE_AUDIO;
-			if (isAudioHeader(data)) audioHeaderData = data;
+			if (audioHeaderData == null) {
+				if (isAudioHeader(data)) audioHeaderData = data;
+			}
 
 			break;
 		case RtmpMessage.MESSAGE_VIDEO:
 			RtmpMessageVideo video = (RtmpMessageVideo) message;
 			data = video.getData();
 			type = Sample.SAMPLE_VIDEO;
-			if (isVideoHeader(data)) videoHeaderData = data;
+			if (videoHeaderData == null) {
+				if (isVideoHeader(data)) videoHeaderData = data;
+			}
 			
 			break;
 		case RtmpMessage.MESSAGE_AMF0_DATA:
