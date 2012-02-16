@@ -179,6 +179,7 @@ public class NetStream {
 					}
 					player = new StreamPlayer(this, publisher);
 					publisher.addSubscriber((IMsgSubscriber)player);
+					player.seek(0);
 				}
 				break;
 		case -2:		// first find live
@@ -187,6 +188,7 @@ public class NetStream {
 					if (publisher != null) {
 						player = new StreamPlayer(this, publisher);
 						publisher.addSubscriber((IMsgSubscriber)player);
+						player.seek(0);
 					} else {
 						String tokens[] = streamName.split(":");
 						String type = "";

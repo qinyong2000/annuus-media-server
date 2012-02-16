@@ -217,7 +217,7 @@ public class RtmpClient implements Runnable {
 	
 
 	public static void main(String[] args) {
-		if (args.length < 2) {
+		if (args.length < 3) {
 			System.out.println("RtmpClient.main fileName publishName host [port]");
 			return;
 		}

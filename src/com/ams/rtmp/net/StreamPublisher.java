@@ -4,13 +4,13 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 
-import com.ams.amf.AmfValue;
 import com.ams.flv.*;
 import com.ams.message.*;
 import com.ams.rtmp.message.*;
 import com.ams.util.ByteBufferHelper;
 
 public class StreamPublisher implements IMsgPublisher {
+	private String type = null;
 	private String publishName = null;
 	private int bytes = 0;
 	private int lastPing = 0;
@@ -25,29 +25,27 @@ public class StreamPublisher implements IMsgPublisher {
 
 	public StreamPublisher(String publishName) {
 		this.publishName = publishName;
+		String tokens[] = publishName.split(":");
+		if (tokens.length >= 2) {
+			this.type = tokens[0];
+			this.publishName = tokens[1];
+		}
 	}
 
-	private boolean isH263Packet(ByteBuffer[] data) {
-		return false;
-	}
-	
-	private boolean isH264Packet(ByteBuffer[] data) {
-		return false;
+	private boolean isH264() {
+		return "mp4".equalsIgnoreCase(type);
 	}
 	
 	private boolean isAudioHeader(ByteBuffer[] data) {
-		return audioHeaderData == null;
+		if (!isH264()) return false;
+		ByteBuffer buf = data[0];
+		return (buf.get(0) & 0xFF) == 0xAF && (buf.get(1) & 0xFF) == 0x00;
 	}
 
 	private boolean isVideoHeader(ByteBuffer[] data) {
-		return videoHeaderData == null;
-	}
-	
-	public AmfValue metaData() {
-		AmfValue value = AmfValue.newEcmaArray();
-		//value.put("width", firstVideoTag.getWidth())
-		//	.put("height", firstVideoTag.getHeight());
-		return value;
+		if (!isH264()) return false;
+		ByteBuffer buf = data[0];
+		return (buf.get(0) & 0xFF) == 0x17 && (buf.get(1) & 0xFF) == 0x00;
 	}
 	
 	public synchronized void publish(MediaMessage msg) throws IOException {

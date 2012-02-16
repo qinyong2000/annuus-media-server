@@ -184,7 +184,7 @@ public class Mp4Deserializer implements SampleDeserializer {
 			 .put("moovPosition", moovPosition)
 			 .put("width", videoSd.width)
 			 .put("height", videoSd.height)
-			 .put("canSeekToEnd", videoSamples[videoSamples.length - 1].isKeyframe())			 
+			 .put("canSeekToEnd", videoSamples[videoSamples.length - 1].isKeyframe())
 			 .put("videocodecid", videoTrak.getType())
 			 .put("audiocodecid", audioTrak.getType())
 			 .put("avcprofile", videoSd.getAvcProfile())
