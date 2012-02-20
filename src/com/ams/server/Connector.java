@@ -29,9 +29,6 @@ public abstract class Connector implements IByteBufferReader, IByteBufferWriter 
 	protected boolean keepAlive = false;
 	protected boolean closed = true;
 
-	protected boolean sleepingForRead = false;
-	protected boolean sleepingForWaitData = false;
-
 	protected ArrayList<ConnectionListner> listners = new ArrayList<ConnectionListner>();
 
 	protected ByteBufferInputStream in;
@@ -136,12 +133,8 @@ public abstract class Connector implements IByteBufferReader, IByteBufferWriter 
 			available.addAndGet(buffer.remaining());
 		}
 		keepAlive();
-		if (sleepingForRead || sleepingForWaitData) {
-			synchronized (readQueue) {
-				sleepingForRead = false;
-				sleepingForWaitData = false;
-				readQueue.notifyAll();
-			}
+		synchronized (readQueue) {
+			readQueue.notifyAll();
 		}
 	}
 
@@ -157,30 +150,30 @@ public abstract class Connector implements IByteBufferReader, IByteBufferWriter 
 				if (length >= remain) {
 					list.add(readQueue.poll());
 					length -= remain;
+					available.addAndGet(-remain);
 				} else {
 					ByteBuffer slice = ByteBufferHelper.cut(buffer, length);
 					list.add(slice);
+					available.addAndGet(-length);
 					length = 0;
 				}
 			} else {
 				// wait new buffer append to queue
 				// sleep for timeout ms
+				long start = System.currentTimeMillis();
 				try {
 					synchronized (readQueue) {
-						sleepingForRead = true;
 						readQueue.wait(timeout);
 					}
 				} catch (InterruptedException e) {
-					sleepingForRead = false;
 					throw new IOException("read interrupted");
 				}
-				if (sleepingForRead) {
-					sleepingForRead = false;
+				long now = System.currentTimeMillis();
+				if (now - start >= timeout) {
 					throw new IOException("read time out");
 				}
 			}
 		} // end while
-		available.addAndGet(-size);
 		return list.toArray(new ByteBuffer[list.size()]);
 	}
 
@@ -207,14 +200,16 @@ public abstract class Connector implements IByteBufferReader, IByteBufferWriter 
 	
 	public boolean waitDataReceived(int time) {
 		if (available.get() == 0) {
+			long start = System.currentTimeMillis();
 			try {
 				synchronized (readQueue) {
-					sleepingForWaitData = true;
 					readQueue.wait(time);
 				}
 			} catch (InterruptedException e) {
 			}
-			if (sleepingForWaitData) {	// timeout
+			
+			long now = System.currentTimeMillis();
+			if (now - start >= timeout) {
 				return false;
 			}
 		}
