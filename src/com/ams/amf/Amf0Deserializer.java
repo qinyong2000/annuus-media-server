@@ -3,7 +3,8 @@ package com.ams.amf;
 import java.io.DataInputStream;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.io.IOException;
 
 public class Amf0Deserializer {
@@ -56,7 +57,7 @@ public class Amf0Deserializer {
 			//This specifies the data in the AMF packet is a Flash object. 
 		case 0x08:
 			//This specifies the data in the AMF packet is a ECMA array.
-			HashMap<String, AmfValue> hash = new HashMap<String, AmfValue>();
+			Map<String, AmfValue> hash = new LinkedHashMap<String, AmfValue>();
 			boolean isEcmaArray = (type == 0x08);
 			int size = -1;
 			if(isEcmaArray) {

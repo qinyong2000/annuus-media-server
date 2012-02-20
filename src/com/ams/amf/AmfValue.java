@@ -1,7 +1,8 @@
 package com.ams.amf;
 
 import java.util.Date;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class AmfValue {
 	public final static int AMF_INT = 1;
@@ -34,7 +35,7 @@ public class AmfValue {
 			this.kind  = AMF_BOOL;
 		else if (value instanceof String)
 			this.kind  = AMF_STRING;
-		else if (value instanceof HashMap)
+		else if (value instanceof Map)
 			this.kind  = AMF_OBJECT;
 		else if (value instanceof Object[])
 			this.kind  = AMF_ARRAY;
@@ -50,11 +51,11 @@ public class AmfValue {
 	}
 
 	public static AmfValue newObject() {
-		return new AmfValue(new HashMap<String, AmfValue>());
+		return new AmfValue(new LinkedHashMap<String, AmfValue>());
 	}
 
 	public static AmfValue newEcmaArray() {
-		AmfValue value = new AmfValue(new HashMap<String, AmfValue>());
+		AmfValue value = new AmfValue(new LinkedHashMap<String, AmfValue>());
 		value.setEcmaArray(true);
 		return value;
 	}
@@ -131,14 +132,14 @@ public class AmfValue {
 		return (AmfValue[])value;
 	}
 	
-	public HashMap<String, AmfValue> object() {
+	public Map<String, AmfValue> object() {
 		if( value == null ) {
 			throw new NullPointerException("parameter is null");
 		}
 		if( kind != AmfValue.AMF_ARRAY && kind != AmfValue.AMF_OBJECT) {
 			throw new IllegalArgumentException("parameter is not a Amf Object");
 		}
-		return (HashMap<String, AmfValue>)value;
+		return (Map<String, AmfValue>)value;
 	}
 
 	public Date date() {
@@ -181,7 +182,7 @@ public class AmfValue {
 		case AmfValue.AMF_STRING:
 			return "'" + (String)value + "'";
 		case AmfValue.AMF_OBJECT:
-			HashMap<String, AmfValue> v = object();
+			Map<String, AmfValue> v = object();
 			result = "{";
 			first = true;
 			for(String key : v.keySet()) {

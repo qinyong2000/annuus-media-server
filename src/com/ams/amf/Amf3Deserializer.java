@@ -3,7 +3,8 @@ package com.ams.amf;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class Amf3Deserializer {
 	protected ArrayList<String> stringRefTable = new ArrayList<String>();
@@ -64,7 +65,7 @@ public class Amf3Deserializer {
 			objectRefTable.add(obj);
 			return obj;
 		} else {		//assoc Array
-			HashMap<String, AmfValue> hash = new HashMap<String, AmfValue>();
+			Map<String, AmfValue> hash = new LinkedHashMap<String, AmfValue>();
 			String key = s;
 			while(true) {
 				int k = in.readByte() & 0xFF;
@@ -84,7 +85,7 @@ public class Amf3Deserializer {
 			return objectRefTable.get(v >> 1);
 		}
 		readAmf3String();	//class name
-		HashMap<String, AmfValue> hash = new HashMap<String, AmfValue>();
+		Map<String, AmfValue> hash = new LinkedHashMap<String, AmfValue>();
 		while(true) {
 			String key = readAmf3String();
 			int k = in.readByte() & 0xFF;

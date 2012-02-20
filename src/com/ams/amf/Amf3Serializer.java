@@ -3,7 +3,7 @@ package com.ams.amf;
 import java.io.DataOutputStream;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.Map;
 import java.io.IOException;
 
 public class Amf3Serializer {
@@ -65,26 +65,7 @@ public class Amf3Serializer {
 			stringRefTable.add(s);
 		}
 	}
-/*
-	private void writeAmf3Object(AmfValue amfValue) throws IOException {
-		for(int i = 0; i < objectRefTable.size(); i++) {
-			if (amfValue.equals(objectRefTable.get(i))) {
-				writeAmf3RefInt(i);
-				return;
-			}
-		}
-		out.writeByte(0x0B);		//dynamic object
-		writeAmf3EmptyString();		//anonymous class
-		HashMap<String, AmfValue> obj = amfValue.object();
-		for(String key : obj.keySet()) {
-			writeAmf3String(key);
-			write((AmfValue) obj.get(key));
-		}
-		//end of Object
-		writeAmf3EmptyString();
-		objectRefTable.add(amfValue);
-	}
-*/
+
 	private void writeAmf3Object(AmfValue amfValue) throws IOException {
 		for(int i = 0; i < objectRefTable.size(); i++) {
 			if (amfValue.equals(objectRefTable.get(i))) {
@@ -93,7 +74,7 @@ public class Amf3Serializer {
 			}
 		}
 		writeAmf3ValueInt(0);
-		HashMap<String, AmfValue> obj = amfValue.object();
+		Map<String, AmfValue> obj = amfValue.object();
 		for(String key : obj.keySet()) {
 			writeAmf3String(key);
 			write((AmfValue) obj.get(key));

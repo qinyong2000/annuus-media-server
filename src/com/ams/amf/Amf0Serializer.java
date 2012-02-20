@@ -1,9 +1,8 @@
 package com.ams.amf;
 
 import java.io.DataOutputStream;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.Map;
 import java.io.IOException;
 
 public class Amf0Serializer {
@@ -47,7 +46,7 @@ public class Amf0Serializer {
 			} else {
 				out.writeByte(0x03);
 			}
-			HashMap<String, AmfValue> v = amfValue.object();
+			Map<String, AmfValue> v = amfValue.object();
 			for(String key : v.keySet()) {
 				out.writeUTF(key);
 				write((AmfValue) v.get(key));

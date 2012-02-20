@@ -14,8 +14,8 @@ public class HttpResponse {
 	private StringBuilder bodyBuffer = new StringBuilder();
 
 	private String resultHeader;
-	private LinkedHashMap<String, String> headers = new LinkedHashMap<String, String>();
-	private LinkedHashMap<String, Cookie> cookies = new LinkedHashMap<String, Cookie>();
+	private Map<String, String> headers = new LinkedHashMap<String, String>();
+	private Map<String, Cookie> cookies = new LinkedHashMap<String, Cookie>();
 
 	private boolean headerWrote = false;
 	private static String NEWLINE = "\r\n";

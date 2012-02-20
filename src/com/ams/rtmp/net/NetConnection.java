@@ -2,6 +2,8 @@ package com.ams.rtmp.net;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
+
 import com.ams.amf.*;
 import com.ams.flv.FlvException;
 import com.ams.message.MediaMessage;
@@ -81,7 +83,7 @@ public class NetConnection {
 
 	private void onConnect(RtmpHeader header, RtmpMessageCommand command) throws NetConnectionException, IOException {
 		AmfValue amfObject = command.getCommandObject();
-		HashMap<String, AmfValue> obj = amfObject.object();
+		Map<String, AmfValue> obj = amfObject.object();
 
 		String app = obj.get("app").string();
 		if (app == null) {
@@ -90,21 +92,27 @@ public class NetConnection {
 		}
 		context.setAttribute("app", app);
 
-		//rtmp.writeProtocolControlMessage(new RtmpMessageWindowAckSize(128*1024));
-		//rtmp.writeProtocolControlMessage(new RtmpMessagePeerBandwidth(128*1024, (byte)2));
+		rtmp.writeProtocolControlMessage(new RtmpMessageWindowAckSize(128*1024));
+		rtmp.writeProtocolControlMessage(new RtmpMessagePeerBandwidth(128*1024, (byte)2));
 		rtmp.writeProtocolControlMessage(new RtmpMessageUserControl(RtmpMessageUserControl.EVT_STREAM_BEGIN, header.getStreamId()));
+
+		AmfValue value0 = AmfValue.newObject();
+		value0.put("capabilities", 31)
+		 .put("fmsver", "AMS/0,1,0,0")
+	 	 .put("mode", 1);
 		
 		AmfValue value = AmfValue.newObject();
 		value.put("level", "status")
 			 .put("code", "NetConnection.Connect.Success")
 			 .put("description", "Connection succeeded.");
+		
 		AmfValue objectEncoding = obj.get("objectEncoding");
 		if (objectEncoding != null) {
 			value.put("objectEncoding", objectEncoding);
 		}
 		
 		rtmp.writeRtmpMessage(header.getChunkStreamId(), 0, 0,
-				  new RtmpMessageCommand("_result", command.getTransactionId(), AmfValue.array(null, value)));
+				  new RtmpMessageCommand("_result", command.getTransactionId(), AmfValue.array(value0, value)));
 
 	}
 	

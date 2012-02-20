@@ -2,8 +2,9 @@ package com.ams.util;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
+
 import com.ams.amf.AmfException;
 import com.ams.amf.AmfValue;
 import com.ams.rtmp.message.RtmpMessage;
@@ -98,7 +99,7 @@ public class RtmpClient implements Runnable {
 	private boolean connectResult(RtmpMessageCommand msg) {
 		if ("_result".equals(msg.getName())) {
 			AmfValue[] args = msg.getArgs();
-			HashMap<String, AmfValue> result = args[1].object();
+			Map<String, AmfValue> result = args[1].object();
 			if ("NetConnection.Connect.Success".equals(result.get("code").string())) {
 				return true;
 			}
@@ -106,7 +107,7 @@ public class RtmpClient implements Runnable {
 		if ("onStatus".equals(msg.getName())) {
 			errorMsg = "";
 			AmfValue[] args = msg.getArgs();
-			HashMap<String, AmfValue> result = args[1].object();
+			Map<String, AmfValue> result = args[1].object();
 			if ("NetConnection.Error".equals(result.get("code").string())) {
 				errorMsg = result.get("details").string();
 			}
@@ -140,7 +141,7 @@ public class RtmpClient implements Runnable {
 		errorMsg = "";
 		if ("onStatus".equals(msg.getName())) {
 			AmfValue[] args = msg.getArgs();
-			HashMap<String, AmfValue> result = args[1].object();
+			Map<String, AmfValue> result = args[1].object();
 			String level = result.get("level").string();
 			if ("status".equals(level)) {
 				String publishName = result.get("details").string();

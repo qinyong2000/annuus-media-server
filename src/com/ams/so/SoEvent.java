@@ -4,8 +4,9 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import com.ams.amf.Amf0Deserializer;
 import com.ams.amf.Amf0Serializer;
@@ -49,7 +50,7 @@ public class SoEvent {
 			event = new SoEventRequestChange(in.readUTF(), deserializer.read());
 			break;
 		case SoEvent.SO_EVT_CHANGE:
-			HashMap<String, AmfValue> hash = new HashMap<String, AmfValue>();
+			Map<String, AmfValue> hash = new LinkedHashMap<String, AmfValue>();
 			while( true ) {
 				String key = null;
 				try {
@@ -102,7 +103,7 @@ public class SoEvent {
 			serializer.write(((SoEventRequestChange)event).getValue());
 			break;
 		case SoEvent.SO_EVT_CHANGE:
-			HashMap<String, AmfValue> data = ((SoEventChange)event).getData();
+			Map<String, AmfValue> data = ((SoEventChange)event).getData();
 			Iterator<String> it = data.keySet().iterator();
 			while (it.hasNext()) {
 				String key = it.next();

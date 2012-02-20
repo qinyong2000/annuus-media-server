@@ -15,11 +15,11 @@ public class HttpRequest {
 	private String rawGet;
 	private String rawPost;
 
-	private HashMap<String, String> headers = new HashMap<String, String>();
-	private HashMap<String, String> cookies = new HashMap<String, String>();
-	private HashMap<String, String> getValues = new HashMap<String, String>();
-	private HashMap<String, String> postValues = new HashMap<String, String>();
-	private HashMap<String, HttpFileUpload> postFiles = new HashMap<String, HttpFileUpload>();
+	private Map<String, String> headers = new LinkedHashMap<String, String>();
+	private Map<String, String> cookies = new LinkedHashMap<String, String>();
+	private Map<String, String> getValues = new LinkedHashMap<String, String>();
+	private Map<String, String> postValues = new LinkedHashMap<String, String>();
+	private Map<String, HttpFileUpload> postFiles = new LinkedHashMap<String, HttpFileUpload>();
 
 	private static SimpleDateFormat dateFormatGMT;
 	static {
@@ -53,7 +53,7 @@ public class HttpRequest {
 		}
 	}
 
-	private void parseRawString(String options, HashMap<String, String> output,
+	private void parseRawString(String options, Map<String, String> output,
 			String seperator) {
 		String[] tokens = options.split(seperator);
 
@@ -370,23 +370,23 @@ public class HttpRequest {
 		return location;
 	}
 
-	public HashMap<String, String> getCookies() {
+	public Map<String, String> getCookies() {
 		return cookies;
 	}
 
-	public HashMap<String, String> getGetValues() {
+	public Map<String, String> getGetValues() {
 		return getValues;
 	}
 
-	public HashMap<String, String> getHeaders() {
+	public Map<String, String> getHeaders() {
 		return headers;
 	}
 
-	public HashMap<String, HttpFileUpload> getPostFiles() {
+	public Map<String, HttpFileUpload> getPostFiles() {
 		return postFiles;
 	}
 
-	public HashMap<String, String> getPostValues() {
+	public Map<String, String> getPostValues() {
 		return postValues;
 	}
 
