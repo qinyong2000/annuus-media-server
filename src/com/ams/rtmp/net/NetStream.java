@@ -2,6 +2,8 @@ package com.ams.rtmp.net;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Map;
+
 import com.ams.amf.*;
 import com.ams.flv.FlvDeserializer;
 import com.ams.flv.FlvException;
@@ -46,9 +48,14 @@ public class NetStream {
 	}
 	
 	public void writeStatusMessage(String status, AmfValue info) throws IOException {
-		info.put("level", "status")
-			.put("code", status);
-		writeMessage(new RtmpMessageCommand("onStatus", transactionId, AmfValue.array(null, info)));
+		AmfValue value = AmfValue.newObject();
+		value.put("level", "status")
+			 .put("code", status);
+		Map<String, AmfValue> v = info.object();
+		for(String key : v.keySet()) {
+			value.put(key, v.get(key).toString());
+		}
+		writeMessage(new RtmpMessageCommand("onStatus", transactionId, AmfValue.array(null, value)));
 	}
 
 	public void writeErrorMessage(String msg) throws IOException {
