@@ -1,9 +1,14 @@
-package com.ams.util;
+package com.ams.io;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 
-public class ByteBufferArray {
+import com.ams.io.IByteBufferReader;
+
+public class ByteBufferArray implements IByteBufferReader {
 	private ByteBuffer[] buffers;
+	private int index = 0;
 	
 	public ByteBufferArray(ByteBuffer[] buffers) {
 		this.buffers = buffers;
@@ -12,7 +17,7 @@ public class ByteBufferArray {
 	public ByteBuffer[] getBuffers() {
 		return buffers;
 	}
-	
+/*	
 	public boolean hasRemaining() {
 		boolean hasRemaining = false;
 		if (buffers != null) {
@@ -25,7 +30,7 @@ public class ByteBufferArray {
 		}
 		return hasRemaining;
 	}
-	
+*/	
 	public int size() {
 		if (buffers == null) return 0;
 		int dataSize = 0;
@@ -40,11 +45,34 @@ public class ByteBufferArray {
 			return null;
 		}
 		ByteBuffer[] bufferDup = new ByteBuffer[buffers.length];
-		for(int i =0 ; i < bufferDup.length; i++) {
+		for(int i = 0 ; i < bufferDup.length; i++) {
 			bufferDup[i] = buffers[i].duplicate();
 		}
 		return new ByteBufferArray(bufferDup);
 	}
+
+	public ByteBuffer[] read(int size) throws IOException {
+		ArrayList<ByteBuffer> list = new ArrayList<ByteBuffer>();
+		int length = size;
+		while (length > 0 && index < buffers.length) {
+			// read a buffer
+			ByteBuffer buffer = buffers[index];
+			int remain = buffer.remaining();
+			if (length >= remain) {
+				list.add(buffer);
+				index++;
+				length -= remain;
+			} else {
+				ByteBuffer slice = buffer.slice();
+				slice.limit(length);
+				buffer.position(buffer.position() + length);
+				list.add(slice);
+				length = 0;
+			}
+		}
+		return list.toArray(new ByteBuffer[list.size()]);
+	}
+
 	
 //	public ByteBufferArray get(int length) {
 //		ByteBuffer slice = buffer.slice();

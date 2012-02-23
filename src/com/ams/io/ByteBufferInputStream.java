@@ -2,28 +2,18 @@ package com.ams.io;
 
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-
-import com.ams.util.ByteBufferHelper;
 import com.ams.util.Utils;
 
 public class ByteBufferInputStream extends InputStream {
 	protected IByteBufferReader reader = null;
-
-	// buffer queue
-	protected ByteBuffer[] buffers = null;
-	protected int index = 0;
-	protected int mark = -1;
-
 	protected byte[] line = new byte[4096];
 
 	public ByteBufferInputStream(ByteBuffer[] buffers) {
-		this.buffers = buffers;
-		this.reader = null;
+		this.reader = new ByteBufferArray(buffers);
 	}
 
 	public ByteBufferInputStream(IByteBufferReader reader) {
-		this.buffers = null;
+//		this.buffers = null;
 		this.reader = reader;
 	}
 
@@ -85,105 +75,13 @@ public class ByteBufferInputStream extends InputStream {
 				|| (length < 0)) { // check indices
 			throw new IndexOutOfBoundsException();
 		}
-		if (buffers == null) {
-			ByteBuffer[] buffers = reader.read(length);
-			for(ByteBuffer buffer : buffers) {
-				int size = buffer.remaining();
-				buffer.get(data, offset, size);
-				offset += size;
-			}
-			return length;
+		ByteBuffer[] buffers = reader.read(length);
+		for(ByteBuffer buffer : buffers) {
+			int size = buffer.remaining();
+			buffer.get(data, offset, size);
+			offset += size;
 		}
-
-		if (index >= buffers.length) {
-			return -1;
-		} else if (index == buffers.length - 1
-				&& !buffers[index].hasRemaining()) {
-			return -1;
-		} else if (length == 0 || data.length == 0) {
-			return (available() > 0 ? 0 : -1);
-		}
-
-		int readBytes = 0;
-		while (index < buffers.length) {
-			ByteBuffer buf = buffers[index];
-			int size = Math.min(length - readBytes, buf.remaining());
-
-			buf.get(data, offset + readBytes, size);
-			readBytes += size;
-
-			if (readBytes >= length)
-				break;
-			index++;
-		}
-		return (readBytes > 0 ? readBytes : -1);
-	}
-
-	public long skip(long n) {
-		if (buffers == null)
-			return -1;
-
-		long cnt = 0;
-		while (index < buffers.length) {
-			ByteBuffer buf = buffers[index];
-			long size = Math.min(buf.remaining(), n - cnt);
-			buf.position(buf.position() + (int) size);
-			cnt += size;
-			if (cnt == n) {
-				break;
-			}
-			index++;
-		}
-		return cnt;
-	}
-
-	public int available() {
-		if (buffers == null)
-			return -1;
-
-		int available = 0;
-		for (int i = buffers.length - 1; i >= index; i--) {
-			available += buffers[i].remaining();
-		}
-		return available;
-	}
-
-	public void close() throws IOException {
-		index = 0;
-		mark = -1;
-		buffers = null;
-		// if (reader != null) reader.close();
-	}
-
-	public void mark(final int readlimit) {
-		if (buffers == null)
-			return;
-
-		if (index < buffers.length) {
-			mark = index;
-			for (int i = buffers.length - 1; i >= mark; i--) {
-				buffers[i].mark();
-			}
-		}
-	}
-
-	public void reset() throws IOException {
-		if (buffers == null)
-			return;
-
-		if (mark != -1) {
-			index = mark;
-			for (int i = buffers.length - 1; i >= index; i--) {
-				buffers[i].reset();
-			}
-			mark = -1;
-		}
-	}
-
-	public boolean markSupported() {
-		if (buffers == null)
-			return false;
-		return true;
+		return length;
 	}
 
 	public byte readByte() throws IOException {
@@ -232,27 +130,7 @@ public class ByteBufferInputStream extends InputStream {
 	}
 
 	public ByteBuffer[] readByteBuffer(int size) throws IOException {
-		if (reader != null) {
 			return reader.read(size);
-		} else {
-			ArrayList<ByteBuffer> list = new ArrayList<ByteBuffer>();
-			int length = size;
-			while (length > 0 && index < buffers.length) {
-				// read a buffer
-				ByteBuffer buffer = buffers[index];
-				int remain = buffer.remaining();
-				if (length >= remain) {
-					list.add(buffer);
-					index++;
-					length -= remain;
-				} else {
-					ByteBuffer slice = ByteBufferHelper.cut(buffer, length);
-					list.add(slice);
-					length = 0;
-				}
-			}
-			return list.toArray(new ByteBuffer[list.size()]);
-		}
 	}
 
 }
