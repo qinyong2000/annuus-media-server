@@ -5,11 +5,11 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import com.ams.amf.Amf0Serializer;
 import com.ams.amf.AmfValue;
+import com.ams.io.ByteBufferArray;
 import com.ams.io.ByteBufferInputStream;
 import com.ams.io.ByteBufferOutputStream;
 import com.ams.rtmp.message.*;
 import com.ams.so.SoMessage;
-import com.ams.util.ByteBufferHelper;
 
 public class RtmpMessageSerializer {
 	private int writeChunkSize = 128;
@@ -23,7 +23,7 @@ public class RtmpMessageSerializer {
 	}
 
 	public void write(int chunkStreamId, int streamId, long timestamp, RtmpMessage message) throws IOException {
-		ByteBuffer[] data = null;
+		ByteBufferArray data = null;
 		ByteBufferOutputStream bos = new ByteBufferOutputStream();
 		
 		int msgType = message.getType();
@@ -140,7 +140,7 @@ public class RtmpMessageSerializer {
 			break;
 		}
 
-		int dataSize = ByteBufferHelper.size(data);
+		int dataSize = data.size();
 		RtmpHeader header = new RtmpHeader(	chunkStreamId, timestamp, dataSize,	msgType, streamId);
 		
 		// write packet header + data

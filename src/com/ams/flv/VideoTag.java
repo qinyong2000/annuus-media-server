@@ -1,16 +1,14 @@
 package com.ams.flv;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-
+import com.ams.io.ByteBufferArray;
 import com.ams.io.ByteBufferInputStream;
-import com.ams.util.ByteBufferHelper;
 
 public class VideoTag extends FlvTag {
 	private int codecId = -1;
 	private int width = 0, height = 0;
 	
-	public VideoTag(ByteBuffer[] data, long timestamp) {
+	public VideoTag(ByteBufferArray data, long timestamp) {
 		super(Sample.SAMPLE_VIDEO, data, timestamp);
 	}
 
@@ -19,7 +17,7 @@ public class VideoTag extends FlvTag {
 	}
 	
 	public void getParameters() throws IOException {
-		ByteBufferInputStream bi = new ByteBufferInputStream(ByteBufferHelper.duplicate(data));
+		ByteBufferInputStream bi = new ByteBufferInputStream(data.duplicate());
 		byte b = bi.readByte();
 		keyframe = (b >>> 4) == 1;
 		codecId = b & 0x0F;

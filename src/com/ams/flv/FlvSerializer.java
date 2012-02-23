@@ -1,7 +1,7 @@
 package com.ams.flv;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
+import com.ams.io.ByteBufferArray;
 import com.ams.io.ByteBufferOutputStream;
 import com.ams.io.RandomAccessFileWriter;
 
@@ -14,7 +14,7 @@ public class FlvSerializer {
 		this.out = new ByteBufferOutputStream(writer);
 	}
 
-	public void write(int type, ByteBuffer[] data, long time) throws IOException {
+	public void write(int type, ByteBufferArray data, long time) throws IOException {
 		if (!headerWrite) {
 			FlvHeader header = new FlvHeader(true, true);
 			FlvHeader.write(out, header);

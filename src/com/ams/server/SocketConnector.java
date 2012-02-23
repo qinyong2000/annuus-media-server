@@ -7,8 +7,6 @@ import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 
-import com.ams.util.ByteBufferHelper;
-
 public class SocketConnector extends Connector {
 	private static final int MIN_READ_BUFFER_SIZE = 256;
 	private static final int MAX_READ_BUFFER_SIZE = 64*1024;
@@ -104,7 +102,15 @@ public class SocketConnector extends Connector {
 					throw new EOFException();
 				}
 
-				if (!ByteBufferHelper.hasRemaining(data)) {
+				boolean hasRemaining = false;
+				for (ByteBuffer buf : data) {
+					if (buf.hasRemaining()) {
+						hasRemaining = true;
+						break;
+					}
+				}
+				
+				if (!hasRemaining) {
 					break;
 				}
 				if (len > 0) {

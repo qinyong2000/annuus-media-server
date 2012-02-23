@@ -1,12 +1,12 @@
 package com.ams.rtmp.message;
 
-import java.nio.ByteBuffer;
+import com.ams.io.ByteBufferArray;
 
 public class RtmpMessageUnknown extends RtmpMessage {
 	private int messageType;
-	private ByteBuffer[] data;
+	private ByteBufferArray data;
 	
-	public RtmpMessageUnknown(int type, ByteBuffer[] data) {
+	public RtmpMessageUnknown(int type, ByteBufferArray data) {
 		super(MESSAGE_UNKNOWN);
 		this.messageType = type;
 		this.data = data;
@@ -16,7 +16,7 @@ public class RtmpMessageUnknown extends RtmpMessage {
 		return messageType;
 	}
 	
-	public ByteBuffer[] getData() {
+	public ByteBufferArray getData() {
 		return data;
 	}
 

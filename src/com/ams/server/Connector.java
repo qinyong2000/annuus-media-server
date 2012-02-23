@@ -15,7 +15,6 @@ import com.ams.io.ByteBufferInputStream;
 import com.ams.io.ByteBufferOutputStream;
 import com.ams.io.IByteBufferReader;
 import com.ams.io.IByteBufferWriter;
-import com.ams.util.ByteBufferHelper;
 
 public abstract class Connector implements IByteBufferReader, IByteBufferWriter {
 	protected static final int DEFAULT_TIMEOUT_MS = 30000;
@@ -152,7 +151,9 @@ public abstract class Connector implements IByteBufferReader, IByteBufferWriter 
 					length -= remain;
 					available.addAndGet(-remain);
 				} else {
-					ByteBuffer slice = ByteBufferHelper.cut(buffer, length);
+					ByteBuffer slice = buffer.slice();
+					slice.limit(length);
+					buffer.position(buffer.position() + length);
 					list.add(slice);
 					available.addAndGet(-length);
 					length = 0;

@@ -13,7 +13,6 @@ public class ByteBufferInputStream extends InputStream {
 	}
 
 	public ByteBufferInputStream(IByteBufferReader reader) {
-//		this.buffers = null;
 		this.reader = reader;
 	}
 
@@ -60,7 +59,6 @@ public class ByteBufferInputStream extends InputStream {
 
 	public int read() throws IOException {
 		byte[] one = new byte[1];
-
 		// read 1 byte
 		int amount = read(one, 0, 1);
 		// return EOF / the byte
@@ -76,12 +74,15 @@ public class ByteBufferInputStream extends InputStream {
 			throw new IndexOutOfBoundsException();
 		}
 		ByteBuffer[] buffers = reader.read(length);
+		if (buffers == null) return -1;
+		int readBytes = 0;
 		for(ByteBuffer buffer : buffers) {
 			int size = buffer.remaining();
 			buffer.get(data, offset, size);
 			offset += size;
+			readBytes += size;
 		}
-		return length;
+		return readBytes;
 	}
 
 	public byte readByte() throws IOException {
@@ -130,7 +131,7 @@ public class ByteBufferInputStream extends InputStream {
 	}
 
 	public ByteBuffer[] readByteBuffer(int size) throws IOException {
-			return reader.read(size);
+		return reader.read(size);
 	}
 
 }

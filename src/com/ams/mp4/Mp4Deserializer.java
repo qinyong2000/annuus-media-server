@@ -11,6 +11,7 @@ import java.util.Collections;
 import com.ams.amf.AmfValue;
 import com.ams.flv.Sample;
 import com.ams.flv.SampleDeserializer;
+import com.ams.io.ByteBufferArray;
 import com.ams.io.RandomAccessFileReader;
 import com.ams.mp4.STSD.AudioSampleDescription;
 import com.ams.mp4.STSD.VideoSampleDescription;
@@ -87,7 +88,7 @@ public class Mp4Deserializer implements SampleDeserializer {
 		return reader.read(sample.getSize());
 	}
 
-	public ByteBuffer[] videoHeaderData() {
+	public ByteBufferArray videoHeaderData() {
 		byte[] data = videoTrak.getVideoDecoderConfigData();
 		int dataSize = (data != null) ? data.length : 0;
 		ByteBuffer[] buf = new ByteBuffer[1];
@@ -97,10 +98,10 @@ public class Mp4Deserializer implements SampleDeserializer {
 			buf[0].put(data);
 		}
 		buf[0].flip();
-		return buf;
+		return new ByteBufferArray(buf);
 	}
 	
-	public ByteBuffer[] audioHeaderData() {
+	public ByteBufferArray audioHeaderData() {
 		byte[] data = audioTrak.getAudioDecoderConfigData();
 		int dataSize = (data != null) ? data.length : 0;
 		ByteBuffer[] buf = new ByteBuffer[1];
@@ -110,10 +111,10 @@ public class Mp4Deserializer implements SampleDeserializer {
 			buf[0].put(data);
 		}
 		buf[0].flip();
-		return buf;
+		return new ByteBufferArray(buf);
 	}
 	
-	private ByteBuffer[] createVideoTag(Mp4Sample sample) throws IOException {
+	private ByteBufferArray createVideoTag(Mp4Sample sample) throws IOException {
 		ByteBuffer[] data = readSampleData(sample);
 		ByteBuffer[] buf = new ByteBuffer[data.length + 1];
 		System.arraycopy(data, 0, buf, 1, data.length);
@@ -121,19 +122,18 @@ public class Mp4Deserializer implements SampleDeserializer {
 
 		byte type = (byte) (sample.isKeyframe() ? 0x17 : 0x27);
 		buf[0].put(new byte[]{type, 0x01, 0, 0, 0});
-
 		buf[0].flip();
-		return buf;
+		return new ByteBufferArray(buf);
 	}
 
-	private ByteBuffer[] createAudioTag(Mp4Sample sample) throws IOException {
+	private ByteBufferArray createAudioTag(Mp4Sample sample) throws IOException {
 		ByteBuffer[] data = readSampleData(sample);
 		ByteBuffer[] buf = new ByteBuffer[data.length + 1];
 		System.arraycopy(data, 0, buf, 1, data.length);
 		buf[0] = ByteBufferFactory.allocate(2);
 		buf[0].put(new byte[]{(byte)0xaf, 0x01});
 		buf[0].flip();
-		return buf;
+		return new ByteBufferArray(buf);
 	}
 	
 	public Sample seek(long seekTime) {

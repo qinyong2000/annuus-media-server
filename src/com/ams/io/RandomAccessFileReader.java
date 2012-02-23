@@ -9,7 +9,6 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 
 import com.ams.server.ByteBufferFactory;
-import com.ams.util.ByteBufferHelper;
 
 public class RandomAccessFileReader implements IByteBufferReader {
 	private RandomAccessFile file;
@@ -107,7 +106,9 @@ public class RandomAccessFileReader implements IByteBufferReader {
 					length -= remain;
 					position += remain;
 				} else {
-					ByteBuffer slice = ByteBufferHelper.cut(buffer, length);
+					ByteBuffer slice = buffer.slice();
+					slice.limit(length);
+					buffer.position(buffer.position() + length);
 					list.add(slice);
 					position += length;
 					length = 0;

@@ -72,9 +72,9 @@ public class ByteBufferOutputStream extends OutputStream {
 		write(b, 0, 1);
 	}
 
-	public ByteBuffer[] toByteBufferArray() {
+	public ByteBufferArray toByteBufferArray() {
 		offerWriteBuffer();
-		return buffers.toArray(new ByteBuffer[buffers.size()]);
+		return new ByteBufferArray(buffers.toArray(new ByteBuffer[buffers.size()]));
 	}
 
 	public void writeByte(int v) throws IOException {
@@ -109,6 +109,10 @@ public class ByteBufferOutputStream extends OutputStream {
 		write(Utils.to32BitLittleEndian(v));
 	}
 
+	public void writeByteBuffer(ByteBufferArray data) throws IOException {
+		writeByteBuffer(data.getBuffers());
+	}
+	
 	public void writeByteBuffer(ByteBuffer[] data) throws IOException {
 		if (writer != null) {
 			flushWriteBuffer();

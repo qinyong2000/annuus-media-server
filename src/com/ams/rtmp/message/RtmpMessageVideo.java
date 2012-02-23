@@ -1,18 +1,16 @@
 package com.ams.rtmp.message;
 
-import java.nio.ByteBuffer;
-
-import com.ams.util.ByteBufferHelper;
+import com.ams.io.ByteBufferArray;
 
 public class RtmpMessageVideo extends RtmpMessage {
-	private ByteBuffer[] data;
-	public RtmpMessageVideo(ByteBuffer[] data) {
+	private ByteBufferArray data;
+	public RtmpMessageVideo(ByteBufferArray data) {
 		super(MESSAGE_VIDEO);
 		this.data = data;
 	}
 
-	public ByteBuffer[] getData() {
-		return ByteBufferHelper.duplicate(data);
+	public ByteBufferArray getData() {
+		return data.duplicate();
 	}
 
 }

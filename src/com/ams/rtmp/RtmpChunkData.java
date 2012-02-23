@@ -3,6 +3,8 @@ package com.ams.rtmp;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+
+import com.ams.io.ByteBufferArray;
 import com.ams.io.ByteBufferInputStream;
 
 class RtmpChunkData {
@@ -26,8 +28,8 @@ class RtmpChunkData {
 		chunkSize -= length;
 	}
 
-	public ByteBuffer[] getChunkData() {
-		return chunkData.toArray(new ByteBuffer[chunkData.size()]);
+	public ByteBufferArray getChunkData() {
+		return new ByteBufferArray(chunkData.toArray(new ByteBuffer[chunkData.size()]));
 	}
 
 	public int getRemainBytes() {

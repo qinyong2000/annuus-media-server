@@ -11,6 +11,7 @@ import com.ams.amf.Amf3Deserializer;
 import com.ams.amf.AmfException;
 import com.ams.amf.AmfSwitchToAmf3Exception;
 import com.ams.amf.AmfValue;
+import com.ams.io.ByteBufferArray;
 import com.ams.io.ByteBufferInputStream;
 import com.ams.rtmp.message.RtmpMessage;
 import com.ams.rtmp.message.RtmpMessageAbort;
@@ -65,7 +66,7 @@ public class RtmpMessageDeserializer {
 
 	private RtmpMessage parseChunkData(RtmpChunkData chunk) throws IOException, AmfException, RtmpException {
 		RtmpHeader header = chunk.getHeader();
-		ByteBuffer[] data = chunk.getChunkData();
+		ByteBufferArray data = chunk.getChunkData();
 		ByteBufferInputStream bis = new ByteBufferInputStream(data);
 		switch(header.getType()) {
 		case RtmpMessage.MESSAGE_USER_CONTROL:

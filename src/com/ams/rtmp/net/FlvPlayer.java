@@ -2,9 +2,9 @@ package com.ams.rtmp.net;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import com.ams.amf.AmfValue;
 import com.ams.flv.*;
+import com.ams.io.ByteBufferArray;
 import com.ams.rtmp.message.*;
 
 public class FlvPlayer implements IPlayer{
@@ -38,7 +38,7 @@ public class FlvPlayer implements IPlayer{
 			stream.writeDataMessage(AmfValue.array("onMetaData", value));
 		}
 		
-		ByteBuffer[] headerData = deserializer.videoHeaderData();
+		ByteBufferArray headerData = deserializer.videoHeaderData();
 		if (headerData != null) {
 			stream.writeMessage(new RtmpMessageVideo(headerData));
 		}
@@ -72,7 +72,7 @@ public class FlvPlayer implements IPlayer{
 				throw new EOFException("End Of Media Stream");
 			}
 			stream.setTimeStamp(timestamp);
-			ByteBuffer[] data = sample.getData();
+			ByteBufferArray data = sample.getData();
 			if (sample.isAudioTag() && audioPlaying) {
 				stream.writeAudioMessage(new RtmpMessageAudio(data));
 			}

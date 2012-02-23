@@ -1,10 +1,8 @@
 package com.ams.flv;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-
+import com.ams.io.ByteBufferArray;
 import com.ams.io.ByteBufferInputStream;
-import com.ams.util.ByteBufferHelper;
 
 public class AudioTag extends FlvTag {
 	private int soundFormat = -1;
@@ -12,7 +10,7 @@ public class AudioTag extends FlvTag {
 	private int soundSize = 0;
 	private int soundType = -1;
 	
-	public AudioTag(ByteBuffer[] data, long timestamp) {
+	public AudioTag(ByteBufferArray data, long timestamp) {
 		super(Sample.SAMPLE_AUDIO, data, timestamp);
 	}
 
@@ -21,7 +19,7 @@ public class AudioTag extends FlvTag {
 	}
 	
 	public void getParameters() throws IOException {
-		ByteBufferInputStream bi = new ByteBufferInputStream(ByteBufferHelper.duplicate(data));
+		ByteBufferInputStream bi = new ByteBufferInputStream(data.duplicate());
 		byte b = bi.readByte();
 		soundFormat = (b & 0xF0) >>> 4;
 		soundRate = (b & 0x0C) >>> 2;

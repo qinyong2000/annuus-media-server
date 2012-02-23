@@ -1,9 +1,8 @@
 package com.ams.rtmp.net;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
+import com.ams.io.ByteBufferArray;
 import com.ams.message.MediaMessage;
 import com.ams.message.IMsgSubscriber;
 import com.ams.rtmp.message.*;
@@ -24,12 +23,12 @@ public class StreamPlayer implements IPlayer, IMsgSubscriber {
 	}
 
 	private void writeStartData() throws IOException {
-		ByteBuffer[] value = publisher.getMetaData();
+		ByteBufferArray value = publisher.getMetaData();
 		if (value != null) {
 			stream.writeMessage(new RtmpMessageData(value));
 		}
 		
-		ByteBuffer[] headerData = publisher.getVideoHeaderData();
+		ByteBufferArray headerData = publisher.getVideoHeaderData();
 		if (headerData != null) {
 			stream.writeMessage(new RtmpMessageVideo(headerData));
 		}

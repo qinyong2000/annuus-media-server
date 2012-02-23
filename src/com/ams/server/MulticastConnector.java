@@ -18,8 +18,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
-import com.ams.util.ByteBufferHelper;
-
 public class MulticastConnector extends Connector {
 	class ReadFrameBuffer {
 		private ByteBuffer[] buffers;
@@ -190,7 +188,10 @@ public class MulticastConnector extends Connector {
 				i++;
 			} else {
 				if (remaining > 0) {
-					ByteBuffer slice = ByteBufferHelper.cut(data, remaining);
+					ByteBuffer slice = data.slice();
+					slice.limit(remaining);
+					data.position(data.position() + remaining);
+
 					frame.put(slice);
 				}
 				buffers.add(frame);

@@ -3,15 +3,14 @@ package com.ams.flv;
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-
+import com.ams.io.ByteBufferArray;
 import com.ams.io.ByteBufferInputStream;
 import com.ams.io.ByteBufferOutputStream;
 import com.ams.io.RandomAccessFileReader;
-import com.ams.util.ByteBufferHelper;
 
 public class FlvTag extends Sample {
 
-	public FlvTag(int tagType, ByteBuffer[] data, long timestamp) {
+	public FlvTag(int tagType, ByteBufferArray data, long timestamp) {
 		super(tagType, data, timestamp);
 	}
 
@@ -38,11 +37,11 @@ public class FlvTag extends Sample {
 
 		switch (tagType) {
 		case 0x08:
-			return new AudioTag(data, timestamp);
+			return new AudioTag(new ByteBufferArray(data), timestamp);
 		case 0x09:
-			return new VideoTag(data, timestamp);
+			return new VideoTag(new ByteBufferArray(data), timestamp);
 		case 0x12:
-			return new MetaTag(data, timestamp);
+			return new MetaTag(new ByteBufferArray(data), timestamp);
 		default:
 			throw new FlvException("Invalid FLV tag " + tagType);
 		}
@@ -82,7 +81,7 @@ public class FlvTag extends Sample {
 	
 	public void readData(RandomAccessFileReader reader) throws IOException {
 		reader.seek(offset);
-		data = reader.read(size);
+		data = new ByteBufferArray(reader.read(size));
 	}
 	
 	public static void write(ByteBufferOutputStream out, FlvTag flvTag)
@@ -102,9 +101,9 @@ public class FlvTag extends Sample {
 		// tag type
 		out.writeByte(tagType);
 
-		ByteBuffer[] data = flvTag.getData();
+		ByteBufferArray data = flvTag.getData();
 		// data size
-		int dataSize = ByteBufferHelper.size(data);
+		int dataSize = data.size();
 
 		out.write24Bit(dataSize); // 24Bit write
 		// time stamp

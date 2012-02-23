@@ -5,9 +5,9 @@ import java.nio.ByteBuffer;
 import java.util.LinkedList;
 
 import com.ams.flv.*;
+import com.ams.io.ByteBufferArray;
 import com.ams.message.*;
 import com.ams.rtmp.message.*;
-import com.ams.util.ByteBufferHelper;
 
 public class StreamPublisher implements IMsgPublisher {
 	private String type = null;
@@ -15,9 +15,9 @@ public class StreamPublisher implements IMsgPublisher {
 	private int bytes = 0;
 	private int lastPing = 0;
 	private boolean ping = false;
-	private ByteBuffer[] videoHeaderData = null;
-	private ByteBuffer[] audioHeaderData = null;
-	private ByteBuffer[] metaData = null;
+	private ByteBufferArray videoHeaderData = null;
+	private ByteBufferArray audioHeaderData = null;
+	private ByteBufferArray metaData = null;
 
 	private LinkedList<IMsgSubscriber> subscribers = new LinkedList<IMsgSubscriber>();
 
@@ -36,22 +36,22 @@ public class StreamPublisher implements IMsgPublisher {
 		return "mp4".equalsIgnoreCase(type);
 	}
 	
-	private boolean isAudioHeader(ByteBuffer[] data) {
+	private boolean isAudioHeader(ByteBufferArray data) {
 		if (!isH264()) return false;
-		ByteBuffer buf = data[0];
+		ByteBuffer buf = data.getBuffers()[0];
 		return (buf.get(0) & 0xFF) == 0xAF && (buf.get(1) & 0xFF) == 0x00;
 	}
 
-	private boolean isVideoHeader(ByteBuffer[] data) {
+	private boolean isVideoHeader(ByteBufferArray data) {
 		if (!isH264()) return false;
-		ByteBuffer buf = data[0];
+		ByteBuffer buf = data.getBuffers()[0];
 		return (buf.get(0) & 0xFF) == 0x17 && (buf.get(1) & 0xFF) == 0x00;
 	}
 	
 	public synchronized void publish(MediaMessage msg) throws IOException {
 		long timestamp = msg.getTimestamp();
 		int type = 0;
-		ByteBuffer[] data = null;
+		ByteBufferArray data = null;
 		RtmpMessage message = (RtmpMessage) msg.getData();
 		switch (message.getType()) {
 		case RtmpMessage.MESSAGE_AUDIO:
@@ -89,7 +89,7 @@ public class StreamPublisher implements IMsgPublisher {
 		notify(msg);
 
 		// ping
-		ping(ByteBufferHelper.size(data));
+		ping(data.size());
 	}
 
 	public synchronized void close() {
@@ -147,15 +147,15 @@ public class StreamPublisher implements IMsgPublisher {
 		return publishName;
 	}
 
-	public ByteBuffer[] getVideoHeaderData() {
+	public ByteBufferArray getVideoHeaderData() {
 		return videoHeaderData;
 	}
 
-	public ByteBuffer[] getAudioHeaderData() {
+	public ByteBufferArray getAudioHeaderData() {
 		return audioHeaderData;
 	}
 	
-	public ByteBuffer[] getMetaData() {
+	public ByteBufferArray getMetaData() {
 		return metaData;
 	}
 	

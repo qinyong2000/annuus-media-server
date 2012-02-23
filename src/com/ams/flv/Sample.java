@@ -1,6 +1,6 @@
 package com.ams.flv;
 
-import java.nio.ByteBuffer;
+import com.ams.io.ByteBufferArray;
 
 public class Sample {
 	public static final int SAMPLE_AUDIO = 0;
@@ -12,9 +12,9 @@ public class Sample {
 	protected int size;
 	protected long timestamp;
 	protected boolean keyframe = true;
-	protected ByteBuffer[] data = null;
+	protected ByteBufferArray data = null;
 
-	public Sample(int sampleType, ByteBuffer[] data, long timestamp) {
+	public Sample(int sampleType, ByteBufferArray data, long timestamp) {
 		this.sampleType = sampleType;
 		this.data = data;
 		this.timestamp = timestamp;
@@ -48,7 +48,7 @@ public class Sample {
 		return keyframe;
 	}
 	
-	public ByteBuffer[] getData() {
+	public ByteBufferArray getData() {
 		return data;
 	}
 

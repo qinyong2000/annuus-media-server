@@ -1,11 +1,10 @@
 package com.ams.flv;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
-
 import com.ams.amf.AmfValue;
+import com.ams.io.ByteBufferArray;
 import com.ams.io.ByteBufferInputStream;
 import com.ams.io.RandomAccessFileReader;
 
@@ -100,11 +99,11 @@ public class FlvDeserializer implements SampleDeserializer {
 		return value;
 	}
 
-	public ByteBuffer[] videoHeaderData() {
+	public ByteBufferArray videoHeaderData() {
 		return null;
 	}
 
-	public ByteBuffer[] audioHeaderData() {
+	public ByteBufferArray audioHeaderData() {
 		return null;
 	}
 	

@@ -11,28 +11,31 @@ public class ByteBufferArray implements IByteBufferReader {
 	private int index = 0;
 	
 	public ByteBufferArray(ByteBuffer[] buffers) {
+		if (buffers == null) throw new NullPointerException();
 		this.buffers = buffers;
+		index = 0;
+		for (ByteBuffer buf : buffers) {
+			if (buf.hasRemaining()) break;
+			index++;
+		}
 	}
 	
 	public ByteBuffer[] getBuffers() {
 		return buffers;
 	}
-/*	
+	
 	public boolean hasRemaining() {
 		boolean hasRemaining = false;
-		if (buffers != null) {
-			for (ByteBuffer buf : buffers) {
-				if (buf.hasRemaining()) {
-					hasRemaining = true;
-					break;
-				}
+		for (ByteBuffer buf : buffers) {
+			if (buf.hasRemaining()) {
+				hasRemaining = true;
+				break;
 			}
 		}
 		return hasRemaining;
 	}
-*/	
+
 	public int size() {
-		if (buffers == null) return 0;
 		int dataSize = 0;
 		for(ByteBuffer buf : buffers) {
 			dataSize += buf.remaining();
@@ -41,17 +44,15 @@ public class ByteBufferArray implements IByteBufferReader {
 	}
 
 	public ByteBufferArray duplicate() {
-		if (buffers == null) {
-			return null;
+		ByteBuffer[] buf = new ByteBuffer[buffers.length];
+		for(int i = 0 ; i < buf.length; i++) {
+			buf[i] = buffers[i].duplicate();
 		}
-		ByteBuffer[] bufferDup = new ByteBuffer[buffers.length];
-		for(int i = 0 ; i < bufferDup.length; i++) {
-			bufferDup[i] = buffers[i].duplicate();
-		}
-		return new ByteBufferArray(bufferDup);
+		return new ByteBufferArray(buf);
 	}
 
 	public ByteBuffer[] read(int size) throws IOException {
+		if (index >= buffers.length) return null;
 		ArrayList<ByteBuffer> list = new ArrayList<ByteBuffer>();
 		int length = size;
 		while (length > 0 && index < buffers.length) {
@@ -72,13 +73,4 @@ public class ByteBufferArray implements IByteBufferReader {
 		}
 		return list.toArray(new ByteBuffer[list.size()]);
 	}
-
-	
-//	public ByteBufferArray get(int length) {
-//		ByteBuffer slice = buffer.slice();
-//		slice.limit(length);
-//		buffer.position(buffer.position() + length);
-//		return slice;
-//	}
-	
 }

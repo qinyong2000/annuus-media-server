@@ -1,19 +1,17 @@
 package com.ams.rtmp.message;
 
-import java.nio.ByteBuffer;
-
-import com.ams.util.ByteBufferHelper;
+import com.ams.io.ByteBufferArray;
 
 public class RtmpMessageAudio extends RtmpMessage {
-	private ByteBuffer[] data;
+	private ByteBufferArray data;
 
-	public RtmpMessageAudio(ByteBuffer[] data) {
+	public RtmpMessageAudio(ByteBufferArray data) {
 		super(MESSAGE_AUDIO);
 		this.data = data;
 	}
 
-	public ByteBuffer[] getData() {
-		return ByteBufferHelper.duplicate(data);
+	public ByteBufferArray getData() {
+		return data.duplicate();
 	}
 	
 }
