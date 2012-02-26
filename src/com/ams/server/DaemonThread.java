@@ -62,7 +62,6 @@ public class DaemonThread extends Thread {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			Log.logger.info(e.getMessage());
 		}
 	}
 

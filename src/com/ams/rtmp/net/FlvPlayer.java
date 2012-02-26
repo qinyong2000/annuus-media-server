@@ -69,6 +69,7 @@ public class FlvPlayer implements IPlayer{
 			}
 			long timestamp = sample.getTimestamp();
 			if (timestamp - stream.getTimeStamp() > 1000) {
+				stream.setPlayer(null);
 				throw new EOFException("End Of Media Stream");
 			}
 			stream.setTimeStamp(timestamp);

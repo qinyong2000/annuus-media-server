@@ -124,7 +124,7 @@ public final class TRAK {
 				// sample size
 				int sampleSize = getSampleSize(sampleIndex);
 				// time stamp
-				long timeStamp = getSampleTimeStamp(sampleIndex);
+				long timeStamp = 1000 * getSampleTimeStamp(sampleIndex) / getTimeScale();
 				// keyframe
 				boolean keyframe = isKeyFrameSample(sampleIndex);
 				// description index

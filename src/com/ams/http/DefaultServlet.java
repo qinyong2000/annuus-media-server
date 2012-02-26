@@ -26,10 +26,8 @@ public class DefaultServlet {
 		try {
 			realPath = context.getRealPath(req.getLocation());
 		} catch (Exception e) {
-			e.printStackTrace();
 			Log.logger.warning(e.getMessage());
 		}
-
 		File file = new File(realPath);
 		if (!file.exists()) {
 			res.setHttpResult(HTTP.HTTP_NOT_FOUND);

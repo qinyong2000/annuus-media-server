@@ -23,8 +23,8 @@ public class RtmpMessageSerializer {
 	}
 
 	public void write(int chunkStreamId, int streamId, long timestamp, RtmpMessage message) throws IOException {
-		ByteBufferArray data = null;
-		ByteBufferOutputStream bos = new ByteBufferOutputStream();
+		ByteBufferArray data = new ByteBufferArray();
+		ByteBufferOutputStream bos = new ByteBufferOutputStream(data);
 		
 		int msgType = message.getType();
 		
@@ -51,7 +51,6 @@ public class RtmpMessageSerializer {
 				bos.write32Bit(ts);
 				break;
 			};
-			data = bos.toByteBufferArray();
 			break;
 			
 		case RtmpMessage.MESSAGE_AMF0_COMMAND:
@@ -66,8 +65,6 @@ public class RtmpMessageSerializer {
 			for(int i = 0; i < args.length; i++) {
 				serializer.write(args[i]);
 			}
-			
-			data = bos.toByteBufferArray();
 			break;
 		}	
 		case RtmpMessage.MESSAGE_AMF3_COMMAND:
@@ -82,8 +79,6 @@ public class RtmpMessageSerializer {
 			for(int i = 0; i < args.length; i++) {
 				serializer.write(args[i]);
 			}
-			
-			data = bos.toByteBufferArray();
 			break;
 		}	
 		case RtmpMessage.MESSAGE_AUDIO:
@@ -104,42 +99,36 @@ public class RtmpMessageSerializer {
 		case RtmpMessage.MESSAGE_SHARED_OBJECT:
 			SoMessage so = ((RtmpMessageSharedObject)message).getData(); 
 			SoMessage.write(new DataOutputStream(bos), so);
-			data = bos.toByteBufferArray();
 			break;
 		case RtmpMessage.MESSAGE_CHUNK_SIZE:
 			int chunkSize = ((RtmpMessageChunkSize)message).getChunkSize();
 			bos.write32Bit(chunkSize);
-			data = bos.toByteBufferArray();
 			writeChunkSize = chunkSize;
 			break;
 		case RtmpMessage.MESSAGE_ABORT:
 			sid = ((RtmpMessageAbort)message).getStreamId();
 			bos.write32Bit(sid);
-			data = bos.toByteBufferArray();
 			break;
 		case RtmpMessage.MESSAGE_ACK:
 			int nbytes = ((RtmpMessageAck)message).getBytes();
 			bos.write32Bit(nbytes);
-			data = bos.toByteBufferArray();
 			break;
 		case RtmpMessage.MESSAGE_WINDOW_ACK_SIZE:
 			int size = ((RtmpMessageWindowAckSize)message).getSize();
 			bos.write32Bit(size);
-			data = bos.toByteBufferArray();
 			break;
 		case RtmpMessage.MESSAGE_PEER_BANDWIDTH:
 			int windowAckSize = ((RtmpMessagePeerBandwidth)message).getWindowAckSize();
 			byte limitType = ((RtmpMessagePeerBandwidth)message).getLimitType();
 			bos.write32Bit(windowAckSize);
 			bos.writeByte(limitType);
-			data = bos.toByteBufferArray();
 			break;
 		case RtmpMessage.MESSAGE_UNKNOWN:
 			int t = ((RtmpMessageUnknown)message).getMessageType();
 			data = ((RtmpMessageUnknown)message).getData();
 			break;
 		}
-
+		bos.flush();
 		int dataSize = data.size();
 		RtmpHeader header = new RtmpHeader(	chunkStreamId, timestamp, dataSize,	msgType, streamId);
 		

@@ -130,7 +130,6 @@ class Replicator implements Runnable {
 				conn.flush();
 			} catch (IOException e) {
 				e.printStackTrace();
-				Log.logger.warning(e.toString());
 				clear();
 			}
 		}

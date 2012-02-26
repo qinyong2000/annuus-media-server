@@ -54,7 +54,6 @@ public class Dispatcher implements Runnable {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			Log.logger.warning(e.getMessage());
 		}
 	}
 
@@ -66,8 +65,6 @@ public class Dispatcher implements Runnable {
 			e.printStackTrace();
 			if (selector.isOpen()) {
 				return;
-			} else {
-				Log.logger.warning(e.getMessage());
 			}
 		}
 
@@ -95,7 +92,6 @@ public class Dispatcher implements Runnable {
 
 			} catch (Exception e) {
 				e.printStackTrace();
-				Log.logger.warning(e.toString());
 				key.cancel();
 				key.attach(null);
 				connector.close();

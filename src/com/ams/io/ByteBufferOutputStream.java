@@ -3,48 +3,23 @@ package com.ams.io;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-
 import com.ams.server.ByteBufferFactory;
 import com.ams.util.Utils;
 
 public class ByteBufferOutputStream extends OutputStream {
 	protected static final int WRITE_BUFFER_SIZE = 512;
-	protected ArrayList<ByteBuffer> buffers = null;
 	protected ByteBuffer writeBuffer = null;
 	protected IByteBufferWriter writer = null;
 
-	public ByteBufferOutputStream() {
-		this.buffers = new ArrayList<ByteBuffer>();
-		this.writer = null;
-	}
-
 	public ByteBufferOutputStream(IByteBufferWriter writer) {
-		this.buffers = null;
 		this.writer = writer;
 	}
 
-	private void offerWriteBuffer() {
-		if (writeBuffer != null) {
-			writeBuffer.flip();
-			buffers.add(writeBuffer);
-			writeBuffer = null;
-		}
-	}
-
-	private void flushWriteBuffer() throws IOException {
+	public void flush() throws IOException {
 		if (writeBuffer != null) {
 			writeBuffer.flip();
 			writer.write(new ByteBuffer[] {writeBuffer});
 			writeBuffer = null;
-		}
-	}
-	
-	public void flush() throws IOException {
-		if (writer != null) {
-			flushWriteBuffer();
-		} else {
-			offerWriteBuffer();
 		}
 	}
 	
@@ -70,11 +45,6 @@ public class ByteBufferOutputStream extends OutputStream {
 		byte[] b = new byte[1];
 		b[0] = (byte) (data & 0xFF);
 		write(b, 0, 1);
-	}
-
-	public ByteBufferArray toByteBufferArray() {
-		offerWriteBuffer();
-		return new ByteBufferArray(buffers.toArray(new ByteBuffer[buffers.size()]));
 	}
 
 	public void writeByte(int v) throws IOException {
@@ -114,14 +84,8 @@ public class ByteBufferOutputStream extends OutputStream {
 	}
 	
 	public void writeByteBuffer(ByteBuffer[] data) throws IOException {
-		if (writer != null) {
-			flushWriteBuffer();
-			writer.write(data);
-		} else {
-			offerWriteBuffer();
-			for (ByteBuffer buf : data)
-				buffers.add(buf);
-		}
+		flush();
+		writer.write(data);
 	}
 
 }

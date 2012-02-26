@@ -79,7 +79,6 @@ public class SlaveHandler implements IProtocolHandler {
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			Log.logger.info("slave handler exception");
 		}
 	}
 	

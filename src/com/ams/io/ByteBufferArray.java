@@ -3,16 +3,32 @@ package com.ams.io;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import com.ams.io.IByteBufferReader;
 
-public class ByteBufferArray implements IByteBufferReader {
-	private ByteBuffer[] buffers;
+public class ByteBufferArray implements IByteBufferReader, IByteBufferWriter {
+	private List<ByteBuffer> buffers;
 	private int index = 0;
+
+	public ByteBufferArray() {
+		this.buffers = new ArrayList<ByteBuffer>();
+	}
+
+	public ByteBufferArray(ArrayList<ByteBuffer> buffers) {
+		if (buffers == null) throw new NullPointerException();
+		this.buffers = buffers;
+		init();
+	}
 	
 	public ByteBufferArray(ByteBuffer[] buffers) {
 		if (buffers == null) throw new NullPointerException();
-		this.buffers = buffers;
+		this.buffers = Arrays.asList(buffers);
+		init();
+	}
+	
+	private void init() {
 		index = 0;
 		for (ByteBuffer buf : buffers) {
 			if (buf.hasRemaining()) break;
@@ -21,7 +37,7 @@ public class ByteBufferArray implements IByteBufferReader {
 	}
 	
 	public ByteBuffer[] getBuffers() {
-		return buffers;
+		return buffers.toArray(new ByteBuffer[buffers.size()]);
 	}
 	
 	public boolean hasRemaining() {
@@ -44,20 +60,20 @@ public class ByteBufferArray implements IByteBufferReader {
 	}
 
 	public ByteBufferArray duplicate() {
-		ByteBuffer[] buf = new ByteBuffer[buffers.length];
-		for(int i = 0 ; i < buf.length; i++) {
-			buf[i] = buffers[i].duplicate();
+		ArrayList<ByteBuffer> dup = new ArrayList<ByteBuffer>();
+		for(ByteBuffer buf : buffers) {
+			dup.add(buf.duplicate());
 		}
-		return new ByteBufferArray(buf);
+		return new ByteBufferArray(dup);
 	}
 
 	public ByteBuffer[] read(int size) throws IOException {
-		if (index >= buffers.length) return null;
+		if (index >= buffers.size()) return null;
 		ArrayList<ByteBuffer> list = new ArrayList<ByteBuffer>();
 		int length = size;
-		while (length > 0 && index < buffers.length) {
+		while (length > 0 && index < buffers.size()) {
 			// read a buffer
-			ByteBuffer buffer = buffers[index];
+			ByteBuffer buffer = buffers.get(index);
 			int remain = buffer.remaining();
 			if (length >= remain) {
 				list.add(buffer);
@@ -72,5 +88,11 @@ public class ByteBufferArray implements IByteBufferReader {
 			}
 		}
 		return list.toArray(new ByteBuffer[list.size()]);
+	}
+
+	public void write(ByteBuffer[] data) throws IOException {
+		for (ByteBuffer buf : data) {
+			buffers.add(buf);
+		}
 	}
 }

@@ -186,7 +186,6 @@ public abstract class Connector implements IByteBufferReader, IByteBufferWriter 
 
 	public void flush() throws IOException {
 		if (out != null) out.flush();
-		
 		ArrayList<ByteBuffer> writeBuffers = new ArrayList<ByteBuffer>();
 		ByteBuffer data;
 		boolean hasData = false;

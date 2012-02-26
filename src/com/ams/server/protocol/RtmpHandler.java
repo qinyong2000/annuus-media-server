@@ -4,7 +4,6 @@ import com.ams.rtmp.net.NetConnection;
 import com.ams.rtmp.net.NetContext;
 import com.ams.rtmp.RtmpConnection;
 import com.ams.server.Connector;
-import com.ams.util.Log;
 
 public class RtmpHandler implements IProtocolHandler {
 	private Connector conn;
@@ -41,7 +40,6 @@ public class RtmpHandler implements IProtocolHandler {
 			conn.flush();
 		} catch (Exception e) {
 			e.printStackTrace();
-			Log.logger.info("rtmp handler exception");
 			clear();
 		}
 	}

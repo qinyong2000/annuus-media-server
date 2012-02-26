@@ -67,12 +67,14 @@ public class NetStream {
 	}
 
 	public void writeDataMessage(AmfValue[] values) throws IOException {
-		ByteBufferOutputStream out = new ByteBufferOutputStream();
+		ByteBufferArray buf = new ByteBufferArray();
+		ByteBufferOutputStream out = new ByteBufferOutputStream(buf);
 		Amf0Serializer serializer = new Amf0Serializer(new DataOutputStream(out));
 		for(int i = 0; i < values.length; i++) {
 			serializer.write(values[i]);
 		}
-		writeMessage(new RtmpMessageData(out.toByteBufferArray()));
+		out.flush();
+		writeMessage(new RtmpMessageData(buf));
 	}
 
 	public synchronized void close() throws IOException {
@@ -246,20 +248,9 @@ public class NetStream {
 			writeErrorMessage("This channel is already closed");
 			return;
 		}
-		
 		player.pause(pause);
-		player.seek(time);
 
-		if (pause) {
-			rtmp.writeProtocolControlMessage(new RtmpMessageUserControl(RtmpMessageUserControl.EVT_STREAM_EOF, streamId));
-		}	
-
-		AmfValue value = AmfValue.newObject();
-		value.put("level", "status")
-			 .put("code", (pause ? "NetStream.Pause.Notify" : "NetStream.Unpause.Notify"));
-		rtmp.writeRtmpMessage(chunkStreamId, 0, 0,  
-				  new RtmpMessageCommand("_result", transactionId, AmfValue.array(null, value)));
-		
+		writeStatusMessage((pause ? "NetStream.Pause.Notify" : "NetStream.Unpause.Notify"), AmfValue.newObject());
 	}
 	
 	public void publish(NetContext context, String name, String type) throws NetConnectionException, IOException {
