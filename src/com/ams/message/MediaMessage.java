@@ -2,6 +2,7 @@ package com.ams.message;
 
 public class MediaMessage {
 	protected long timestamp = 0;
+	protected boolean keyframe = false;
 	protected Object data;
 	
 	public MediaMessage(long timestamp, Object data) {
@@ -22,4 +23,12 @@ public class MediaMessage {
 		return data;
 	}
 
+	public boolean isKeyframe() {
+		return keyframe;
+	}
+
+	public void setKeyframe(boolean keyframe) {
+		this.keyframe = keyframe;
+	}
+	
 }

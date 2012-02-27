@@ -11,6 +11,8 @@ public final class Configuration {
 	private int slabPageSize = 10 * 1024 * 1024;
 	private int dispatcherThreadPoolSize = 8;
 	private int workerThreadPoolSize = 16;
+	private int commandPort = 55555;
+
 	private String httpHost = "0.0.0.0";
 	private int httpPort = 80;
 	private String httpContextRoot = "www";
@@ -29,13 +31,17 @@ public final class Configuration {
 		Properties prop = new Properties();
 		try {
 			prop.load(new FileInputStream("server.conf"));
-			String dispatchersProp = prop.getProperty("dispatchers");
+			String dispatchersProp = prop.getProperty("server.dispatchers");
 			if (dispatchersProp != null) {
 				dispatcherThreadPoolSize = Integer.parseInt(dispatchersProp);
 			}
-			String workersProp = prop.getProperty("workers");
+			String workersProp = prop.getProperty("server.workers");
 			if (workersProp != null) {
 				workerThreadPoolSize = Integer.parseInt(workersProp);
+			}
+			String commandProp = prop.getProperty("server.command.port");
+			if (workersProp != null) {
+				commandPort = Integer.parseInt(commandProp);
 			}
 			String host = prop.getProperty("http.host");
 			if (host != null) {
@@ -112,6 +118,10 @@ public final class Configuration {
 
 	public int getWokerThreadPoolSize() {
 		return workerThreadPoolSize;
+	}
+
+	public int getCommandPort() {
+		return commandPort;
 	}
 
 	public String getHttpHost() {

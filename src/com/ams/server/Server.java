@@ -85,7 +85,7 @@ public final class Server implements ConnectionListner {
 		}
 		
 		// establish replicate cluster
-		if (config.getReplicationHost() != null && config.getReplicationSlaves() != null) {
+		if (config.getReplicationSlaves() != null) {
 			try {
 				ReplicateCluster.establishTcpReplicator(config.getReplicationSlaves(), config.getReplicationPort());
 			} catch (IOException e) {

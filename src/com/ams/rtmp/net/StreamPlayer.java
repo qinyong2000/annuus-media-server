@@ -40,6 +40,7 @@ public class StreamPlayer implements IPlayer, IMsgSubscriber {
 	
 	public void seek(long seekTime) throws IOException {
 		writeStartData();
+		// start from a keyframe
 	}
 
 	public void play() throws IOException {

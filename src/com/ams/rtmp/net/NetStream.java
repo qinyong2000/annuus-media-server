@@ -156,7 +156,7 @@ public class NetStream {
 			return;
 		}
 		this.streamName = streamName;
-		
+
 		// set chunk size
 		rtmp.writeProtocolControlMessage(new RtmpMessageChunkSize(1024));
 
@@ -255,7 +255,6 @@ public class NetStream {
 	
 	public void publish(NetContext context, String name, String type) throws NetConnectionException, IOException {
 		String app = context.getAttribute("app");
-		
 		//save to share or file
 		publisher = new StreamPublisher(name);
 		if ("record".equals(type)) {

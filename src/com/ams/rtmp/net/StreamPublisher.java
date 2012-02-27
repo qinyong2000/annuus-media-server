@@ -48,6 +48,10 @@ public class StreamPublisher implements IMsgPublisher {
 		return (buf.get(0) & 0xFF) == 0x17 && (buf.get(1) & 0xFF) == 0x00;
 	}
 	
+	private boolean isKeyframe(ByteBufferArray data) {
+		return false;
+	}
+	
 	public synchronized void publish(MediaMessage msg) throws IOException {
 		long timestamp = msg.getTimestamp();
 		int type = 0;

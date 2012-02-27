@@ -10,8 +10,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import com.ams.util.Log;
 
 public class Dispatcher implements Runnable {
-	private static final long selectTimeOut = 2 * 1000;
-	private static final long timeExpire = 2 * 60 * 1000;
+	private static final long SELECT_TIMEOUT = 2 * 1000;
+	private long timeExpire = 2 * 60 * 1000;
 	private long lastExpirationTime = 0;
 	private Selector selector = null;
 	private ConcurrentLinkedQueue<ChannelInterestOps> registerChannelQueue = null;
@@ -60,7 +60,7 @@ public class Dispatcher implements Runnable {
 	private void doSelect() {
 		int selectedKeys = 0;
 		try {
-			selectedKeys = selector.select(selectTimeOut);
+			selectedKeys = selector.select(SELECT_TIMEOUT);
 		} catch (Exception e) {
 			e.printStackTrace();
 			if (selector.isOpen()) {
@@ -113,7 +113,7 @@ public class Dispatcher implements Runnable {
 			if (connector != null) {
 				long keepAliveTime = connector.getKeepAliveTime();
 				if (now - keepAliveTime > timeExpire) {
-					Log.logger.warning("key expired");
+					Log.logger.warning("close expired idle connector!");
 					key.cancel();
 					key.attach(null);
 					connector.close();
@@ -134,6 +134,10 @@ public class Dispatcher implements Runnable {
 			}	
 		}
 
+	}
+
+	public void setTimeExpire(long timeExpire) {
+		this.timeExpire = timeExpire;
 	}
 	
 	public void start() {

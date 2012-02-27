@@ -1,7 +1,6 @@
 package com.ams.server;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
@@ -15,26 +14,17 @@ import com.ams.server.protocol.SlaveHandler;
 import com.ams.util.Log;
 
 public class DaemonThread extends Thread {
+	Configuration config;
 	private ServerSocket commandSocket;
 	private Server server;
 
-	public DaemonThread() throws IOException {
-		commandSocket = new ServerSocket(5555);
+	public DaemonThread(Configuration config) throws IOException {
+		this.config = config;
+		this.commandSocket = new ServerSocket(config.getCommandPort());
 		createServerInstance();
 	}
 
 	private void createServerInstance() {
-		Configuration config = new Configuration();
-		try {
-			if (!config.read()) {
-				Log.logger.info("read config error!");
-				return;
-			}
-		} catch (FileNotFoundException e) {
-			Log.logger
-					.info("Not found server.conf file, using default setting!");
-		}
-
 		try {
 			server = new Server(config);
 			// http service
