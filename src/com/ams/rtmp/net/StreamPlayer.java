@@ -41,6 +41,12 @@ public class StreamPlayer implements IPlayer, IMsgSubscriber {
 	public void seek(long seekTime) throws IOException {
 		writeStartData();
 		// start from a keyframe
+		MediaMessage msg;
+		do {
+			msg = receivedEventQueue.peek();
+			if (msg.isKeyframe()) break;
+			msg = receivedEventQueue.poll();
+		} while(msg != null);
 	}
 
 	public void play() throws IOException {

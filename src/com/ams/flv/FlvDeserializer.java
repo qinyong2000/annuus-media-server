@@ -1,6 +1,8 @@
 package com.ams.flv;
 
+import java.io.EOFException;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import com.ams.amf.AmfValue;
@@ -10,7 +12,7 @@ import com.ams.io.RandomAccessFileReader;
 
 public class FlvDeserializer implements SampleDeserializer {
 	private RandomAccessFileReader reader;
-	private ArrayList<FlvTag> samples = new ArrayList<FlvTag>();
+	private ArrayList<Sample> samples = new ArrayList<Sample>();
 	private long videoFrames = 0, audioFrames = 0;
 	private long videoDataSize = 0, audioDataSize = 0;
 	private long lastTimestamp = 0;
@@ -23,7 +25,7 @@ public class FlvDeserializer implements SampleDeserializer {
 
 	private class SampleTimestampComparator implements java.util.Comparator {
 		public int compare(Object s, Object t) {
-			return (int)((FlvTag) s).getTimestamp() - (int)((FlvTag) t).getTimestamp();
+			return (int)((Sample) s).getTimestamp() - (int)((Sample) t).getTimestamp();
 		}
 	};
 	
@@ -32,13 +34,73 @@ public class FlvDeserializer implements SampleDeserializer {
 		getAllSamples();
 	}
 	
+	private Sample readSampleData(ByteBufferInputStream in) throws IOException,FlvException {
+		int tagType;
+		try {
+			tagType = in.readByte() & 0xFF;
+		} catch (EOFException e) {
+			return null;
+		}
+		int dataSize = in.read24Bit(); // 24Bit read
+		long timestamp = in.read24Bit(); // 24Bit read
+		timestamp |= (in.readByte() & 0xFF) << 24; // time stamp extended
+		
+		int streamId = in.read24Bit(); // 24Bit read
+		ByteBuffer[] data = in.readByteBuffer(dataSize);
+		
+		int previousTagSize = (int) in.read32Bit();
+		
+		switch (tagType) {
+		case 0x08:
+			return new AudioTag(timestamp, new ByteBufferArray(data));
+		case 0x09:
+			return new VideoTag(timestamp, new ByteBufferArray(data));
+		case 0x12:
+			return new MetaTag(timestamp, new ByteBufferArray(data));
+		default:
+			throw new FlvException("Invalid FLV tag " + tagType);
+		}
+	}
+
+	private Sample readSampleOffset(RandomAccessFileReader reader) throws IOException, FlvException {
+		int tagType;
+		ByteBufferInputStream in = new ByteBufferInputStream(reader);
+		try {
+			tagType = in.readByte() & 0xFF;
+		} catch (EOFException e) {
+			return null;
+		}
+		int dataSize = in.read24Bit(); // 24Bit read
+		long timestamp = in.read24Bit(); // 24Bit read
+		timestamp |= (in.readByte() & 0xFF) << 24; // time stamp extended
+		
+		int streamId = in.read24Bit(); // 24Bit read
+		long offset = reader.getPosition();
+		
+		int header = in.readByte();
+		boolean keyframe = (header >>> 4) == 1;
+		
+		reader.seek(offset + dataSize);
+		int previousTagSize = (int) in.read32Bit();
+		switch (tagType) {
+		case 0x08:
+			return new AudioTag(timestamp, offset, dataSize);
+		case 0x09:
+			return new VideoTag(timestamp, keyframe, offset, dataSize);
+		case 0x12:
+			return new MetaTag(timestamp, offset, dataSize);
+		default:
+			throw new FlvException("Invalid FLV tag " + tagType);
+		}
+	}
+	
 	private void getAllSamples() {
 		try {
 			reader.seek(0);
 			ByteBufferInputStream in = new ByteBufferInputStream(reader);
 			FlvHeader.read(in);
-			FlvTag tag = null;
-			while((tag = FlvTag.read(reader)) != null) {
+			Sample tag = null;
+			while((tag = readSampleOffset(reader)) != null) {
 				if (tag.isVideoTag()) {
 					videoFrames++;
 					videoDataSize += tag.size;
@@ -62,7 +124,7 @@ public class FlvDeserializer implements SampleDeserializer {
 					lastMetaTag = (MetaTag)tag;
 				}
 				
-				lastTimestamp = tag.timestamp;
+				lastTimestamp = tag.getTimestamp();
 			}
 			
 			if (firstVideoTag != null) {
@@ -107,9 +169,9 @@ public class FlvDeserializer implements SampleDeserializer {
 		return null;
 	}
 	
-	public FlvTag seek(long seekTime) throws IOException {
-		FlvTag flvTag = firstVideoTag;
-		int idx = Collections.binarySearch(samples, new FlvTag(Sample.SAMPLE_VIDEO, 0, 0, true, seekTime) , new SampleTimestampComparator());
+	public Sample seek(long seekTime) throws IOException {
+		Sample flvTag = firstVideoTag;
+		int idx = Collections.binarySearch(samples, new Sample(Sample.SAMPLE_VIDEO, seekTime, true, 0, 0) , new SampleTimestampComparator());
 		int i = (idx >= 0) ? idx : -(idx + 1);
 		while(i > 0) {
 			flvTag = samples.get(i);
@@ -122,9 +184,9 @@ public class FlvDeserializer implements SampleDeserializer {
 		return flvTag;
 	}
 	
-	public FlvTag readNext() throws IOException {
+	public Sample readNext() throws IOException {
 		try {
-			return FlvTag.read(new ByteBufferInputStream(reader));
+			return readSampleData(new ByteBufferInputStream(reader));
 		} catch (FlvException e) {
 			e.printStackTrace();
 		}

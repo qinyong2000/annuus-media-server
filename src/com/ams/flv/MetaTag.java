@@ -8,16 +8,16 @@ import com.ams.amf.AmfValue;
 import com.ams.io.ByteBufferArray;
 import com.ams.io.ByteBufferInputStream;
 
-public class MetaTag extends FlvTag {
+public class MetaTag extends Sample {
 	private String event = null;
 	private AmfValue metaData = null;
 	
-	public MetaTag(ByteBufferArray data, long timestamp) {
-		super(Sample.SAMPLE_META, data, timestamp);
+	public MetaTag(long timestamp, ByteBufferArray data) {
+		super(Sample.SAMPLE_META, timestamp, data);
 	}
 
-	public MetaTag(long offset, int size, long timestamp) {
-		super(Sample.SAMPLE_META, offset, size, false, timestamp);
+	public MetaTag(long timestamp, long offset, int size) {
+		super(Sample.SAMPLE_META, timestamp, false, offset, size);
 	}
 	
 	public void getParameters() throws IOException {

@@ -4,16 +4,16 @@ import java.io.IOException;
 import com.ams.io.ByteBufferArray;
 import com.ams.io.ByteBufferInputStream;
 
-public class VideoTag extends FlvTag {
+public class VideoTag extends Sample {
 	private int codecId = -1;
 	private int width = 0, height = 0;
 	
-	public VideoTag(ByteBufferArray data, long timestamp) {
-		super(Sample.SAMPLE_VIDEO, data, timestamp);
+	public VideoTag(long timestamp, ByteBufferArray data) {
+		super(Sample.SAMPLE_VIDEO, timestamp, data);
 	}
 
-	public VideoTag(long offset, int size, boolean keyframe, long timestamp) {
-		super(Sample.SAMPLE_VIDEO, offset, size, keyframe, timestamp);
+	public VideoTag(long timestamp, boolean keyframe, long offset, int size) {
+		super(Sample.SAMPLE_VIDEO, timestamp, keyframe, offset, size);
 	}
 	
 	public void getParameters() throws IOException {

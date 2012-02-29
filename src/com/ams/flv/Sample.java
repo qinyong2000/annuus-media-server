@@ -1,8 +1,12 @@
 package com.ams.flv;
 
-import com.ams.io.ByteBufferArray;
+import java.io.IOException;
 
-public class Sample {
+import com.ams.io.ByteBufferArray;
+import com.ams.io.RandomAccessFileReader;
+import com.ams.message.MediaMessage;
+
+public class Sample extends MediaMessage<ByteBufferArray> {
 	public static final int SAMPLE_AUDIO = 0;
 	public static final int SAMPLE_VIDEO = 1;
 	public static final int SAMPLE_META = 2;
@@ -10,22 +14,22 @@ public class Sample {
 	protected int sampleType;
 	protected long offset;
 	protected int size;
-	protected long timestamp;
-	protected boolean keyframe = true;
-	protected ByteBufferArray data = null;
 
-	public Sample(int sampleType, ByteBufferArray data, long timestamp) {
+	public Sample(int sampleType, long timestamp, ByteBufferArray data) {
+		super(timestamp, data);
 		this.sampleType = sampleType;
-		this.data = data;
-		this.timestamp = timestamp;
 	}
 	
-	public Sample(int sampleType, long offset, int size, boolean keyframe, long timestamp) {
+	public Sample(int sampleType, long timestamp, boolean keyframe, long offset, int size) {
+		super(timestamp, keyframe);
 		this.sampleType = sampleType;
 		this.offset = offset;
 		this.size = size;
-		this.keyframe = keyframe;
-		this.timestamp = timestamp;
+	}
+	
+	public void readData(RandomAccessFileReader reader) throws IOException {
+		reader.seek(offset);
+		data = new ByteBufferArray(reader.read(size));
 	}
 	
 	public int getSampleType() {

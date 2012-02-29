@@ -105,7 +105,7 @@ public final class TRAK {
 					boolean keyframe = isKeyFrameSample(sampleIndex);
 					// description index
 					int sampleDescIndex = prevSampleDescIndex;
-					list.add(new Mp4Sample(sampleType, sampleOffset, sampleSize, timeStamp, keyframe, sampleDescIndex));
+					list.add(new Mp4Sample(sampleType, timeStamp, keyframe, sampleOffset, sampleSize, sampleDescIndex));
 					
 					sampleOffset += sampleSize;
 					sampleIndex++;	
@@ -129,7 +129,7 @@ public final class TRAK {
 				boolean keyframe = isKeyFrameSample(sampleIndex);
 				// description index
 				int sampleDescIndex = prevSampleDescIndex;
-				list.add(new Mp4Sample(sampleType, sampleOffset, sampleSize, timeStamp, keyframe, sampleDescIndex));
+				list.add(new Mp4Sample(sampleType, timeStamp, keyframe, sampleOffset, sampleSize, sampleDescIndex));
 				
 				sampleOffset += sampleSize;
 				sampleIndex++;	

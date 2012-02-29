@@ -2,8 +2,8 @@ package com.ams.message;
 
 import java.io.IOException;
 
-public interface IMsgPublisher {
-	public void publish(MediaMessage msg) throws IOException;
-	public void addSubscriber(IMsgSubscriber subscriber);
-	public void removeSubscriber(IMsgSubscriber subscriber);
+public interface IMsgPublisher<T> {
+	public void publish(MediaMessage<T> msg) throws IOException;
+	public void addSubscriber(IMsgSubscriber<T> subscriber);
+	public void removeSubscriber(IMsgSubscriber<T> subscriber);
 }

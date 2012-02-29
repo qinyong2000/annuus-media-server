@@ -5,8 +5,8 @@ import com.ams.flv.Sample;
 public class Mp4Sample extends Sample {
     private int descriptionIndex;
 	
-	public Mp4Sample(int sampleType, long offset, int size, long timestamp, boolean keyframe, int sampleDescIndex) {
-		super(sampleType, offset, size, keyframe, timestamp);
+	public Mp4Sample(int sampleType, long timestamp, boolean keyframe, long offset, int size,  int sampleDescIndex) {
+		super(sampleType, timestamp, keyframe, offset, size);
 		this.descriptionIndex = sampleDescIndex;
 	}
 

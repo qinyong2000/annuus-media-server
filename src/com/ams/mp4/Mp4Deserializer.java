@@ -138,7 +138,7 @@ public class Mp4Deserializer implements SampleDeserializer {
 	
 	public Sample seek(long seekTime) {
 		Mp4Sample seekSample = videoSamples[0];
-		int idx = Collections.binarySearch(samples, new Mp4Sample(Sample.SAMPLE_VIDEO, 0, 0, seekTime, true, 0) , new SampleTimestampComparator());
+		int idx = Collections.binarySearch(samples, new Mp4Sample(Sample.SAMPLE_VIDEO, seekTime, true, 0, 0, 0) , new SampleTimestampComparator());
 		int i = (idx >= 0) ? idx : -(idx + 1);
 		while(i > 0) {
 			seekSample = samples.get(i);
@@ -155,10 +155,10 @@ public class Mp4Deserializer implements SampleDeserializer {
 		if (sampleIndex < samples.size()) {
 			Mp4Sample sample = samples.get(sampleIndex ++);
 			if (sample.isVideoTag()) {
-				return new Sample(Sample.SAMPLE_VIDEO, createVideoTag(sample), sample.getTimestamp());
+				return new Sample(Sample.SAMPLE_VIDEO, sample.getTimestamp(), createVideoTag(sample));
 			}
 			if (sample.isAudioTag()) {
-				return new Sample(Sample.SAMPLE_AUDIO, createAudioTag(sample), sample.getTimestamp());
+				return new Sample(Sample.SAMPLE_AUDIO, sample.getTimestamp(), createAudioTag(sample));
 			}
 		}
 		return null;
