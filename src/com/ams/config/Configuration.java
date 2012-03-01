@@ -70,17 +70,17 @@ public final class Configuration {
 				rtmpContextRoot = root;
 			}
 
-			host = prop.getProperty("replication.host");
+			host = prop.getProperty("replication.unicast.host");
 			if (host != null) {
 				replicationHost = host;
 			}
 
-			portProp = prop.getProperty("replication.port");
+			portProp = prop.getProperty("replication.unicast.port");
 			if (portProp != null) {
 				replicationPort = Integer.parseInt(portProp);
 			}
 
-			String slavesProp = prop.getProperty("replication.slaves");
+			String slavesProp = prop.getProperty("replication.unicast.slaves");
 			if (slavesProp != null) {
 				replicationSlaves = slavesProp.split(",");
 			}
