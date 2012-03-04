@@ -10,14 +10,14 @@ import com.ams.rtmp.message.*;
 public class FlvPlayer implements IPlayer{
 	private static int BUFFER_TIME = 3 * 1000; // x seconds of buffering
 	private NetStream stream = null;
-	private SampleDeserializer deserializer;
+	private ISampleDeserializer deserializer;
 	private long startTime = -1;
 	private long bufferTime = BUFFER_TIME;
 	private boolean pause = false;
 	private boolean audioPlaying = true;
 	private boolean videoPlaying = true;
 
-	public FlvPlayer(SampleDeserializer deserializer, NetStream stream) throws IOException {
+	public FlvPlayer(ISampleDeserializer deserializer, NetStream stream) throws IOException {
 		this.deserializer = deserializer;
 		this.stream = stream;
 	}
@@ -74,13 +74,13 @@ public class FlvPlayer implements IPlayer{
 			}
 			stream.setTimeStamp(timestamp);
 			ByteBufferArray data = sample.getData();
-			if (sample.isAudioTag() && audioPlaying) {
+			if (sample.isAudioSample() && audioPlaying) {
 				stream.writeAudioMessage(new RtmpMessageAudio(data));
 			}
-			if (sample.isVideoTag() && videoPlaying) {
+			if (sample.isVideoSample() && videoPlaying) {
 				stream.writeVideoMessage(new RtmpMessageVideo(data));
 			}
-			if (sample.isMetaTag()) {
+			if (sample.isMetaSample()) {
 				stream.writeMessage(new RtmpMessageData(data));
 			}
 		}

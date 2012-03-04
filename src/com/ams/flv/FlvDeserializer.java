@@ -10,7 +10,7 @@ import com.ams.io.ByteBufferArray;
 import com.ams.io.ByteBufferInputStream;
 import com.ams.io.RandomAccessFileReader;
 
-public class FlvDeserializer implements SampleDeserializer {
+public class FlvDeserializer implements ISampleDeserializer {
 	private RandomAccessFileReader reader;
 	private ArrayList<Sample> samples = new ArrayList<Sample>();
 	private long videoFrames = 0, audioFrames = 0;
@@ -101,7 +101,7 @@ public class FlvDeserializer implements SampleDeserializer {
 			FlvHeader.read(in);
 			Sample tag = null;
 			while((tag = readSampleOffset(reader)) != null) {
-				if (tag.isVideoTag()) {
+				if (tag.isVideoSample()) {
 					videoFrames++;
 					videoDataSize += tag.size;
 					if (firstVideoTag == null)
@@ -110,7 +110,7 @@ public class FlvDeserializer implements SampleDeserializer {
 						samples.add(tag);
 					lastVideoTag = (VideoTag)tag;	
 				}
-				if (tag.isAudioTag()) {
+				if (tag.isAudioSample()) {
 					audioFrames++;
 					audioDataSize += tag.size;
 					if (firstAudioTag == null)
@@ -118,7 +118,7 @@ public class FlvDeserializer implements SampleDeserializer {
 					lastAudioTag = (AudioTag)tag;	
 				}
 
-				if (tag.isMetaTag()) {
+				if (tag.isMetaSample()) {
 					if (firstMetaTag == null)
 						firstMetaTag = (MetaTag)tag;
 					lastMetaTag = (MetaTag)tag;
@@ -175,7 +175,7 @@ public class FlvDeserializer implements SampleDeserializer {
 		int i = (idx >= 0) ? idx : -(idx + 1);
 		while(i > 0) {
 			flvTag = samples.get(i);
-			if (flvTag.isVideoTag() && flvTag.isKeyframe()) {
+			if (flvTag.isVideoSample() && flvTag.isKeyframe()) {
 				break;
 			}
 			i--;

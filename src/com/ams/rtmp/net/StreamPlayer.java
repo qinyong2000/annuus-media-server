@@ -2,71 +2,64 @@ package com.ams.rtmp.net;
 
 import java.io.IOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import com.ams.io.ByteBufferArray;
-import com.ams.message.MediaMessage;
+import com.ams.flv.Sample;
 import com.ams.message.IMsgSubscriber;
-import com.ams.rtmp.message.*;
 
-public class StreamPlayer implements IPlayer, IMsgSubscriber {
+public class StreamPlayer implements IPlayer, IMsgSubscriber<Sample> {
 	private NetStream stream;
 	private StreamPublisher publisher;
 	private long pausedTime = -1;
 	private boolean audioPlaying = true;
 	private boolean videoPlaying = true;
-	private ConcurrentLinkedQueue<MediaMessage> receivedEventQueue;
+	private ConcurrentLinkedQueue<Sample> receivedEventQueue;
 	private static int MAX_EVENT_QUEUE_LENGTH = 100;
 	
 	public StreamPlayer(NetStream stream, StreamPublisher publisher) {
 		this.stream = stream;
 		this.publisher = publisher;
-		this.receivedEventQueue = new ConcurrentLinkedQueue<MediaMessage>();
+		this.receivedEventQueue = new ConcurrentLinkedQueue<Sample>();
 	}
 
 	private void writeStartData() throws IOException {
-		ByteBufferArray value = publisher.getMetaData();
-		if (value != null) {
-			stream.writeMessage(new RtmpMessageData(value));
+		Sample sample = publisher.getMeta();
+		if (sample != null) {
+			stream.writeMessage(sample.toRtmpMessage());
 		}
 		
-		ByteBufferArray headerData = publisher.getVideoHeaderData();
-		if (headerData != null) {
-			stream.writeMessage(new RtmpMessageVideo(headerData));
+		sample = publisher.getVideoHeader();
+		if (sample != null) {
+			stream.writeMessage(sample.toRtmpMessage());
 		}
-		headerData = publisher.getAudioHeaderData();
-		if (headerData != null) {
-			stream.writeMessage(new RtmpMessageAudio(headerData));
+		sample = publisher.getAudioHeader();
+		if (sample != null) {
+			stream.writeMessage(sample.toRtmpMessage());
 		}
 	}
 	
 	public void seek(long seekTime) throws IOException {
 		writeStartData();
 		// start from a keyframe
-		MediaMessage msg;
+		Sample sample;
 		do {
-			msg = receivedEventQueue.peek();
-			if (msg.isKeyframe()) break;
-			msg = receivedEventQueue.poll();
-		} while(msg != null);
+			sample = receivedEventQueue.peek();
+			if (sample.isVideoKeyframe()) break;
+			sample = receivedEventQueue.poll();
+		} while(sample != null);
 	}
 
 	public void play() throws IOException {
-		MediaMessage msg;
-		while ((msg = receivedEventQueue.poll()) != null) {
-			RtmpMessage message = (RtmpMessage) msg.getData();
-			if ((message instanceof RtmpMessageAudio && audioPlaying)
-					|| (message instanceof RtmpMessageVideo && videoPlaying)) {
-				stream.writeMessage(msg.getTimestamp(), message);
-			}
-
-			if (stream.isWriteBlocking()) {
-				break;
+		Sample sample;
+		while ((sample = receivedEventQueue.poll()) != null) {
+			if ((sample.isAudioSample() && audioPlaying)
+				|| (sample.isVideoSample() && videoPlaying)) {
+				stream.writeMessage(sample.getTimestamp(), sample.toRtmpMessage());
 			}
 		}
 	}
 
-	public void messageNotify(MediaMessage msg) {
+	public void messageNotify(Sample msg) {
 		if (!isPaused()) {
-			if (receivedEventQueue.size() > MAX_EVENT_QUEUE_LENGTH) {
+			if (receivedEventQueue.size() > MAX_EVENT_QUEUE_LENGTH && msg.isVideoKeyframe()) {
 				receivedEventQueue.clear();
 			}
 			receivedEventQueue.offer(msg);

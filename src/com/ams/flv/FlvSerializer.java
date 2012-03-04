@@ -14,19 +14,18 @@ public class FlvSerializer {
 		this.out = new ByteBufferOutputStream(writer);
 	}
 
-	public void write(int type, ByteBufferArray data, long time) throws IOException {
-		if (!headerWrite) {
-			FlvHeader header = new FlvHeader(true, true);
-			FlvHeader.write(out, header);
-			headerWrite = true;
-		}
-		
-		Sample flvTag = new Sample(type, time, data);
+	public void write(Sample flvTag) throws IOException {
 		write(out, flvTag);
 		out.flush();
 	}
 
 	private void write(ByteBufferOutputStream out, Sample flvTag) throws IOException {
+		if (!headerWrite) {
+			FlvHeader header = new FlvHeader(true, true);
+			FlvHeader.write(out, header);
+			headerWrite = true;
+		}
+
 		byte tagType = -1;
 		switch (flvTag.getSampleType()) {
 		case Sample.SAMPLE_AUDIO:

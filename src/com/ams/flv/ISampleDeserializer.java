@@ -4,7 +4,7 @@ import java.io.IOException;
 import com.ams.amf.AmfValue;
 import com.ams.io.ByteBufferArray;
 
-public interface SampleDeserializer {
+public interface ISampleDeserializer {
 	public AmfValue metaData();
 	public ByteBufferArray videoHeaderData();
 	public ByteBufferArray audioHeaderData();

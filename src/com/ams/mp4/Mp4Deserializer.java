@@ -10,7 +10,7 @@ import java.util.Collections;
 
 import com.ams.amf.AmfValue;
 import com.ams.flv.Sample;
-import com.ams.flv.SampleDeserializer;
+import com.ams.flv.ISampleDeserializer;
 import com.ams.io.ByteBufferArray;
 import com.ams.io.RandomAccessFileReader;
 import com.ams.mp4.STSD.AudioSampleDescription;
@@ -18,7 +18,7 @@ import com.ams.mp4.STSD.VideoSampleDescription;
 import com.ams.server.ByteBufferFactory;
 import com.ams.util.Utils;
 
-public class Mp4Deserializer implements SampleDeserializer {
+public class Mp4Deserializer implements ISampleDeserializer {
 	private RandomAccessFileReader reader;
 	private TRAK videoTrak = null;
 	private TRAK audioTrak = null;
@@ -142,7 +142,7 @@ public class Mp4Deserializer implements SampleDeserializer {
 		int i = (idx >= 0) ? idx : -(idx + 1);
 		while(i > 0) {
 			seekSample = samples.get(i);
-			if (seekSample.isVideoTag() && seekSample.isKeyframe()) {
+			if (seekSample.isVideoSample() && seekSample.isKeyframe()) {
 				break;
 			}
 			i--;
@@ -154,10 +154,10 @@ public class Mp4Deserializer implements SampleDeserializer {
 	public Sample readNext() throws IOException {
 		if (sampleIndex < samples.size()) {
 			Mp4Sample sample = samples.get(sampleIndex ++);
-			if (sample.isVideoTag()) {
+			if (sample.isVideoSample()) {
 				return new Sample(Sample.SAMPLE_VIDEO, sample.getTimestamp(), createVideoTag(sample));
 			}
-			if (sample.isAudioTag()) {
+			if (sample.isAudioSample()) {
 				return new Sample(Sample.SAMPLE_AUDIO, sample.getTimestamp(), createAudioTag(sample));
 			}
 		}

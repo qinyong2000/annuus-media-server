@@ -1,25 +1,21 @@
 package com.ams.rtmp.net;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.LinkedList;
-
 import com.ams.flv.*;
-import com.ams.io.ByteBufferArray;
 import com.ams.message.*;
 import com.ams.rtmp.message.*;
 
-public class StreamPublisher implements IMsgPublisher {
-	private String type = null;
+public class StreamPublisher implements IMsgPublisher<MediaMessage<RtmpMessage>, Sample> {
 	private String publishName = null;
 	private int bytes = 0;
 	private int lastPing = 0;
 	private boolean ping = false;
-	private ByteBufferArray videoHeaderData = null;
-	private ByteBufferArray audioHeaderData = null;
-	private ByteBufferArray metaData = null;
+	private Sample videoHeader = null;
+	private Sample audioHeader = null;
+	private Sample meta = null;
 
-	private LinkedList<IMsgSubscriber> subscribers = new LinkedList<IMsgSubscriber>();
+	private LinkedList<IMsgSubscriber<Sample>> subscribers = new LinkedList<IMsgSubscriber<Sample>>();
 
 	private FlvSerializer recorder = null; // record to file stream
 
@@ -27,73 +23,47 @@ public class StreamPublisher implements IMsgPublisher {
 		this.publishName = publishName;
 		String tokens[] = publishName.split(":");
 		if (tokens.length >= 2) {
-			this.type = tokens[0];
 			this.publishName = tokens[1];
 		}
 	}
 
-	private boolean isH264() {
-		return "mp4".equalsIgnoreCase(type);
-	}
-	
-	private boolean isAudioHeader(ByteBufferArray data) {
-		if (!isH264()) return false;
-		ByteBuffer buf = data.getBuffers()[0];
-		return (buf.get(0) & 0xFF) == 0xAF && (buf.get(1) & 0xFF) == 0x00;
-	}
-
-	private boolean isVideoHeader(ByteBufferArray data) {
-		if (!isH264()) return false;
-		ByteBuffer buf = data.getBuffers()[0];
-		return (buf.get(0) & 0xFF) == 0x17 && (buf.get(1) & 0xFF) == 0x00;
-	}
-	
-	private boolean isKeyframe(ByteBufferArray data) {
-		return false;
-	}
-	
-	public synchronized void publish(MediaMessage msg) throws IOException {
+	public synchronized void publish(MediaMessage<RtmpMessage> msg) throws IOException {
 		long timestamp = msg.getTimestamp();
-		int type = 0;
-		ByteBufferArray data = null;
-		RtmpMessage message = (RtmpMessage) msg.getData();
+		Sample sample = null;
+		RtmpMessage message = msg.getData();
 		switch (message.getType()) {
 		case RtmpMessage.MESSAGE_AUDIO:
 			RtmpMessageAudio audio = (RtmpMessageAudio) message;
-			data = audio.getData();
-			type = Sample.SAMPLE_AUDIO;
-			if (audioHeaderData == null) {
-				if (isAudioHeader(data)) audioHeaderData = data;
+			sample = new Sample(Sample.SAMPLE_AUDIO, timestamp, audio.getData());
+			if (audioHeader == null) {
+				if (sample.isH264AudioHeader()) audioHeader = sample;
 			}
 
 			break;
 		case RtmpMessage.MESSAGE_VIDEO:
 			RtmpMessageVideo video = (RtmpMessageVideo) message;
-			data = video.getData();
-			type = Sample.SAMPLE_VIDEO;
-			if (videoHeaderData == null) {
-				if (isVideoHeader(data)) videoHeaderData = data;
+			sample = new Sample(Sample.SAMPLE_VIDEO, timestamp, video.getData());
+			if (videoHeader == null) {
+				if (sample.isH264VideoHeader()) videoHeader = sample;
 			}
 			
 			break;
 		case RtmpMessage.MESSAGE_AMF0_DATA:
-			RtmpMessageData meta = (RtmpMessageData) message;
-			data = meta.getData();
-			metaData = data;
-			type = Sample.SAMPLE_META;
+			RtmpMessageData m = (RtmpMessageData) message;
+			sample = new Sample(Sample.SAMPLE_META, timestamp, m.getData());
+			meta = sample;
 			break;
 		}
 
 		// record to file
 		if (recorder != null) {
-			recorder.write(type, data, timestamp);
+			recorder.write(sample);
 		}
-		
 		// publish packet to other stream subscriber
-		notify(msg);
-
+		notify(sample);
+		
 		// ping
-		ping(data.size());
+		ping(sample.getDataSize());
 	}
 
 	public synchronized void close() {
@@ -101,14 +71,14 @@ public class StreamPublisher implements IMsgPublisher {
 			recorder.close();
 		}
 		subscribers.clear();
-		videoHeaderData = null;
-		audioHeaderData = null;
-		metaData = null;
+		videoHeader = null;
+		audioHeader = null;
+		meta = null;
 	}
 
-	private void notify(MediaMessage msg) {
-		for (IMsgSubscriber subscriber : subscribers) {
-			subscriber.messageNotify(msg);
+	private void notify(Sample sample) {
+		for (IMsgSubscriber<Sample> subscriber : subscribers) {
+			subscriber.messageNotify(sample);
 		}
 	}
 	
@@ -123,13 +93,13 @@ public class StreamPublisher implements IMsgPublisher {
 		}
 	}
 	
-	public void addSubscriber(IMsgSubscriber subscrsiber) {
+	public void addSubscriber(IMsgSubscriber<Sample> subscrsiber) {
 		synchronized (subscribers) {
 			subscribers.add(subscrsiber);
 		}
 	}
 
-	public void removeSubscriber(IMsgSubscriber subscriber) {
+	public void removeSubscriber(IMsgSubscriber<Sample> subscriber) {
 		synchronized (subscribers) {
 			subscribers.remove(subscriber);
 		}
@@ -151,16 +121,15 @@ public class StreamPublisher implements IMsgPublisher {
 		return publishName;
 	}
 
-	public ByteBufferArray getVideoHeaderData() {
-		return videoHeaderData;
+	public Sample getVideoHeader() {
+		return videoHeader;
 	}
 
-	public ByteBufferArray getAudioHeaderData() {
-		return audioHeaderData;
+	public Sample getAudioHeader() {
+		return audioHeader;
 	}
 	
-	public ByteBufferArray getMetaData() {
-		return metaData;
+	public Sample getMeta() {
+		return meta;
 	}
-	
 }

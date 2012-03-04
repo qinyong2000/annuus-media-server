@@ -8,7 +8,7 @@ import com.ams.amf.*;
 import com.ams.flv.FlvDeserializer;
 import com.ams.flv.FlvException;
 import com.ams.flv.FlvSerializer;
-import com.ams.flv.SampleDeserializer;
+import com.ams.flv.ISampleDeserializer;
 import com.ams.io.*;
 import com.ams.message.*;
 import com.ams.mp4.Mp4Deserializer;
@@ -229,7 +229,7 @@ public class NetStream {
 	
 	public IPlayer createPlayer(String type, String file) throws IOException {
 		RandomAccessFileReader reader = new RandomAccessFileReader(file, 0);
-		SampleDeserializer sampleDeserializer = null;
+		ISampleDeserializer sampleDeserializer = null;
 		if ("mp4".equalsIgnoreCase(type)) {
 			sampleDeserializer = new Mp4Deserializer(reader);
 		} else {
