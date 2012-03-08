@@ -3,18 +3,17 @@ package com.ams.server;
 import java.nio.ByteBuffer;
 
 public final class ByteBufferFactory {
-	private static ByteBufferAllocator allocator = new ByteBufferAllocator();
+	private static IByteBufferAllocator allocator = null;
 	
 	public static ByteBuffer allocate(int size) {
+		if (allocator == null) {
+			return ByteBuffer.allocateDirect(size);
+		}
 		return allocator.allocate(size);
 	}
 
-	public static void init() {
-		allocator.init();
-	}
-	
-	public static void setPageSize(int pageSize) {
-		allocator.setPageSize(pageSize);
+	public static void setAllocator(IByteBufferAllocator alloc) {
+		allocator = alloc;
 	}
 	
 }

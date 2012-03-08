@@ -34,8 +34,10 @@ public final class Server implements ConnectionListner {
 	}
 	
 	private void initByteBufferFactory(Configuration config) {
-		ByteBufferFactory.setPageSize(config.getSlabPageSize());
-		ByteBufferFactory.init();
+		SlabByteBufferAllocator allocator = new SlabByteBufferAllocator();
+		allocator.setPageSize(config.getSlabPageSize());
+		allocator.init();
+		ByteBufferFactory.setAllocator(allocator);
 	}
 	
 	public void addTcpListenEndpoint(SocketAddress endpoint, IProtocolHandler handler) throws IOException {

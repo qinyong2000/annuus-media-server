@@ -34,14 +34,15 @@ public class NetConnection {
 			throw new NetConnectionException("Publish not done on stream " + header.getStreamId());
 		}
 		
-		publisher.publish(new MediaMessage(header.getTimestamp(), message));
+		MediaMessage<RtmpMessage> msg = new MediaMessage<RtmpMessage>(header.getTimestamp(), message);
+		publisher.publish(msg);
 		
 		if (publisher.isPing()) {
 			rtmp.writeProtocolControlMessage(new RtmpMessageAck(publisher.getBytes()));
 		}
 		
 		// replicate to all slave server
-		ReplicateCluster.publishMessage(publisher.getPublishName(), new MediaMessage(header.getTimestamp(), message));
+		ReplicateCluster.publishMessage(publisher.getPublishName(), msg);
 	}
 
 	private void onSharedMessage(RtmpHeader header, RtmpMessage message) {

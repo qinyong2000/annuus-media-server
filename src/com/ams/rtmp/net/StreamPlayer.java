@@ -8,16 +8,13 @@ import com.ams.message.IMsgSubscriber;
 public class StreamPlayer implements IPlayer, IMsgSubscriber<Sample> {
 	private NetStream stream;
 	private StreamPublisher publisher;
-	private long pausedTime = -1;
-	private boolean audioPlaying = true;
-	private boolean videoPlaying = true;
-	private ConcurrentLinkedQueue<Sample> receivedEventQueue;
-	private static int MAX_EVENT_QUEUE_LENGTH = 100;
+	private ConcurrentLinkedQueue<Sample> receivedQueue;
+	private static int MAX_QUEUE_LENGTH = 100;
 	
 	public StreamPlayer(NetStream stream, StreamPublisher publisher) {
 		this.stream = stream;
 		this.publisher = publisher;
-		this.receivedEventQueue = new ConcurrentLinkedQueue<Sample>();
+		this.receivedQueue = new ConcurrentLinkedQueue<Sample>();
 	}
 
 	private void writeStartData() throws IOException {
@@ -40,57 +37,45 @@ public class StreamPlayer implements IPlayer, IMsgSubscriber<Sample> {
 		writeStartData();
 		// start from a keyframe
 		Sample sample;
-		do {
-			sample = receivedEventQueue.peek();
+		while ((sample = receivedQueue.peek()) != null) {
 			if (sample.isVideoKeyframe()) break;
-			sample = receivedEventQueue.poll();
-		} while(sample != null);
+			receivedQueue.poll();
+		}
 	}
 
 	public void play() throws IOException {
 		Sample sample;
-		while ((sample = receivedEventQueue.poll()) != null) {
-			if ((sample.isAudioSample() && audioPlaying)
-				|| (sample.isVideoSample() && videoPlaying)) {
-				stream.writeMessage(sample.getTimestamp(), sample.toRtmpMessage());
-			}
+		while ((sample = receivedQueue.poll()) != null) {
+			stream.writeMessage(sample.getTimestamp(), sample.toRtmpMessage());
 		}
 	}
 
 	public void messageNotify(Sample msg) {
 		if (!isPaused()) {
-			if (receivedEventQueue.size() > MAX_EVENT_QUEUE_LENGTH && msg.isVideoKeyframe()) {
-				receivedEventQueue.clear();
+			if (receivedQueue.size() > MAX_QUEUE_LENGTH && msg.isVideoKeyframe()) {
+				receivedQueue.clear();
 			}
-			receivedEventQueue.offer(msg);
+			receivedQueue.offer(msg);
 		}
 	}
 
 	public void pause(boolean pause) {
-		if (pause) {
-			pausedTime = System.currentTimeMillis();
-		} else {
-			pausedTime = -1;
-		}
 	}
 
 	public boolean isPaused() {
-		return pausedTime != -1;
+		return false;
 	}
 
 	public synchronized void close() {
-		receivedEventQueue.clear();
+		receivedQueue.clear();
 		// remove from publisher
 		publisher.removeSubscriber(this);
 	}
 
 	public void audioPlaying(boolean flag) {
-		this.audioPlaying = flag;
-
 	}
 
 	public void videoPlaying(boolean flag) {
-		this.videoPlaying = flag;
 	}
 
 }

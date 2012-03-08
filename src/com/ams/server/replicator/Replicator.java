@@ -48,11 +48,11 @@ class Replicator implements Runnable {
 			return (currentTime - keepAliveTime > DEFAULT_TIMEOUT_MS);
 		}
 		
-		public void addEvent(MediaMessage event) {
+		public void addMessage(MediaMessage msg) {
 			if (msgQueue.size() > MAX_EVENT_QUEUE_LENGTH) {
 				msgQueue.clear();
 			}
-			msgQueue.offer(event);
+			msgQueue.offer(msg);
 		}
 		
 		public void replicate() throws IOException {
@@ -165,11 +165,11 @@ class Replicator implements Runnable {
 		return id;
 	}
 	
-	public void publishMessage(String publishName, MediaMessage event) {
+	public void publishMessage(String publishName, MediaMessage msg) {
 		if (!isConnected) return;
 		Publisher publisher = publishMap.get(publishName);
 		if (publisher != null) {
-			publisher.addEvent(event);
+			publisher.addMessage(msg);
 		} else {
 			int streamId = allocStreamId();
 			publishMap.put(publishName, new Publisher(streamId, publishName));

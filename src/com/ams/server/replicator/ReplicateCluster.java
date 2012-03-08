@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 
 import com.ams.message.MediaMessage;
+import com.ams.rtmp.message.RtmpMessage;
 import com.ams.server.Connector;
 import com.ams.server.MulticastConnector;
 import com.ams.server.SocketConnector;
@@ -40,9 +41,9 @@ public class ReplicateCluster {
 		new Thread(replicator).start();
 	}
 
-	public static void publishMessage(String publishName, MediaMessage event) {
+	public static void publishMessage(String publishName, MediaMessage msg) {
 		for (Replicator replicator : replicators) {
-			replicator.publishMessage(publishName, event);
+			replicator.publishMessage(publishName, msg);
 		}
 	}
 	

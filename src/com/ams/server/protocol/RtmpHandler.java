@@ -1,5 +1,7 @@
 package com.ams.server.protocol;
 
+import java.io.EOFException;
+
 import com.ams.rtmp.net.NetConnection;
 import com.ams.rtmp.net.NetContext;
 import com.ams.rtmp.RtmpConnection;

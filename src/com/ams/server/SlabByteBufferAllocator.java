@@ -10,7 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 import com.ams.util.Log;
 
-public final class ByteBufferAllocator {
+public final class SlabByteBufferAllocator implements IByteBufferAllocator{
 	private int minChunkSize = 16;
 	private int maxChunkSize = 128 * 1024;
 	private int pageSize = 8 * 1024 * 1024;
@@ -160,7 +160,7 @@ public final class ByteBufferAllocator {
 		}
 	}
 
-	public ByteBufferAllocator (){
+	public SlabByteBufferAllocator (){
 		ByteBufferCollector collector = new ByteBufferCollector();
 		collector.start();
 		
