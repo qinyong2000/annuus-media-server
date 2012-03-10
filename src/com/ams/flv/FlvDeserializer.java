@@ -23,9 +23,9 @@ public class FlvDeserializer implements ISampleDeserializer {
 	private AudioTag lastAudioTag = null;
 	private MetaTag lastMetaTag = null;
 
-	private class SampleTimestampComparator implements java.util.Comparator {
-		public int compare(Object s, Object t) {
-			return (int)((Sample) s).getTimestamp() - (int)((Sample) t).getTimestamp();
+	private class SampleTimestampComparator implements java.util.Comparator<Sample> {
+		public int compare(Sample s, Sample t) {
+			return (int)(s.getTimestamp() - t.getTimestamp());
 		}
 	};
 	
@@ -149,15 +149,19 @@ public class FlvDeserializer implements ISampleDeserializer {
 		}
 		AmfValue value = AmfValue.newEcmaArray();
 		float duration = (float)lastTimestamp / 1000;
-		value.put("duration", duration)
-			.put("width", firstVideoTag.getWidth())
-			.put("height", firstVideoTag.getHeight())
-			.put("videodatarate", (float)videoDataSize * 8 / duration / 1024) //kBits/sec
-			.put("canSeekToEnd", lastVideoTag.isKeyframe())
-			.put("videocodecid", firstVideoTag.getCodecId())
-			.put("audiodatarate", (float)audioDataSize * 8 / duration / 1024) //kBits/sec
-			.put("audiocodecid", firstAudioTag.getSoundFormat())
-			.put("framerate", (float)videoFrames / duration);
+		value.put("duration", duration);
+		if (firstVideoTag != null) {
+			value.put("width", firstVideoTag.getWidth())
+				 .put("height", firstVideoTag.getHeight())
+				 .put("videodatarate", (float)videoDataSize * 8 / duration / 1024) //kBits/sec
+				 .put("canSeekToEnd", lastVideoTag.isKeyframe())
+				 .put("videocodecid", firstVideoTag.getCodecId())
+				 .put("framerate", (float)videoFrames / duration);
+		}
+		if (firstAudioTag != null) {
+			value.put("audiodatarate", (float)audioDataSize * 8 / duration / 1024) //kBits/sec
+				 .put("audiocodecid", firstAudioTag.getSoundFormat());
+		}
 		return value;
 	}
 

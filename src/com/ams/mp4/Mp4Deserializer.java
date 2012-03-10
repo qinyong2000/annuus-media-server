@@ -12,11 +12,11 @@ import com.ams.amf.AmfValue;
 import com.ams.flv.Sample;
 import com.ams.flv.ISampleDeserializer;
 import com.ams.io.ByteBufferArray;
+import com.ams.io.ByteBufferInputStream;
 import com.ams.io.RandomAccessFileReader;
 import com.ams.mp4.STSD.AudioSampleDescription;
 import com.ams.mp4.STSD.VideoSampleDescription;
 import com.ams.server.ByteBufferFactory;
-import com.ams.util.Utils;
 
 public class Mp4Deserializer implements ISampleDeserializer {
 	private RandomAccessFileReader reader;
@@ -28,9 +28,9 @@ public class Mp4Deserializer implements ISampleDeserializer {
 	private int sampleIndex = 0;
 	private long moovPosition = 0;
 	
-	private class SampleTimestampComparator implements java.util.Comparator {
-		public int compare(Object s, Object t) {
-			return (int)((Mp4Sample) s).getTimestamp() - (int)((Mp4Sample) t).getTimestamp();
+	private class SampleTimestampComparator implements java.util.Comparator<Mp4Sample> {
+		public int compare(Mp4Sample s, Mp4Sample t) {
+			return (int)(s.getTimestamp() - t.getTimestamp());
 		}
 	};
 	
@@ -59,22 +59,18 @@ public class Mp4Deserializer implements ISampleDeserializer {
 			reader.seek(0);
 			for(;;) {
 				// find moov box
-				byte[] b = new byte[4];
-				reader.read(b, 0, 4);
-				int size = (int)Utils.from32Bit(b);
-				b = new byte[4];
-				reader.read(b, 0, 4);
-				String box = new String(b);
-				if ("moov".equalsIgnoreCase(box)) {
+				BOX.Header header = BOX.readHeader(new ByteBufferInputStream(reader));
+				long payloadSize = header.payloadSize;
+				if ("moov".equalsIgnoreCase(header.type)) {
 					moovPosition = reader.getPosition();
-					b = new byte[size - 8];
-					reader.read(b, 0, size - 8);
+					byte[] b = new byte[(int) payloadSize];
+					reader.read(b, 0, b.length);
 					DataInputStream bin = new DataInputStream(new ByteArrayInputStream(b));
 					moov = new MOOV();
 					moov.read(bin);
 					break;
 				} else {
-					reader.skip(size - 8);
+					reader.skip(payloadSize);
 				}
 			}
 		} catch(IOException e) {
@@ -89,6 +85,7 @@ public class Mp4Deserializer implements ISampleDeserializer {
 	}
 
 	public ByteBufferArray videoHeaderData() {
+		if (videoTrak == null) return null;
 		byte[] data = videoTrak.getVideoDecoderConfigData();
 		int dataSize = (data != null) ? data.length : 0;
 		ByteBuffer[] buf = new ByteBuffer[1];
@@ -102,6 +99,7 @@ public class Mp4Deserializer implements ISampleDeserializer {
 	}
 	
 	public ByteBufferArray audioHeaderData() {
+		if (audioTrak == null) return null;
 		byte[] data = audioTrak.getAudioDecoderConfigData();
 		int dataSize = (data != null) ? data.length : 0;
 		ByteBuffer[] buf = new ByteBuffer[1];
@@ -165,35 +163,46 @@ public class Mp4Deserializer implements ISampleDeserializer {
 	}
 
 	public AmfValue metaData() {
-		AmfValue track1 = AmfValue.newEcmaArray();
-		track1.put("length", videoTrak.getDuration())
-			  .put("timescale", videoTrak.getTimeScale())				
-			  .put("language", videoTrak.getLanguage())
-			  .put("sampledescription", AmfValue.newArray(AmfValue.newEcmaArray().put("sampletype", videoTrak.getType())));
-
-		AmfValue track2 = AmfValue.newEcmaArray();
-		track2.put("length", audioTrak.getDuration())
-			  .put("timescale", audioTrak.getTimeScale())				
-			  .put("language", audioTrak.getLanguage())
-			  .put("sampledescription", AmfValue.newArray(AmfValue.newEcmaArray().put("sampletype", audioTrak.getType())));
+		AmfValue track1 = null;
+		if (videoTrak != null) {
+			track1 = AmfValue.newEcmaArray();
+			track1.put("length", videoTrak.getDuration())
+				  .put("timescale", videoTrak.getTimeScale())				
+				  .put("language", videoTrak.getLanguage())
+				  .put("sampledescription", AmfValue.newArray(AmfValue.newEcmaArray().put("sampletype", videoTrak.getType())));
+			
+		}
+		
+		AmfValue track2 = null;
+		if (audioTrak != null) {
+			track2 = AmfValue.newEcmaArray();
+			track2.put("length", audioTrak.getDuration())
+				  .put("timescale", audioTrak.getTimeScale())				
+				  .put("language", audioTrak.getLanguage())
+				  .put("sampledescription", AmfValue.newArray(AmfValue.newEcmaArray().put("sampletype", audioTrak.getType())));
+		}
 		
 		AmfValue value = AmfValue.newEcmaArray();
-		VideoSampleDescription videoSd = videoTrak.getVideoSampleDescription();
-		AudioSampleDescription audioSd = audioTrak.getAudioSampleDescription();
-		value.put("duration", videoTrak.getDurationBySecond())
+		if (videoTrak != null) {
+			VideoSampleDescription videoSd = videoTrak.getVideoSampleDescription();
+			value.put("duration", videoTrak.getDurationBySecond())
 			 .put("moovPosition", moovPosition)
 			 .put("width", videoSd.width)
 			 .put("height", videoSd.height)
 			 .put("canSeekToEnd", videoSamples[videoSamples.length - 1].isKeyframe())
 			 .put("videocodecid", videoTrak.getType())
-			 .put("audiocodecid", audioTrak.getType())
 			 .put("avcprofile", videoSd.getAvcProfile())
 			 .put("avclevel", videoSd.getAvcLevel())
-			 .put("aacaot", audioSd.getAudioCodecType())
-			 .put("videoframerate", (float)videoSamples.length / videoTrak.getDurationBySecond())
-			 .put("audiosamplerate", audioSd.sampleRate)
-			 .put("audiochannels", audioSd.channelCount)
-			 .put("trackinfo", AmfValue.newArray(track1, track2));
+			 .put("videoframerate", (float)videoSamples.length / videoTrak.getDurationBySecond());
+		}
+		if (audioTrak != null) {
+			AudioSampleDescription audioSd = audioTrak.getAudioSampleDescription();
+			value.put("audiocodecid", audioTrak.getType())
+				 .put("aacaot", audioSd.getAudioCodecType())
+				 .put("audiosamplerate", audioSd.sampleRate)
+				 .put("audiochannels", audioSd.channelCount);
+		}
+		value.put("trackinfo", AmfValue.newArray(track1, track2));
 
 		return value;
 	}

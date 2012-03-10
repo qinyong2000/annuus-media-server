@@ -13,10 +13,8 @@ public final class MOOV {
 		try {
 			TRAK trak = null;;
 			while(true) {
-				int size = in.readInt();
-				byte[] b = new byte[4];
-				in.read(b);
-				String box = new String(b);
+				BOX.Header header = BOX.readHeader(in);
+				String box = header.type;
 				if ("trak".equalsIgnoreCase(box)) {
 					trak = new TRAK();
 					traks.add(trak);
@@ -29,8 +27,7 @@ public final class MOOV {
 					continue;
 				}
 
-				// read size - 8 bytes
-				b = new byte[size - 8];
+				byte[] b = new byte[(int) header.payloadSize];
 				in.read(b);
 				DataInputStream bin = new DataInputStream(new ByteArrayInputStream(b));
 				int version = bin.readByte(); // version & flags

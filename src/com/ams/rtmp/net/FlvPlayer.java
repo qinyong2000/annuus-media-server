@@ -1,6 +1,5 @@
 package com.ams.rtmp.net;
 
-import java.io.EOFException;
 import java.io.IOException;
 import com.ams.amf.AmfValue;
 import com.ams.flv.*;
@@ -64,13 +63,13 @@ public class FlvPlayer implements IPlayer{
 		while(stream.getTimeStamp() < durationTime ) {
 			Sample sample = deserializer.readNext();
 			if( sample == null ) {	// eof
-				stream.setPlayer(null);
-				throw new EOFException("End Of Media Stream");
+				stream.stop();
+				break;
 			}
 			long timestamp = sample.getTimestamp();
 			if (timestamp - stream.getTimeStamp() > 1000) {
-				stream.setPlayer(null);
-				throw new EOFException("End Of Media Stream");
+				stream.stop();
+				break;
 			}
 			stream.setTimeStamp(timestamp);
 			ByteBufferArray data = sample.getData();

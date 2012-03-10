@@ -91,7 +91,6 @@ public class Dispatcher implements Runnable {
 				}
 
 			} catch (Exception e) {
-				e.printStackTrace();
 				key.cancel();
 				key.attach(null);
 				connector.close();

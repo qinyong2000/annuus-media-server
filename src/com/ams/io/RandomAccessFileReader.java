@@ -143,7 +143,7 @@ public class RandomAccessFileReader implements IByteBufferReader {
 		this.eof = false;
 	}
 
-	public void skip(int bytes) throws IOException {
+	public void skip(long bytes) throws IOException {
 		seek(position + bytes);
 	}
 	

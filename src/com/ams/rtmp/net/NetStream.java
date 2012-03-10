@@ -9,6 +9,7 @@ import com.ams.flv.FlvDeserializer;
 import com.ams.flv.FlvException;
 import com.ams.flv.FlvSerializer;
 import com.ams.flv.ISampleDeserializer;
+import com.ams.flv.Sample;
 import com.ams.io.*;
 import com.ams.message.*;
 import com.ams.mp4.Mp4Deserializer;
@@ -187,7 +188,7 @@ public class NetStream {
 						return;
 					}
 					player = new StreamPlayer(this, publisher);
-					publisher.addSubscriber((IMsgSubscriber)player);
+					publisher.addSubscriber((IMsgSubscriber<Sample>) player);
 					player.seek(0);
 				}
 				break;
@@ -196,7 +197,7 @@ public class NetStream {
 					StreamPublisher publisher = (StreamPublisher) PublisherManager.getPublisher(streamName);
 					if (publisher != null) {
 						player = new StreamPlayer(this, publisher);
-						publisher.addSubscriber((IMsgSubscriber)player);
+						publisher.addSubscriber((IMsgSubscriber<Sample>)player);
 						player.seek(0);
 					} else {
 						String tokens[] = streamName.split(":");
@@ -241,6 +242,27 @@ public class NetStream {
 			}
 		}
 		return new FlvPlayer(sampleDeserializer, this);
+	}
+	
+	public void stop() throws IOException {
+		//clear
+		rtmp.writeProtocolControlMessage(new RtmpMessageUserControl(RtmpMessageUserControl.EVT_STREAM_EOF, streamId));
+		
+		//NetStream.Play.Complete
+		writeDataMessage(AmfValue.array("onPlayStatus", 
+						AmfValue.newObject()
+						.put("level", "status")
+						.put("code", "NetStream.Play.Complete")));
+
+		//clear
+		rtmp.writeProtocolControlMessage(new RtmpMessageUserControl(RtmpMessageUserControl.EVT_STREAM_EOF, streamId));
+		
+		//NetStream.Play.Stop
+		writeStatusMessage("NetStream.Play.Stop", 
+							AmfValue.newObject()
+								.put("description", "Stoped playing " + streamName + ".")
+								.put("clientId", streamId));
+		setPlayer(null);
 	}
 	
 	public void pause(boolean pause, long time) throws IOException, NetConnectionException, FlvException {

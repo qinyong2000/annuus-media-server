@@ -8,7 +8,7 @@ import com.ams.rtmp.message.*;
 
 public class StreamPublisher implements IMsgPublisher<MediaMessage<RtmpMessage>, Sample> {
 	private String publishName = null;
-	private int bytes = 0;
+	private int pingBytes = 0;
 	private int lastPing = 0;
 	private boolean ping = false;
 	private Sample videoHeader = null;
@@ -83,12 +83,11 @@ public class StreamPublisher implements IMsgPublisher<MediaMessage<RtmpMessage>,
 	}
 	
 	private void ping(int dataSize) {
-		bytes += dataSize;
+		pingBytes += dataSize;
 		// ping
 		ping = false;
-		if (bytes - lastPing > 100000) {
-			// if (bytes - lastPing > 1024*20) {
-			lastPing = bytes;
+		if (pingBytes - lastPing > 1024 * 10) {
+			lastPing = pingBytes;
 			ping = true;
 		}
 	}
@@ -113,8 +112,8 @@ public class StreamPublisher implements IMsgPublisher<MediaMessage<RtmpMessage>,
 		return ping;
 	}
 
-	public int getBytes() {
-		return bytes;
+	public int getPingBytes() {
+		return pingBytes;
 	}
 
 	public String getPublishName() {

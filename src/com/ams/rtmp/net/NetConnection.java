@@ -10,6 +10,7 @@ import com.ams.message.MediaMessage;
 import com.ams.rtmp.message.*;
 import com.ams.rtmp.*;
 import com.ams.server.replicator.ReplicateCluster;
+import com.ams.util.Log;
 
 public class NetConnection {
 	private RtmpHandShake handshake;
@@ -38,7 +39,7 @@ public class NetConnection {
 		publisher.publish(msg);
 		
 		if (publisher.isPing()) {
-			rtmp.writeProtocolControlMessage(new RtmpMessageAck(publisher.getBytes()));
+			rtmp.writeProtocolControlMessage(new RtmpMessageAck(publisher.getPingBytes()));
 		}
 		
 		// replicate to all slave server
@@ -92,6 +93,7 @@ public class NetConnection {
 			return;
 		}
 		context.setAttribute("app", app);
+		Log.logger.info("connect application:" + app);
 
 		rtmp.writeProtocolControlMessage(new RtmpMessageWindowAckSize(128*1024));
 		rtmp.writeProtocolControlMessage(new RtmpMessagePeerBandwidth(128*1024, (byte)2));
@@ -135,8 +137,8 @@ public class NetConnection {
 			streamError(header.getChunkStreamId(), header.getStreamId(), command.getTransactionId(), "Invalid 'Play' stream id "+ header.getStreamId());
 			return;
 		}
-		//stream.setChunkStreamId(header.getChunkStreamId());
 		stream.setTransactionId(command.getTransactionId());
+		Log.logger.info("play stream:" + streamName);
 		stream.play(context, streamName, start, duration);
 	}
 
@@ -190,8 +192,7 @@ public class NetConnection {
 			streamError(header.getChunkStreamId(), header.getStreamId(), command.getTransactionId(), "Invalid 'Publish' stream id "+ header.getStreamId());
 			return;
 		}
-
-		//stream.setChunkStreamId(header.getChunkStreamId());
+		Log.logger.info("publish stream:" + publishName);
 		stream.setTransactionId(command.getTransactionId());
 		stream.publish(context, publishName, type);
 	}
