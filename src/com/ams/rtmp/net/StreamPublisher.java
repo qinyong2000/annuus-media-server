@@ -36,7 +36,9 @@ public class StreamPublisher implements IMsgPublisher<MediaMessage<RtmpMessage>,
 			RtmpMessageAudio audio = (RtmpMessageAudio) message;
 			sample = new Sample(Sample.SAMPLE_AUDIO, timestamp, audio.getData());
 			if (audioHeader == null) {
-				if (sample.isH264AudioHeader()) audioHeader = sample;
+				if (sample.isH264AudioHeader()) {
+					audioHeader = sample;
+				}
 			}
 
 			break;
@@ -44,7 +46,9 @@ public class StreamPublisher implements IMsgPublisher<MediaMessage<RtmpMessage>,
 			RtmpMessageVideo video = (RtmpMessageVideo) message;
 			sample = new Sample(Sample.SAMPLE_VIDEO, timestamp, video.getData());
 			if (videoHeader == null) {
-				if (sample.isH264VideoHeader()) videoHeader = sample;
+				if (sample.isH264VideoHeader()) {
+					videoHeader = sample;
+				}
 			}
 			
 			break;

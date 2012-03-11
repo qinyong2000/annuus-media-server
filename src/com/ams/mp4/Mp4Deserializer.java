@@ -103,7 +103,7 @@ public class Mp4Deserializer implements ISampleDeserializer {
 		byte[] data = audioTrak.getAudioDecoderConfigData();
 		int dataSize = (data != null) ? data.length : 0;
 		ByteBuffer[] buf = new ByteBuffer[1];
-		buf[0] = ByteBufferFactory.allocate(5 + dataSize);
+		buf[0] = ByteBufferFactory.allocate(2 + dataSize);
 		buf[0].put(new byte[]{(byte)0xaf, 0x00});
 		if (data != null) {
 			buf[0].put(data);

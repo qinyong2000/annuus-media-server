@@ -9,6 +9,7 @@ import com.ams.amf.AmfValue;
 import com.ams.io.ByteBufferArray;
 import com.ams.io.ByteBufferInputStream;
 import com.ams.io.RandomAccessFileReader;
+import com.ams.server.ByteBufferFactory;
 
 public class FlvDeserializer implements ISampleDeserializer {
 	private RandomAccessFileReader reader;
@@ -23,6 +24,15 @@ public class FlvDeserializer implements ISampleDeserializer {
 	private AudioTag lastAudioTag = null;
 	private MetaTag lastMetaTag = null;
 
+	private static final byte[] H264_VIDEO_HEADER=
+		{(byte)0x01,(byte)0x4d,(byte)0x40,(byte)0x1e,(byte)0xff,(byte)0xe1,(byte)0x00,(byte)0x17,
+		(byte)0x67,(byte)0x4d,(byte)0x40,(byte)0x1e,(byte)0x92,(byte)0x42,(byte)0x01,(byte)0x40,
+		(byte)0x5f,(byte)0xd4,(byte)0xb0,(byte)0x80,(byte)0x00,(byte)0x01,(byte)0xf4,(byte)0x80,
+		(byte)0x00,(byte)0x75,(byte)0x30,(byte)0x07,(byte)0x8b,(byte)0x17,(byte)0x24,(byte)0x01,
+		(byte)0x00,(byte)0x04,(byte)0x68,(byte)0xee,(byte)0x3c,(byte)0x8};
+
+	private static final byte[] H264_AUDIO_HEADER= {(byte)0x12, (byte)0x10};
+	
 	private class SampleTimestampComparator implements java.util.Comparator<Sample> {
 		public int compare(Sample s, Sample t) {
 			return (int)(s.getTimestamp() - t.getTimestamp());
@@ -78,7 +88,7 @@ public class FlvDeserializer implements ISampleDeserializer {
 		long offset = reader.getPosition();
 		
 		int header = in.readByte();
-		boolean keyframe = (header >>> 4) == 1;
+		boolean keyframe = (header >>> 4) == 1 || header == 0x17;
 		
 		reader.seek(offset + dataSize);
 		int previousTagSize = (int) in.read32Bit();
@@ -166,10 +176,28 @@ public class FlvDeserializer implements ISampleDeserializer {
 	}
 
 	public ByteBufferArray videoHeaderData() {
+		if (firstVideoTag != null && firstVideoTag.isH264VideoSample()) {
+			byte[] data = H264_VIDEO_HEADER;
+			ByteBuffer[] buf = new ByteBuffer[1];
+			buf[0] = ByteBufferFactory.allocate(5 + data.length);
+			buf[0].put(new byte[]{0x17, 0x00, 0x00, 0x00, 0x00});
+			buf[0].put(data);
+			buf[0].flip();
+			return new ByteBufferArray(buf);
+		}
 		return null;
 	}
 
 	public ByteBufferArray audioHeaderData() {
+		if (firstAudioTag != null && firstVideoTag.isH264VideoSample()) {
+			byte[] data = H264_AUDIO_HEADER;
+			ByteBuffer[] buf = new ByteBuffer[1];
+			buf[0] = ByteBufferFactory.allocate(2 + data.length);
+			buf[0].put(new byte[]{(byte)0xaf, 0x00});
+			buf[0].put(data);
+			buf[0].flip();
+			return new ByteBufferArray(buf);
+		}
 		return null;
 	}
 	

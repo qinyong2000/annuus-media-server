@@ -74,23 +74,30 @@ public class Sample extends MediaMessage<ByteBufferArray> {
 
 	public boolean isVideoKeyframe() {
 		ByteBuffer buf = data.getBuffers()[0];
-		int firstByte = (buf.get(0) & 0xFF);
-		return isVideoSample() && ((firstByte >>> 4) == 1 || firstByte == 0x17);
+		int h = buf.get(buf.position()) & 0xFF;
+		return isVideoSample() && ((h >>> 4) == 1 || h == 0x17);
 	}
 	
 	public boolean isH264VideoSample() {
 		ByteBuffer buf = data.getBuffers()[0];
-		return (buf.get(0) & 0xFF) == 0x17 || (buf.get(0) & 0xFF) == 0x27;
+		int h = buf.get(buf.position()) & 0xFF;
+		return h == 0x17 || h == 0x27;
 	}
 
 	public boolean isH264AudioHeader() {
 		ByteBuffer buf = data.getBuffers()[0];
-		return (buf.get(0) & 0xFF) == 0xAF && (buf.get(1) & 0xFF) == 0x00;
+		int pos = buf.position();
+		int h1 = buf.get(pos) & 0xFF;
+		int h2 = buf.get(pos + 1) & 0xFF;
+		return h1 == 0xAF && h2 == 0x00;
 	}
 
 	public boolean isH264VideoHeader() {
 		ByteBuffer buf = data.getBuffers()[0];
-		return (buf.get(0) & 0xFF) == 0x17 && (buf.get(1) & 0xFF) == 0x00;
+		int pos = buf.position();
+		int h1 = buf.get(pos) & 0xFF;
+		int h2 = buf.get(pos + 1) & 0xFF;
+		return h1 == 0x17 && h2 == 0x00;
 	}
 
 	public RtmpMessage toRtmpMessage() {
