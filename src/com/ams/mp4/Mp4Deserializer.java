@@ -209,8 +209,12 @@ public class Mp4Deserializer implements IMediaDeserializer {
 	}
 
 
-	public void close() throws IOException {
-		reader.close();
+	public void close() {
+		try {
+			reader.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 }

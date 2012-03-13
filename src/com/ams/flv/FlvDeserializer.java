@@ -47,12 +47,7 @@ public class FlvDeserializer implements IMediaDeserializer {
 	}
 	
 	private MediaSample readSampleData(ByteBufferInputStream in) throws IOException,FlvException {
-		int tagType;
-		try {
-			tagType = in.readByte() & 0xFF;
-		} catch (EOFException e) {
-			return null;
-		}
+		int tagType = in.readByte() & 0xFF;
 		int dataSize = in.read24Bit(); // 24Bit read
 		long timestamp = in.read24Bit(); // 24Bit read
 		timestamp |= (in.readByte() & 0xFF) << 24; // time stamp extended
@@ -224,13 +219,17 @@ public class FlvDeserializer implements IMediaDeserializer {
 	public MediaSample readNext() throws IOException {
 		try {
 			return readSampleData(new ByteBufferInputStream(reader));
-		} catch (FlvException e) {
+		} catch (Exception e) {
 			throw new EOFException();
 		}
 	}
 
-	public void close() throws IOException {
-		reader.close();
+	public void close() {
+		try {
+			reader.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 }

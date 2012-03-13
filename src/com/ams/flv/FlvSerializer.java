@@ -4,9 +4,10 @@ import java.io.IOException;
 import com.ams.io.ByteBufferArray;
 import com.ams.io.ByteBufferOutputStream;
 import com.ams.io.RandomAccessFileWriter;
+import com.ams.message.IMediaSerializer;
 import com.ams.message.MediaSample;
 
-public class FlvSerializer {
+public class FlvSerializer implements IMediaSerializer {
 	private ByteBufferOutputStream out;		//record to file stream
 	private boolean headerWrite = false;
 	
@@ -59,7 +60,7 @@ public class FlvSerializer {
 		out.write32Bit(dataSize + 11);
 	}
 	
-	public synchronized void close() {
+	public void close() {
 		try {
 			out.close();
 		} catch (IOException e) {

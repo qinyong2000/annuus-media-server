@@ -8,5 +8,5 @@ public interface IMediaDeserializer {
 	public MediaSample audioHeaderData();
 	public MediaSample seek(long seekTime) throws IOException;
 	public MediaSample readNext() throws IOException;
-	public void close() throws IOException;
+	public void close();
 }

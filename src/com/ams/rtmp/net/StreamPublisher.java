@@ -2,7 +2,6 @@ package com.ams.rtmp.net;
 
 import java.io.IOException;
 import java.util.LinkedList;
-import com.ams.flv.*;
 import com.ams.message.*;
 import com.ams.rtmp.message.*;
 
@@ -17,7 +16,7 @@ public class StreamPublisher implements IMsgPublisher<MediaMessage<RtmpMessage>,
 
 	private LinkedList<IMsgSubscriber<MediaSample>> subscribers = new LinkedList<IMsgSubscriber<MediaSample>>();
 
-	private FlvSerializer recorder = null; // record to file stream
+	private IMediaSerializer recorder = null; // record to file stream
 
 	public StreamPublisher(String publishName) {
 		this.publishName = publishName;
@@ -108,7 +107,7 @@ public class StreamPublisher implements IMsgPublisher<MediaMessage<RtmpMessage>,
 		}
 	}
 
-	public void setRecorder(FlvSerializer recorder) {
+	public void setRecorder(IMediaSerializer recorder) {
 		this.recorder = recorder;
 	}
 

@@ -30,11 +30,11 @@ public class StreamSubscriber implements IMediaDeserializer, IMsgSubscriber<Medi
 
 	public MediaSample seek(long seekTime) throws IOException {
 		// start from a keyframe
-		MediaSample sample;
-		while ((sample = receivedQueue.peek()) != null) {
-			if (sample.isVideoKeyframe()) break;
-			receivedQueue.poll();
-		}
+//		MediaSample sample;
+//		while ((sample = receivedQueue.peek()) != null) {
+//			if (sample.isVideoKeyframe()) break;
+//			receivedQueue.poll();
+//		}
 		
 		return null;
 	}
@@ -44,7 +44,8 @@ public class StreamSubscriber implements IMediaDeserializer, IMsgSubscriber<Medi
 	}
 	
 	public void messageNotify(MediaSample msg) {
-		if (receivedQueue.size() > MAX_QUEUE_LENGTH && msg.isVideoKeyframe()) {
+		if (receivedQueue.size() > MAX_QUEUE_LENGTH ) {
+System.out.println("clear");			
 			receivedQueue.clear();
 		}
 		receivedQueue.offer(msg);
