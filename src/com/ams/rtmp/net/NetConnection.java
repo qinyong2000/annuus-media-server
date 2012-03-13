@@ -1,5 +1,6 @@
 package com.ams.rtmp.net;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -333,6 +334,11 @@ public class NetConnection {
 				if (player != null) {
 					try {
 						player.play();
+					} catch (EOFException e) {
+						try {
+							stream.stop();
+						} catch (IOException e1) {
+						}
 					} catch (IOException e) {
 						e.printStackTrace();
 					}

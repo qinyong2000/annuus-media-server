@@ -22,15 +22,8 @@ public final class NetContext {
 		return attributes.get(key);
 	}
 	
-	public String getMimeType(String file) {
-		int index = file.lastIndexOf('.');
-		return (index++ > 0)
-			? MimeTypes.getContentType(file.substring(index))
-			: "unkown/unkown";
-	}
-
 	public String getRealPath(String app, String path, String type) {
-		if ("unkown/unkown".equals(getMimeType(path))) {
+		if ("unkown/unkown".equals(MimeTypes.getMimeType(path))) {
 			if (type == null || "".equals(type)) {
 				path += ".flv";
 			} else {

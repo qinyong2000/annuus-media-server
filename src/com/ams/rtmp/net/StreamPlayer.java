@@ -1,6 +1,5 @@
 package com.ams.rtmp.net;
 
-import java.io.EOFException;
 import java.io.IOException;
 import com.ams.amf.AmfValue;
 import com.ams.io.ByteBufferArray;
@@ -64,21 +63,11 @@ public class StreamPlayer {
 		if (pause) return;
 		long durationTime = System.currentTimeMillis() - startTime;
 		while(stream.getTimeStamp() < durationTime ) {
-			MediaSample sample = null;
-			try {
-				sample = deserializer.readNext();
-				if( sample == null ) {
-					break;
-				} 
-			} catch(EOFException e) {
-				stream.stop();			// eof
+			MediaSample sample = deserializer.readNext();
+			if( sample == null ) {
 				break;
-			}
+			} 
 			long timestamp = sample.getTimestamp();
-			if (timestamp - stream.getTimeStamp() > 1000) {
-				stream.stop();
-				break;
-			}
 			stream.setTimeStamp(timestamp);
 			ByteBufferArray data = sample.getData();
 			if (sample.isAudioSample() && audioPlaying) {

@@ -19,7 +19,14 @@ public class MimeTypes {
 		String contentType = (String) mimeMap.get(extension);
 		if (contentType == null)
 			contentType = "unkown/unkown";
-		return contentType;		
+		return contentType;
+	}
+	
+	public static String getMimeType(String file) {
+		int index = file.lastIndexOf('.');
+		return (index++ > 0)
+			? MimeTypes.getContentType(file.substring(index))
+			: "unkown/unkown";
 	}
 	
 }
