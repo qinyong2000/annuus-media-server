@@ -1,8 +1,14 @@
 package com.ams.amf;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import com.ams.io.ByteBufferArray;
+import com.ams.io.ByteBufferOutputStream;
+import com.ams.rtmp.message.RtmpMessageData;
 
 public class AmfValue {
 	public final static int AMF_INT = 1;
@@ -219,4 +225,21 @@ public class AmfValue {
 	public void setEcmaArray(boolean ecmaArray) {
 		this.ecmaArray = ecmaArray;
 	}
+	
+	public static ByteBufferArray toBinary(AmfValue[] values) {
+		ByteBufferArray buf = new ByteBufferArray();
+		ByteBufferOutputStream out = new ByteBufferOutputStream(buf);
+		Amf0Serializer serializer = new Amf0Serializer(new DataOutputStream(out));
+		try {
+			for(int i = 0; i < values.length; i++) {
+					serializer.write(values[i]);
+			}
+			out.flush();
+		} catch (IOException e) {
+			return null;
+		}
+		
+		return buf;
+	}
+
 }

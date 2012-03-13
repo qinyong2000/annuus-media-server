@@ -6,16 +6,16 @@ import com.ams.flv.*;
 import com.ams.message.*;
 import com.ams.rtmp.message.*;
 
-public class StreamPublisher implements IMsgPublisher<MediaMessage<RtmpMessage>, Sample> {
+public class StreamPublisher implements IMsgPublisher<MediaMessage<RtmpMessage>, MediaSample> {
 	private String publishName = null;
 	private int pingBytes = 0;
 	private int lastPing = 0;
 	private boolean ping = false;
-	private Sample videoHeader = null;
-	private Sample audioHeader = null;
-	private Sample meta = null;
+	private MediaSample videoHeader = null;
+	private MediaSample audioHeader = null;
+	private MediaSample meta = null;
 
-	private LinkedList<IMsgSubscriber<Sample>> subscribers = new LinkedList<IMsgSubscriber<Sample>>();
+	private LinkedList<IMsgSubscriber<MediaSample>> subscribers = new LinkedList<IMsgSubscriber<MediaSample>>();
 
 	private FlvSerializer recorder = null; // record to file stream
 
@@ -29,12 +29,12 @@ public class StreamPublisher implements IMsgPublisher<MediaMessage<RtmpMessage>,
 
 	public synchronized void publish(MediaMessage<RtmpMessage> msg) throws IOException {
 		long timestamp = msg.getTimestamp();
-		Sample sample = null;
+		MediaSample sample = null;
 		RtmpMessage message = msg.getData();
 		switch (message.getType()) {
 		case RtmpMessage.MESSAGE_AUDIO:
 			RtmpMessageAudio audio = (RtmpMessageAudio) message;
-			sample = new Sample(Sample.SAMPLE_AUDIO, timestamp, audio.getData());
+			sample = new MediaSample(MediaSample.SAMPLE_AUDIO, timestamp, audio.getData());
 			if (audioHeader == null) {
 				if (sample.isH264AudioHeader()) {
 					audioHeader = sample;
@@ -44,7 +44,7 @@ public class StreamPublisher implements IMsgPublisher<MediaMessage<RtmpMessage>,
 			break;
 		case RtmpMessage.MESSAGE_VIDEO:
 			RtmpMessageVideo video = (RtmpMessageVideo) message;
-			sample = new Sample(Sample.SAMPLE_VIDEO, timestamp, video.getData());
+			sample = new MediaSample(MediaSample.SAMPLE_VIDEO, timestamp, video.getData());
 			if (videoHeader == null) {
 				if (sample.isH264VideoHeader()) {
 					videoHeader = sample;
@@ -54,7 +54,7 @@ public class StreamPublisher implements IMsgPublisher<MediaMessage<RtmpMessage>,
 			break;
 		case RtmpMessage.MESSAGE_AMF0_DATA:
 			RtmpMessageData m = (RtmpMessageData) message;
-			sample = new Sample(Sample.SAMPLE_META, timestamp, m.getData());
+			sample = new MediaSample(MediaSample.SAMPLE_META, timestamp, m.getData());
 			meta = sample;
 			break;
 		}
@@ -80,8 +80,8 @@ public class StreamPublisher implements IMsgPublisher<MediaMessage<RtmpMessage>,
 		meta = null;
 	}
 
-	private void notify(Sample sample) {
-		for (IMsgSubscriber<Sample> subscriber : subscribers) {
+	private void notify(MediaSample sample) {
+		for (IMsgSubscriber<MediaSample> subscriber : subscribers) {
 			subscriber.messageNotify(sample);
 		}
 	}
@@ -96,13 +96,13 @@ public class StreamPublisher implements IMsgPublisher<MediaMessage<RtmpMessage>,
 		}
 	}
 	
-	public void addSubscriber(IMsgSubscriber<Sample> subscrsiber) {
+	public void addSubscriber(IMsgSubscriber<MediaSample> subscrsiber) {
 		synchronized (subscribers) {
 			subscribers.add(subscrsiber);
 		}
 	}
 
-	public void removeSubscriber(IMsgSubscriber<Sample> subscriber) {
+	public void removeSubscriber(IMsgSubscriber<MediaSample> subscriber) {
 		synchronized (subscribers) {
 			subscribers.remove(subscriber);
 		}
@@ -124,15 +124,15 @@ public class StreamPublisher implements IMsgPublisher<MediaMessage<RtmpMessage>,
 		return publishName;
 	}
 
-	public Sample getVideoHeader() {
+	public MediaSample getVideoHeader() {
 		return videoHeader;
 	}
 
-	public Sample getAudioHeader() {
+	public MediaSample getAudioHeader() {
 		return audioHeader;
 	}
 	
-	public Sample getMeta() {
+	public MediaSample getMetaData() {
 		return meta;
 	}
 }

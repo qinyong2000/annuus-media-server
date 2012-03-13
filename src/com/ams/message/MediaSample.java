@@ -1,4 +1,4 @@
-package com.ams.flv;
+package com.ams.message;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -11,7 +11,7 @@ import com.ams.rtmp.message.RtmpMessageAudio;
 import com.ams.rtmp.message.RtmpMessageData;
 import com.ams.rtmp.message.RtmpMessageVideo;
 
-public class Sample extends MediaMessage<ByteBufferArray> {
+public class MediaSample extends MediaMessage<ByteBufferArray> {
 	public static final int SAMPLE_AUDIO = 0;
 	public static final int SAMPLE_VIDEO = 1;
 	public static final int SAMPLE_META = 2;
@@ -21,13 +21,13 @@ public class Sample extends MediaMessage<ByteBufferArray> {
 	protected long offset;
 	protected int size;
 
-	public Sample(int sampleType, long timestamp, ByteBufferArray data) {
+	public MediaSample(int sampleType, long timestamp, ByteBufferArray data) {
 		super(timestamp, data);
 		this.sampleType = sampleType;
 		this.data = data;
 	}
 	
-	public Sample(int sampleType, long timestamp, boolean keyframe, long offset, int size) {
+	public MediaSample(int sampleType, long timestamp, boolean keyframe, long offset, int size) {
 		super(timestamp, null);
 		this.sampleType = sampleType;
 		this.keyframe = keyframe;

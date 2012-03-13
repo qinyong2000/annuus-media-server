@@ -3,17 +3,18 @@ package com.ams.flv;
 import java.io.IOException;
 import com.ams.io.ByteBufferArray;
 import com.ams.io.ByteBufferInputStream;
+import com.ams.message.MediaSample;
 
-public class VideoTag extends Sample {
+public class VideoTag extends MediaSample {
 	private int codecId = -1;
 	private int width = 0, height = 0;
 	
 	public VideoTag(long timestamp, ByteBufferArray data) {
-		super(Sample.SAMPLE_VIDEO, timestamp, data);
+		super(MediaSample.SAMPLE_VIDEO, timestamp, data);
 	}
 
 	public VideoTag(long timestamp, boolean keyframe, long offset, int size) {
-		super(Sample.SAMPLE_VIDEO, timestamp, keyframe, offset, size);
+		super(MediaSample.SAMPLE_VIDEO, timestamp, keyframe, offset, size);
 	}
 	
 	public void getParameters() throws IOException {

@@ -7,17 +7,18 @@ import com.ams.amf.AmfException;
 import com.ams.amf.AmfValue;
 import com.ams.io.ByteBufferArray;
 import com.ams.io.ByteBufferInputStream;
+import com.ams.message.MediaSample;
 
-public class MetaTag extends Sample {
+public class MetaTag extends MediaSample {
 	private String event = null;
 	private AmfValue metaData = null;
 	
 	public MetaTag(long timestamp, ByteBufferArray data) {
-		super(Sample.SAMPLE_META, timestamp, data);
+		super(MediaSample.SAMPLE_META, timestamp, data);
 	}
 
 	public MetaTag(long timestamp, long offset, int size) {
-		super(Sample.SAMPLE_META, timestamp, false, offset, size);
+		super(MediaSample.SAMPLE_META, timestamp, false, offset, size);
 	}
 	
 	public void getParameters() throws IOException {

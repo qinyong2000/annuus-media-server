@@ -1,15 +1,13 @@
 package com.ams.rtmp.net;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Map;
-
 import com.ams.amf.*;
 import com.ams.flv.FlvDeserializer;
 import com.ams.flv.FlvException;
 import com.ams.flv.FlvSerializer;
-import com.ams.flv.ISampleDeserializer;
-import com.ams.flv.Sample;
+import com.ams.message.IMediaDeserializer;
+import com.ams.message.MediaSample;
 import com.ams.io.*;
 import com.ams.message.*;
 import com.ams.mp4.Mp4Deserializer;
@@ -25,7 +23,7 @@ public class NetStream {
 	private long timeStamp = 0;
 	
 	private StreamPublisher publisher = null;
-	private IPlayer player = null;
+	private StreamPlayer player = null;
 	
 	public NetStream(RtmpConnection rtmp, int streamId) {
 		this.rtmp = rtmp;
@@ -68,14 +66,7 @@ public class NetStream {
 	}
 
 	public void writeDataMessage(AmfValue[] values) throws IOException {
-		ByteBufferArray buf = new ByteBufferArray();
-		ByteBufferOutputStream out = new ByteBufferOutputStream(buf);
-		Amf0Serializer serializer = new Amf0Serializer(new DataOutputStream(out));
-		for(int i = 0; i < values.length; i++) {
-			serializer.write(values[i]);
-		}
-		out.flush();
-		writeMessage(new RtmpMessageData(buf));
+		writeMessage(new RtmpMessageData(AmfValue.toBinary(values)));
 	}
 
 	public synchronized void close() throws IOException {
@@ -105,12 +96,12 @@ public class NetStream {
 		return streamId;
 	}
 
-	public IPlayer getPlayer() {
+	public StreamPlayer getPlayer() {
 		return player;
 	}
 
 
-	public void setPlayer(IPlayer player) {
+	public void setPlayer(StreamPlayer player) {
 		this.player = player;
 	}
 
@@ -187,8 +178,9 @@ public class NetStream {
 						writeErrorMessage("Unknown shared stream '" + streamName + "'");
 						return;
 					}
-					player = new StreamPlayer(this, publisher);
-					publisher.addSubscriber((IMsgSubscriber<Sample>) player);
+					StreamSubscriber subscriber = new StreamSubscriber(publisher);
+					player = new StreamPlayer(subscriber, this);
+					publisher.addSubscriber((IMsgSubscriber<MediaSample>) subscriber);
 					player.seek(0);
 				}
 				break;
@@ -196,8 +188,9 @@ public class NetStream {
 				{
 					StreamPublisher publisher = (StreamPublisher) PublisherManager.getPublisher(streamName);
 					if (publisher != null) {
-						player = new StreamPlayer(this, publisher);
-						publisher.addSubscriber((IMsgSubscriber<Sample>)player);
+						StreamSubscriber subscriber = new StreamSubscriber(publisher);
+						player = new StreamPlayer(subscriber, this);
+						publisher.addSubscriber((IMsgSubscriber<MediaSample>)subscriber);
 						player.seek(0);
 					} else {
 						String tokens[] = streamName.split(":");
@@ -228,9 +221,9 @@ public class NetStream {
 		
 	}
 	
-	public IPlayer createPlayer(String type, String file) throws IOException {
+	public StreamPlayer createPlayer(String type, String file) throws IOException {
 		RandomAccessFileReader reader = new RandomAccessFileReader(file, 0);
-		ISampleDeserializer sampleDeserializer = null;
+		IMediaDeserializer sampleDeserializer = null;
 		if ("mp4".equalsIgnoreCase(type)) {
 			sampleDeserializer = new Mp4Deserializer(reader);
 		} else {
@@ -241,7 +234,7 @@ public class NetStream {
 				sampleDeserializer = new FlvDeserializer(reader);
 			}
 		}
-		return new FlvPlayer(sampleDeserializer, this);
+		return new StreamPlayer(sampleDeserializer, this);
 	}
 	
 	public void stop() throws IOException {

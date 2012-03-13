@@ -9,7 +9,7 @@ import com.ams.amf.AmfException;
 import com.ams.amf.AmfValue;
 import com.ams.rtmp.message.RtmpMessage;
 import com.ams.rtmp.message.RtmpMessageCommand;
-import com.ams.rtmp.net.IPlayer;
+import com.ams.rtmp.net.StreamPlayer;
 import com.ams.rtmp.net.NetStream;
 import com.ams.rtmp.RtmpConnection;
 import com.ams.rtmp.RtmpException;
@@ -21,7 +21,7 @@ public class RtmpClient implements Runnable {
 	private SocketConnector conn;
 	private RtmpConnection rtmp;
 	private RtmpHandShake handshake;
-	private IPlayer player;
+	private StreamPlayer player;
 
 	private final static int CMD_CONNECT = 1;
 	private final static int CMD_CREATE_STREAM = 2;

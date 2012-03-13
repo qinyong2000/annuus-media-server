@@ -9,11 +9,13 @@ import com.ams.amf.AmfValue;
 import com.ams.io.ByteBufferArray;
 import com.ams.io.ByteBufferInputStream;
 import com.ams.io.RandomAccessFileReader;
+import com.ams.message.IMediaDeserializer;
+import com.ams.message.MediaSample;
 import com.ams.server.ByteBufferFactory;
 
-public class FlvDeserializer implements ISampleDeserializer {
+public class FlvDeserializer implements IMediaDeserializer {
 	private RandomAccessFileReader reader;
-	private ArrayList<Sample> samples = new ArrayList<Sample>();
+	private ArrayList<MediaSample> samples = new ArrayList<MediaSample>();
 	private long videoFrames = 0, audioFrames = 0;
 	private long videoDataSize = 0, audioDataSize = 0;
 	private long lastTimestamp = 0;
@@ -33,8 +35,8 @@ public class FlvDeserializer implements ISampleDeserializer {
 
 	private static final byte[] H264_AUDIO_HEADER= {(byte)0x12, (byte)0x10};
 	
-	private class SampleTimestampComparator implements java.util.Comparator<Sample> {
-		public int compare(Sample s, Sample t) {
+	private class SampleTimestampComparator implements java.util.Comparator<MediaSample> {
+		public int compare(MediaSample s, MediaSample t) {
 			return (int)(s.getTimestamp() - t.getTimestamp());
 		}
 	};
@@ -44,7 +46,7 @@ public class FlvDeserializer implements ISampleDeserializer {
 		getAllSamples();
 	}
 	
-	private Sample readSampleData(ByteBufferInputStream in) throws IOException,FlvException {
+	private MediaSample readSampleData(ByteBufferInputStream in) throws IOException,FlvException {
 		int tagType;
 		try {
 			tagType = in.readByte() & 0xFF;
@@ -72,7 +74,7 @@ public class FlvDeserializer implements ISampleDeserializer {
 		}
 	}
 
-	private Sample readSampleOffset(RandomAccessFileReader reader) throws IOException, FlvException {
+	private MediaSample readSampleOffset(RandomAccessFileReader reader) throws IOException, FlvException {
 		int tagType;
 		ByteBufferInputStream in = new ByteBufferInputStream(reader);
 		try {
@@ -109,11 +111,11 @@ public class FlvDeserializer implements ISampleDeserializer {
 			reader.seek(0);
 			ByteBufferInputStream in = new ByteBufferInputStream(reader);
 			FlvHeader.read(in);
-			Sample tag = null;
+			MediaSample tag = null;
 			while((tag = readSampleOffset(reader)) != null) {
 				if (tag.isVideoSample()) {
 					videoFrames++;
-					videoDataSize += tag.size;
+					videoDataSize += tag.getSize();
 					if (firstVideoTag == null)
 						firstVideoTag = (VideoTag)tag;
 					if (tag.isKeyframe())
@@ -122,7 +124,7 @@ public class FlvDeserializer implements ISampleDeserializer {
 				}
 				if (tag.isAudioSample()) {
 					audioFrames++;
-					audioDataSize += tag.size;
+					audioDataSize += tag.getSize();
 					if (firstAudioTag == null)
 						firstAudioTag = (AudioTag)tag;
 					lastAudioTag = (AudioTag)tag;	
@@ -153,29 +155,32 @@ public class FlvDeserializer implements ISampleDeserializer {
 		}
 	}
 
-	public AmfValue metaData() {
+	public MediaSample metaData() {
+		AmfValue[] metaData;
 		if (firstMetaTag != null && "onMetaData".equals(firstMetaTag.getEvent()) && firstMetaTag.getMetaData() != null) {
-			return firstMetaTag.getMetaData();
+			metaData = AmfValue.array("onMetaData", firstMetaTag.getMetaData());
+		} else {
+			AmfValue value = AmfValue.newEcmaArray();
+			float duration = (float)lastTimestamp / 1000;
+			value.put("duration", duration);
+			if (firstVideoTag != null) {
+				value.put("width", firstVideoTag.getWidth())
+					 .put("height", firstVideoTag.getHeight())
+					 .put("videodatarate", (float)videoDataSize * 8 / duration / 1024) //kBits/sec
+					 .put("canSeekToEnd", lastVideoTag.isKeyframe())
+					 .put("videocodecid", firstVideoTag.getCodecId())
+					 .put("framerate", (float)videoFrames / duration);
+			}
+			if (firstAudioTag != null) {
+				value.put("audiodatarate", (float)audioDataSize * 8 / duration / 1024) //kBits/sec
+					 .put("audiocodecid", firstAudioTag.getSoundFormat());
+			}
+			metaData = AmfValue.array("onMetaData", value);
 		}
-		AmfValue value = AmfValue.newEcmaArray();
-		float duration = (float)lastTimestamp / 1000;
-		value.put("duration", duration);
-		if (firstVideoTag != null) {
-			value.put("width", firstVideoTag.getWidth())
-				 .put("height", firstVideoTag.getHeight())
-				 .put("videodatarate", (float)videoDataSize * 8 / duration / 1024) //kBits/sec
-				 .put("canSeekToEnd", lastVideoTag.isKeyframe())
-				 .put("videocodecid", firstVideoTag.getCodecId())
-				 .put("framerate", (float)videoFrames / duration);
-		}
-		if (firstAudioTag != null) {
-			value.put("audiodatarate", (float)audioDataSize * 8 / duration / 1024) //kBits/sec
-				 .put("audiocodecid", firstAudioTag.getSoundFormat());
-		}
-		return value;
+		return new MediaSample(MediaSample.SAMPLE_META, 0, AmfValue.toBinary(metaData));
 	}
 
-	public ByteBufferArray videoHeaderData() {
+	public MediaSample videoHeaderData() {
 		if (firstVideoTag != null && firstVideoTag.isH264VideoSample()) {
 			byte[] data = H264_VIDEO_HEADER;
 			ByteBuffer[] buf = new ByteBuffer[1];
@@ -183,12 +188,12 @@ public class FlvDeserializer implements ISampleDeserializer {
 			buf[0].put(new byte[]{0x17, 0x00, 0x00, 0x00, 0x00});
 			buf[0].put(data);
 			buf[0].flip();
-			return new ByteBufferArray(buf);
+			return new MediaSample(MediaSample.SAMPLE_VIDEO, 0, new ByteBufferArray(buf));
 		}
 		return null;
 	}
 
-	public ByteBufferArray audioHeaderData() {
+	public MediaSample audioHeaderData() {
 		if (firstAudioTag != null && firstVideoTag.isH264VideoSample()) {
 			byte[] data = H264_AUDIO_HEADER;
 			ByteBuffer[] buf = new ByteBuffer[1];
@@ -196,14 +201,14 @@ public class FlvDeserializer implements ISampleDeserializer {
 			buf[0].put(new byte[]{(byte)0xaf, 0x00});
 			buf[0].put(data);
 			buf[0].flip();
-			return new ByteBufferArray(buf);
+			return new MediaSample(MediaSample.SAMPLE_AUDIO, 0, new ByteBufferArray(buf));
 		}
 		return null;
 	}
 	
-	public Sample seek(long seekTime) throws IOException {
-		Sample flvTag = firstVideoTag;
-		int idx = Collections.binarySearch(samples, new Sample(Sample.SAMPLE_VIDEO, seekTime, true, 0, 0) , new SampleTimestampComparator());
+	public MediaSample seek(long seekTime) throws IOException {
+		MediaSample flvTag = firstVideoTag;
+		int idx = Collections.binarySearch(samples, new MediaSample(MediaSample.SAMPLE_VIDEO, seekTime, true, 0, 0) , new SampleTimestampComparator());
 		int i = (idx >= 0) ? idx : -(idx + 1);
 		while(i > 0) {
 			flvTag = samples.get(i);
@@ -212,17 +217,16 @@ public class FlvDeserializer implements ISampleDeserializer {
 			}
 			i--;
 		}
-		reader.seek(flvTag.offset - 11);
+		reader.seek(flvTag.getOffset() - 11);
 		return flvTag;
 	}
 	
-	public Sample readNext() throws IOException {
+	public MediaSample readNext() throws IOException {
 		try {
 			return readSampleData(new ByteBufferInputStream(reader));
 		} catch (FlvException e) {
-			e.printStackTrace();
+			throw new EOFException();
 		}
-		return null;
 	}
 
 	public void close() throws IOException {

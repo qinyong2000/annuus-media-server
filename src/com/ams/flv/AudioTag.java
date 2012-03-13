@@ -3,19 +3,20 @@ package com.ams.flv;
 import java.io.IOException;
 import com.ams.io.ByteBufferArray;
 import com.ams.io.ByteBufferInputStream;
+import com.ams.message.MediaSample;
 
-public class AudioTag extends Sample {
+public class AudioTag extends MediaSample {
 	private int soundFormat = -1;
 	private int soundRate = 0;
 	private int soundSize = 0;
 	private int soundType = -1;
 	
 	public AudioTag(long timestamp, ByteBufferArray data) {
-		super(Sample.SAMPLE_AUDIO, timestamp, data);
+		super(MediaSample.SAMPLE_AUDIO, timestamp, data);
 	}
 
 	public AudioTag(long timestamp, long offset, int size) {
-		super(Sample.SAMPLE_AUDIO, timestamp, true, offset, size);
+		super(MediaSample.SAMPLE_AUDIO, timestamp, true, offset, size);
 	}
 	
 	public void getParameters() throws IOException {

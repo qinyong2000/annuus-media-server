@@ -329,7 +329,7 @@ public class NetConnection {
 	public void playStreams() {
 		for(NetStream stream : streams.values()) {
 			if(stream != null) {
-				IPlayer player = stream.getPlayer();
+				StreamPlayer player = stream.getPlayer();
 				if (player != null) {
 					try {
 						player.play();
