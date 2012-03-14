@@ -50,7 +50,7 @@ public class RtmpMessageSerializer {
 			case RtmpMessageUserControl.EVT_PING_RESPONSE:
 				bos.write32Bit(ts);
 				break;
-			};
+			}
 			break;
 			
 		case RtmpMessage.MESSAGE_AMF0_COMMAND:

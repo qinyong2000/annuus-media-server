@@ -60,7 +60,7 @@ public abstract class Connector implements IByteBufferReader, IByteBufferWriter 
 		if (dispatcher == null) {
 			synchronized(dispatcherLock) {
 				dispatcher = new Dispatcher();
-				Thread t = new Thread(dispatcher);
+				Thread t = new Thread(dispatcher, "dispatcher");
 				t.setDaemon(true);
 				t.start();
 			}
@@ -244,10 +244,10 @@ public abstract class Connector implements IByteBufferReader, IByteBufferWriter 
 		ArrayList<InetAddress> address = new ArrayList<InetAddress>();
 		for (Enumeration<NetworkInterface> ifaces = NetworkInterface
 				.getNetworkInterfaces(); ifaces.hasMoreElements();) {
-			NetworkInterface iface = (NetworkInterface) ifaces.nextElement();
+			NetworkInterface iface = ifaces.nextElement();
 			for (Enumeration<InetAddress> ips = iface.getInetAddresses(); ips
 					.hasMoreElements();) {
-				InetAddress ia = (InetAddress) ips.nextElement();
+				InetAddress ia = ips.nextElement();
 				address.add(ia);
 			}
 		}

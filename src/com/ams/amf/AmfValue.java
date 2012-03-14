@@ -8,7 +8,6 @@ import java.util.Map;
 
 import com.ams.io.ByteBufferArray;
 import com.ams.io.ByteBufferOutputStream;
-import com.ams.rtmp.message.RtmpMessageData;
 
 public class AmfValue {
 	public final static int AMF_INT = 1;

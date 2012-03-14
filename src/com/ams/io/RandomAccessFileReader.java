@@ -75,7 +75,7 @@ public class RandomAccessFileReader implements IByteBufferReader {
 					length = 0;
 				}
 			} else {
-				this.buffer = ByteBufferFactory.allocate(32 * 1024);
+				this.buffer = ByteBufferFactory.allocate(8 * 1024);
 				int len = channel.read(buffer);
 				if (len < 0) {
 					eof = true;

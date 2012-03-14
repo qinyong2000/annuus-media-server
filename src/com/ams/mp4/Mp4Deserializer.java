@@ -12,11 +12,11 @@ import java.util.Collections;
 import com.ams.amf.AmfValue;
 import com.ams.message.MediaSample;
 import com.ams.message.IMediaDeserializer;
+import com.ams.mp4.STSD.AudioSampleDescription;
+import com.ams.mp4.STSD.VideoSampleDescription;
 import com.ams.io.ByteBufferArray;
 import com.ams.io.ByteBufferInputStream;
 import com.ams.io.RandomAccessFileReader;
-import com.ams.mp4.STSD.AudioSampleDescription;
-import com.ams.mp4.STSD.VideoSampleDescription;
 import com.ams.server.ByteBufferFactory;
 
 public class Mp4Deserializer implements IMediaDeserializer {

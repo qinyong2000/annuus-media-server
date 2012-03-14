@@ -77,7 +77,7 @@ public class Amf3Serializer {
 		Map<String, AmfValue> obj = amfValue.object();
 		for(String key : obj.keySet()) {
 			writeAmf3String(key);
-			write((AmfValue) obj.get(key));
+			write(obj.get(key));
 		}
 		//end of Object
 		writeAmf3EmptyString();
@@ -98,7 +98,7 @@ public class Amf3Serializer {
 		
 		writeAmf3EmptyString();
 		for(int i = 0; i < len; i++) {
-			write((AmfValue) array[i]);
+			write(array[i]);
 		}
 		objectRefTable.add(amfValue);
 	}

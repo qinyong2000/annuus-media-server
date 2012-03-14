@@ -54,7 +54,6 @@ public class FlvDeserializer implements IMediaDeserializer {
 		
 		int streamId = in.read24Bit(); // 24Bit read
 		ByteBuffer[] data = in.readByteBuffer(dataSize);
-		
 		int previousTagSize = (int) in.read32Bit();
 		
 		switch (tagType) {

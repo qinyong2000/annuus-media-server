@@ -76,13 +76,13 @@ public final class Server implements ConnectionListner {
 		
 		for (int i = 0; i < dispatchers.size(); i++) {
 			Dispatcher dispatcher = dispatchers.get(i);
-			new Thread(dispatcher).start();
+			new Thread(dispatcher, "dispatcher").start();
 		}
 
 		for (SocketAddress endpoint : acceptorMap.keySet()) {
 			IAcceptor acceptor = acceptorMap.get(endpoint);
 			acceptor.start();
-			new Thread(acceptor).start();
+			new Thread(acceptor, "acceptor").start();
 			Log.logger.info("Start service on port: " + acceptor.getListenEndpoint());
 		}
 		
@@ -122,13 +122,13 @@ public final class Server implements ConnectionListner {
 	
 	public IProtocolHandler getHandler(SocketAddress endpoint) {
 		if (handlerMap.containsKey(endpoint)) {
-			return (IProtocolHandler)handlerMap.get(endpoint);
+			return handlerMap.get(endpoint);
 		} else {
 			if (endpoint instanceof InetSocketAddress) {
 				SocketAddress endpointAny = new InetSocketAddress("0.0.0.0", 
 						((InetSocketAddress)endpoint).getPort());
 				if (handlerMap.containsKey(endpointAny)) {
-					return (IProtocolHandler)handlerMap.get(endpointAny);
+					return handlerMap.get(endpointAny);
 				}
 			}
 		}

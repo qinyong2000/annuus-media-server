@@ -39,7 +39,7 @@ public class MimeTypes {
 	};
 	
 	public static String getContentType(String extension) {
-		String contentType = (String) mimeMap.get(extension);
+		String contentType = mimeMap.get(extension);
 		if (contentType == null)
 			contentType = "unkown/unkown";
 		return contentType;		

@@ -154,7 +154,7 @@ public class HttpResponse {
 
 			StringBuilder cookieString = new StringBuilder();
 			cookieString.append(key + "="
-					+ URLEncoder.encode((String) cookie.value, "UTF-8"));
+					+ URLEncoder.encode(cookie.value, "UTF-8"));
 			if (cookie.expires != 0) {
 				Date d = new Date(cookie.expires);
 				cookieString.append("; expires=" + dateFormatGMT.format(d));

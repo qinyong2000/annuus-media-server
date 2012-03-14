@@ -49,7 +49,7 @@ public class Amf0Serializer {
 			Map<String, AmfValue> v = amfValue.object();
 			for(String key : v.keySet()) {
 				out.writeUTF(key);
-				write((AmfValue) v.get(key));
+				write(v.get(key));
 			}
 			//end of Object
 			out.writeByte(0);
@@ -62,7 +62,7 @@ public class Amf0Serializer {
 			int len = array.length;
 			out.writeInt(len);
 			for(int i = 0; i < len; i++) {
-				write((AmfValue) array[i]);
+				write(array[i]);
 			}
 			break;
 		case AmfValue.AMF_DATE:

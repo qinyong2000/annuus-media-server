@@ -11,7 +11,7 @@ public final class MOOV {
 
 	public void read(DataInputStream in) throws IOException {
 		try {
-			TRAK trak = null;;
+			TRAK trak = null;
 			while(true) {
 				BOX.Header header = BOX.readHeader(in);
 				String box = header.type;

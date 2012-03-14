@@ -212,6 +212,8 @@ public class MulticastConnector extends Connector {
 	}
 
 	private void handleIncoming(ByteBuffer frame) {
+		keepAlive();
+		
 		int sessionId = frame.getInt();
 		byte payloadType = frame.get();
 		short sequnceNum = frame.getShort();

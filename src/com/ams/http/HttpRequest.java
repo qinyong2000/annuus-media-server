@@ -131,7 +131,7 @@ public class HttpRequest {
 
 		// get cookies
 		if (headers.containsKey("cookie")) {
-			parseRawString((String) headers.get("cookie"), cookies, ";");
+			parseRawString(headers.get("cookie"), cookies, ";");
 		}
 
 		return HTTP.HTTP_OK;
@@ -140,7 +140,7 @@ public class HttpRequest {
 	private int parseMessageBody() throws IOException {
 		// if method is post, parse the post values
 		if (method == HTTP.HTTP_METHOD_POST) {
-			String contentType = (String) headers.get("content-type");
+			String contentType = headers.get("content-type");
 
 			// if multi-form part
 			if ((contentType != null)
@@ -159,7 +159,7 @@ public class HttpRequest {
 				}
 
 				int len = Integer.parseInt(
-						(String) headers.get("content-length"), 10);
+						headers.get("content-length"), 10);
 				byte[] buf = new byte[len];
 				in.read(buf, 0, len);
 
@@ -171,7 +171,7 @@ public class HttpRequest {
 	}
 
 	private int parseMultipartBody() throws IOException {
-		String contentType = (String) headers.get("content-type");
+		String contentType = headers.get("content-type");
 		String boundary = "--"
 				+ contentType.replaceAll("^.*boundary=\"?([^\";,]+)\"?.*$",
 						"$1");
@@ -201,7 +201,7 @@ public class HttpRequest {
 			}
 
 			// read body
-			String disposition = (String) item.get("content-disposition");
+			String disposition = item.get("content-disposition");
 			String name = disposition.replaceAll("^.* name=\"?([^\";]*)\"?.*$",
 					"$1");
 			String filename = disposition.replaceAll(

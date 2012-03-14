@@ -5,7 +5,6 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 
 import com.ams.message.MediaMessage;
-import com.ams.rtmp.message.RtmpMessage;
 import com.ams.server.Connector;
 import com.ams.server.MulticastConnector;
 import com.ams.server.SocketConnector;
@@ -22,7 +21,7 @@ public class ReplicateCluster {
 			if (!isLocalHost(host)) {
 				Replicator replicator = new Replicator(new SocketConnector(), host, port);
 				replicators.add(replicator);
-				new Thread(replicator).start();
+				new Thread(replicator, "replicator").start();
 			}
 		}
 	}
@@ -38,7 +37,7 @@ public class ReplicateCluster {
 		Replicator replicator = new Replicator(new MulticastConnector(), group,
 				port);
 		replicators.add(replicator);
-		new Thread(replicator).start();
+		new Thread(replicator, "replicator").start();
 	}
 
 	public static void publishMessage(String publishName, MediaMessage msg) {

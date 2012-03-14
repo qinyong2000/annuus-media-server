@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.ams.io.IByteBufferReader;
-
 public class ByteBufferArray implements IByteBufferReader, IByteBufferWriter {
 	private List<ByteBuffer> buffers;
 	private int index = 0;

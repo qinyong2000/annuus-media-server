@@ -14,7 +14,7 @@ public final class STCO extends BOX {
 		int count = in.readInt();
 		offsets = new long[count];
 		for (int i=0; i < count; i++) {
-			offsets[i] = (int) in.readInt();
+			offsets[i] = in.readInt();
 		}
 	}
 

@@ -44,7 +44,6 @@ public class SocketAcceptor implements IAcceptor {
 								.register(selector, SelectionKey.OP_ACCEPT);
 					} catch (Exception e1) {
 					}
-					;
 				}
 			}
 			if (selectedKeys == 0) {

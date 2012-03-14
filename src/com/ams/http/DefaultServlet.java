@@ -46,7 +46,7 @@ public class DefaultServlet {
 	private boolean writeFile(String url, File file, HttpResponse res) {
 		boolean result = true;
 		try {
-			MapedFile mapedFile = (MapedFile) fileCache.get(url);
+			MapedFile mapedFile = fileCache.get(url);
 			if (mapedFile == null) {
 				// open the resource stream
 				mapedFile = new MapedFile();

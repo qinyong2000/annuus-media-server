@@ -16,7 +16,7 @@ public final class SlabByteBufferAllocator implements IByteBufferAllocator{
 	private int pageSize = 8 * 1024 * 1024;
 	private float factor = 2.0f;
 	private double logFactor;
-	
+
 	private ArrayList<Slab> slabs;
 	private class Slab {
 		private ArrayList<Page> pages;
@@ -87,7 +87,6 @@ public final class SlabByteBufferAllocator implements IByteBufferAllocator{
 			chunkBitSet.set(index, true);
 			chunks.position(index * chunkSize);
 			chunks.limit(chunks.position() + chunkSize);
-		
 			ByteBuffer slice = chunks.slice();
 			referenceList.add(new ChunkReference(slice, this, index));
 			currentIndex = index + 1;
@@ -138,7 +137,7 @@ public final class SlabByteBufferAllocator implements IByteBufferAllocator{
 	}
 	
 	private class ByteBufferCollector extends Thread {
-		private static final int COLLECT_INTERVAL_MS = 100;
+		private static final int COLLECT_INTERVAL_MS = 1000;
 
 		public ByteBufferCollector() {
 			super();
@@ -150,7 +149,7 @@ public final class SlabByteBufferAllocator implements IByteBufferAllocator{
 
 		public void run() {
 			try {
-				while (!interrupted()) {
+				while (! Thread.interrupted()) {
 					sleep(COLLECT_INTERVAL_MS);
 					collect();
 				}

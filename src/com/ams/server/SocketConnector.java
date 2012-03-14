@@ -88,6 +88,7 @@ public class SocketConnector extends Connector {
 			key.cancel();
 			key.attach(null);
 		}
+		keepAlive();
 	}
 
 	protected void writeToChannel(ByteBuffer[] data) throws IOException {

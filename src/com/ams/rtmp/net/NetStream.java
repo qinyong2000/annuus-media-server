@@ -7,9 +7,7 @@ import com.ams.flv.FlvDeserializer;
 import com.ams.flv.FlvException;
 import com.ams.flv.FlvSerializer;
 import com.ams.message.IMediaDeserializer;
-import com.ams.message.MediaSample;
 import com.ams.io.*;
-import com.ams.message.*;
 import com.ams.mp4.Mp4Deserializer;
 import com.ams.rtmp.RtmpConnection;
 import com.ams.rtmp.message.*;
@@ -180,7 +178,7 @@ public class NetStream {
 					}
 					StreamSubscriber subscriber = new StreamSubscriber(publisher);
 					player = new StreamPlayer(subscriber, this);
-					publisher.addSubscriber((IMsgSubscriber<MediaSample>) subscriber);
+					publisher.addSubscriber(subscriber);
 					player.seek(0);
 				}
 				break;
@@ -190,7 +188,7 @@ public class NetStream {
 					if (publisher != null) {
 						StreamSubscriber subscriber = new StreamSubscriber(publisher);
 						player = new StreamPlayer(subscriber, this);
-						publisher.addSubscriber((IMsgSubscriber<MediaSample>)subscriber);
+						publisher.addSubscriber(subscriber);
 						player.seek(0);
 					} else {
 						String tokens[] = streamName.split(":");

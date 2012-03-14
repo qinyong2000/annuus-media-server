@@ -66,7 +66,7 @@ public class ObjectCache<T> {
 
 		public void run() {
 			try {
-				while (!interrupted()) {
+				while (! Thread.interrupted()) {
 					sleep(30000);
 					collect();
 				}
