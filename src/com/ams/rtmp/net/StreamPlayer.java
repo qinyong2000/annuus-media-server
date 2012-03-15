@@ -61,8 +61,8 @@ public class StreamPlayer {
 
 	public void play() throws IOException {
 		if (pause) return;
-		long durationTime = System.currentTimeMillis() - startTime;
-		while(stream.getTimeStamp() < durationTime ) {
+		long time = System.currentTimeMillis() - startTime;
+		while(stream.getTimeStamp() < time ) {
 			MediaSample sample = deserializer.readNext();
 			if( sample == null ) {
 				break;

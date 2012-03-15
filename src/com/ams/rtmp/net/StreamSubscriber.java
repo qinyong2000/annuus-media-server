@@ -29,14 +29,7 @@ public class StreamSubscriber implements IMediaDeserializer, IMsgSubscriber<Medi
 	}
 
 	public MediaSample seek(long seekTime) throws IOException {
-		// start from a keyframe
-		MediaSample sample;
-		while ((sample = receivedQueue.peek()) != null) {
-			if (sample.isVideoKeyframe()) break;
-			receivedQueue.poll();
-		}
-		
-		return null;
+		return publisher.getCurrentSample();
 	}
 
 	public MediaSample readNext() throws IOException {
@@ -52,7 +45,6 @@ public class StreamSubscriber implements IMediaDeserializer, IMsgSubscriber<Medi
 
 	public synchronized void close() {
 		receivedQueue.clear();
-		// remove from publisher
 		publisher.removeSubscriber(this);
 	}
 

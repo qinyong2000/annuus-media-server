@@ -13,6 +13,7 @@ public class StreamPublisher implements IMsgPublisher<MediaMessage<RtmpMessage>,
 	private MediaSample videoHeader = null;
 	private MediaSample audioHeader = null;
 	private MediaSample meta = null;
+	private MediaSample currentSample = null;
 
 	private LinkedList<IMsgSubscriber<MediaSample>> subscribers = new LinkedList<IMsgSubscriber<MediaSample>>();
 
@@ -67,6 +68,8 @@ public class StreamPublisher implements IMsgPublisher<MediaMessage<RtmpMessage>,
 		
 		// ping
 		ping(sample.getDataSize());
+		
+		currentSample = sample;
 	}
 
 	public synchronized void close() {
@@ -134,4 +137,9 @@ public class StreamPublisher implements IMsgPublisher<MediaMessage<RtmpMessage>,
 	public MediaSample getMetaData() {
 		return meta;
 	}
+	
+	public MediaSample getCurrentSample() {
+		return currentSample;
+	}
+	
 }

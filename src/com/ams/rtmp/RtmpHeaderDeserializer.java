@@ -35,16 +35,22 @@ public class RtmpHeaderDeserializer {
 
 		RtmpHeader lastHeader = getLastHeader(chunkStreamId);
 		int fmt = h >>> 6;
-		if (fmt == 0 || fmt == 1 || fmt == 2) {			// type 0, type 1, type 2 header
-			int ts = in.read24Bit();
-			lastHeader.setTimestamp(ts);
+		long ts = 0;
+		if (fmt == 0) {									// type 0 header
+			ts = in.read24Bit();
+			lastHeader.setTimestamp(ts);				// absolute timestamp
+		}
+		long lastTimestamp = lastHeader.getTimestamp();
+		if (fmt == 1 || fmt == 2) {						// type 1, type 2 header
+			ts = in.read24Bit();
+			lastHeader.setTimestamp(lastTimestamp + ts);	// delta timestamp
 		}
 		if (fmt == 0 || fmt == 1 ) {					// type 0, type 1 header
 			int size = in.read24Bit();
 			lastHeader.setSize(size);
 			lastHeader.setType(in.readByte() & 0xFF);
 		}
-		if (fmt == 0 ) {								// type 0 header	
+		if (fmt == 0 ) {								// type 0 header
 			int streamId = (int)in.read32BitLittleEndian();
 			lastHeader.setStreamId(streamId);
 		}
@@ -53,9 +59,13 @@ public class RtmpHeaderDeserializer {
 		}
 		
 		// extended time stamp
-		if ((fmt ==0 || fmt == 1 || fmt == 2) && lastHeader.getTimestamp() == 0x00FFFFFF ) {
-			long ts = in.read32Bit();
+		if (fmt == 0 && ts >= 0x00FFFFFF ) {
+			ts = in.read32Bit();
 			lastHeader.setTimestamp(ts);
+		}
+		if ((fmt == 1 || fmt == 2) && ts >= 0x00FFFFFF ) {
+			ts = in.read32Bit();
+			lastHeader.setTimestamp(lastTimestamp + ts);
 		}
 		
 		return new RtmpHeader(	chunkStreamId,
