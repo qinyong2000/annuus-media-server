@@ -8,6 +8,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 
 import com.ams.amf.AmfValue;
 import com.ams.message.MediaSample;
@@ -28,8 +29,7 @@ public class Mp4Deserializer implements IMediaDeserializer {
 	private ArrayList<Mp4Sample> samples = new ArrayList<Mp4Sample>();
 	private int sampleIndex = 0;
 	private long moovPosition = 0;
-	
-	private class SampleTimestampComparator implements java.util.Comparator<Mp4Sample> {
+	private static Comparator<Mp4Sample> sampleTimestampComparator = new Comparator<Mp4Sample>() {
 		public int compare(Mp4Sample s, Mp4Sample t) {
 			return (int)(s.getTimestamp() - t.getTimestamp());
 		}
@@ -51,7 +51,7 @@ public class Mp4Deserializer implements IMediaDeserializer {
 			samples.addAll(Arrays.asList(audioSamples));
 		}
 		
-		Collections.sort(samples, new SampleTimestampComparator());
+		Collections.sort(samples, sampleTimestampComparator);
 	}
 	
 	private MOOV readMoov(RandomAccessFileReader reader) {
@@ -182,7 +182,7 @@ public class Mp4Deserializer implements IMediaDeserializer {
 	
 	public MediaSample seek(long seekTime) {
 		Mp4Sample seekSample = videoSamples[0];
-		int idx = Collections.binarySearch(samples, new Mp4Sample(MediaSample.SAMPLE_VIDEO, seekTime, true, 0, 0, 0) , new SampleTimestampComparator());
+		int idx = Collections.binarySearch(samples, new Mp4Sample(MediaSample.SAMPLE_VIDEO, seekTime, true, 0, 0, 0) , sampleTimestampComparator);
 		int i = (idx >= 0) ? idx : -(idx + 1);
 		while(i > 0) {
 			seekSample = samples.get(i);

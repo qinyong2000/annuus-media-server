@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+
 import com.ams.amf.AmfValue;
 import com.ams.io.ByteBufferArray;
 import com.ams.io.ByteBufferInputStream;
@@ -35,7 +37,7 @@ public class FlvDeserializer implements IMediaDeserializer {
 
 	private static final byte[] H264_AUDIO_HEADER= {(byte)0x12, (byte)0x10};
 	
-	private class SampleTimestampComparator implements java.util.Comparator<MediaSample> {
+	private static Comparator<MediaSample> sampleTimestampComparator = new Comparator<MediaSample>() {
 		public int compare(MediaSample s, MediaSample t) {
 			return (int)(s.getTimestamp() - t.getTimestamp());
 		}
@@ -202,7 +204,7 @@ public class FlvDeserializer implements IMediaDeserializer {
 	
 	public MediaSample seek(long seekTime) throws IOException {
 		MediaSample flvTag = firstVideoTag;
-		int idx = Collections.binarySearch(samples, new MediaSample(MediaSample.SAMPLE_VIDEO, seekTime, true, 0, 0) , new SampleTimestampComparator());
+		int idx = Collections.binarySearch(samples, new MediaSample(MediaSample.SAMPLE_VIDEO, seekTime, true, 0, 0) , sampleTimestampComparator);
 		int i = (idx >= 0) ? idx : -(idx + 1);
 		while(i > 0) {
 			flvTag = samples.get(i);
