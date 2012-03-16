@@ -15,7 +15,7 @@ public class ByteBufferOutputStream extends OutputStream {
 		this.writer = writer;
 	}
 
-	public void flush() throws IOException {
+	public synchronized void flush() throws IOException {
 		if (writeBuffer != null) {
 			writeBuffer.flip();
 			writer.write(new ByteBuffer[] {writeBuffer});
@@ -23,7 +23,7 @@ public class ByteBufferOutputStream extends OutputStream {
 		}
 	}
 	
-	public void write(byte[] data, int offset, int len) throws IOException {
+	public synchronized void write(byte[] data, int offset, int len) throws IOException {
 		while (true) {
 			if (writeBuffer == null) {
 				int size = Math.max(len, WRITE_BUFFER_SIZE);

@@ -48,7 +48,7 @@ public class RandomAccessFileReader implements IByteBufferReader {
 		return (amount < 0) ? -1 : one[0] & 0xff;
 	}
 	
-	public int read(byte[] data, int offset, int size) throws IOException {
+	public synchronized int read(byte[] data, int offset, int size) throws IOException {
 		// throw an exception if eof
 		if (eof) {
 			throw new EOFException("stream is eof");
@@ -88,7 +88,7 @@ public class RandomAccessFileReader implements IByteBufferReader {
 		return amount;
 	}
 
-	public ByteBuffer[] read(int size) throws IOException {
+	public synchronized ByteBuffer[] read(int size) throws IOException {
 		// throw an exception if eof
 		if (eof) {
 			throw new EOFException("stream is eof");
@@ -127,7 +127,7 @@ public class RandomAccessFileReader implements IByteBufferReader {
 		return list.toArray(new ByteBuffer[list.size()]);
 	}
 
-	public void seek(long startPosition) throws IOException {
+	public synchronized void seek(long startPosition) throws IOException {
 		if (this.buffer != null) {
 			int bufferPosition = buffer.position();
 			if (startPosition >= position - bufferPosition

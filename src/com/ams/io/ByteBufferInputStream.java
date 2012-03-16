@@ -16,7 +16,7 @@ public class ByteBufferInputStream extends InputStream {
 		this.reader = reader;
 	}
 
-	public String readLine() throws IOException {
+	public synchronized String readLine() throws IOException {
 		// throw an exception if the stream is closed
 		// closedCheck();
 		int index = 0;

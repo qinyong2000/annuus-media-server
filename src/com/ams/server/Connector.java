@@ -137,7 +137,7 @@ public abstract class Connector implements IByteBufferReader, IByteBufferWriter 
 		}
 	}
 
-	public ByteBuffer[] read(int size) throws IOException {
+	public synchronized ByteBuffer[] read(int size) throws IOException {
 		ArrayList<ByteBuffer> list = new ArrayList<ByteBuffer>();
 		int length = size;
 		while (length > 0) {
@@ -178,13 +178,13 @@ public abstract class Connector implements IByteBufferReader, IByteBufferWriter 
 		return list.toArray(new ByteBuffer[list.size()]);
 	}
 
-	public void write(ByteBuffer[] data) throws IOException {
+	public synchronized void write(ByteBuffer[] data) throws IOException {
 		for (ByteBuffer buf : data) {
 			writeQueue.offer(buf);
 		}
 	}
 
-	public void flush() throws IOException {
+	public synchronized void flush() throws IOException {
 		if (out != null) out.flush();
 		ArrayList<ByteBuffer> writeBuffers = new ArrayList<ByteBuffer>();
 		ByteBuffer data;

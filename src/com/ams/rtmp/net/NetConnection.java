@@ -54,7 +54,7 @@ public class NetConnection {
 	private void onCommandMessage(RtmpHeader header, RtmpMessage message) throws NetConnectionException, IOException, FlvException {
 		RtmpMessageCommand command = (RtmpMessageCommand)message;
 		String cmdName = command.getName();
-		System.out.println("command name:" + cmdName);
+		Log.logger.info("command:" + cmdName);
 		if ("connect".equals(cmdName)) {
 			onConnect(header, command); 
 		} else if ("createStream".equals(cmdName)) {
@@ -94,7 +94,6 @@ public class NetConnection {
 			return;
 		}
 		context.setAttribute("app", app);
-		Log.logger.info("connect application:" + app);
 
 		rtmp.writeProtocolControlMessage(new RtmpMessageWindowAckSize(128*1024));
 		rtmp.writeProtocolControlMessage(new RtmpMessagePeerBandwidth(128*1024, (byte)2));
@@ -292,34 +291,35 @@ public class NetConnection {
 				break;
 			case RtmpMessage.MESSAGE_USER_CONTROL:
 				RtmpMessageUserControl userControl = (RtmpMessageUserControl)message;
-				System.out.println("read message USER_CONTROL:" + userControl.getEvent() + ":" + userControl.getStreamId() + ":" + userControl.getTimestamp());
+				Log.logger.info("read message USER_CONTROL:" + userControl.getEvent() + ":" + userControl.getStreamId() + ":" + userControl.getTimestamp());
 				break;
 			case RtmpMessage.MESSAGE_SHARED_OBJECT:
-				System.out.println("read message SHARED OBJECT:");
 				onSharedMessage(header, message);
 				break;
 			case RtmpMessage.MESSAGE_CHUNK_SIZE:
-				System.out.println("read message chunk size:");
+				RtmpMessageChunkSize chunkSize = (RtmpMessageChunkSize)message;
+				Log.logger.info("read message chunk size:" + chunkSize.getChunkSize());
 				break;
 			case RtmpMessage.MESSAGE_ABORT:
-				System.out.println("read message abort:");
+				RtmpMessageAbort abort = (RtmpMessageAbort)message;
+				Log.logger.info("read message abort:" + abort.getStreamId());
 				break;
 			case RtmpMessage.MESSAGE_ACK:
 				RtmpMessageAck ack = (RtmpMessageAck)message;
-				System.out.println("read message ACK:" + ack.getBytes());
+				//Log.logger.info("read message ack:" + ack.getBytes());
 				break;
 			case RtmpMessage.MESSAGE_WINDOW_ACK_SIZE:
 				RtmpMessageWindowAckSize ackSize = (RtmpMessageWindowAckSize)message;
-				System.out.println("read message window ack size:" + ackSize.getSize());
+				Log.logger.info("read message window ack size:" + ackSize.getSize());
 				break;
 			case RtmpMessage.MESSAGE_PEER_BANDWIDTH:
-				System.out.println("read message peer bandwidth:");
+				RtmpMessagePeerBandwidth peer = (RtmpMessagePeerBandwidth)message;
+				Log.logger.info("read message peer bandwidth:" + peer.getWindowAckSize() + ":" + peer.getLimitType());
 				break;
-			case RtmpMessage.MESSAGE_AGGREGATE:
-				System.out.println("read message aggregate:");
-				break;
+			//case RtmpMessage.MESSAGE_AGGREGATE:
+			//	break;
 			case RtmpMessage.MESSAGE_UNKNOWN:
-				System.out.println("read message UNKNOWN:");
+				Log.logger.warning("read message UNKNOWN!");
 				break;
 			}
 		} catch(Exception e) {

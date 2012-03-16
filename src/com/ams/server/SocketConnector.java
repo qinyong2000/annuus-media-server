@@ -12,7 +12,6 @@ public class SocketConnector extends Connector {
 	private static final int MAX_READ_BUFFER_SIZE = 64*1024;
 	private SocketChannel channel = null;
 	private ByteBuffer readBuffer = null;
-	private boolean connectSleeping = false;
 
 	public SocketConnector() {
 		super();
@@ -31,7 +30,6 @@ public class SocketConnector extends Connector {
 
 		ConnectionListner listener = new ConnectionListner() {
 			public void connectionEstablished(Connector conn) {
-				connectSleeping = false;
 				synchronized(conn) {
 					conn.notifyAll();
 				}
@@ -44,19 +42,19 @@ public class SocketConnector extends Connector {
 		addListner(listener);
 		getDispatcher().addChannelToRegister(new ChannelInterestOps(channel,
 				SelectionKey.OP_CONNECT, this));
+		long start = System.currentTimeMillis();
 		try {
 			synchronized (this) {
 				channel.connect(new InetSocketAddress(host, port));
-				connectSleeping = true;
 				wait(DEFAULT_TIMEOUT_MS);
 			}
 		} catch (InterruptedException e) {
-			connectSleeping = false;
 			throw new IOException("connect interrupted");
 		} finally {
 			removeListner(listener);
 		}
-		if (connectSleeping) {
+		long now = System.currentTimeMillis();
+		if (now - start >= timeout) {
 			throw new IOException("connect time out");
 		}
 	}
@@ -91,7 +89,7 @@ public class SocketConnector extends Connector {
 		keepAlive();
 	}
 
-	protected void writeToChannel(ByteBuffer[] data) throws IOException {
+	protected synchronized void writeToChannel(ByteBuffer[] data) throws IOException {
 		Selector writeSelector = null;
 		SelectionKey writeKey = null;
 		int retry = 0;
@@ -123,8 +121,7 @@ public class SocketConnector extends Connector {
 					if (writeSelector == null) {
 						writeSelector = SelectorFactory.getInstance().get();
 						try {
-							writeKey = channel.register(writeSelector,
-									SelectionKey.OP_WRITE);
+							writeKey = channel.register(writeSelector, SelectionKey.OP_WRITE);
 						} catch (Exception e) {
 							e.printStackTrace();
 						}

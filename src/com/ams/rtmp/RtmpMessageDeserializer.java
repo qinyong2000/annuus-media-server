@@ -153,9 +153,9 @@ public class RtmpMessageDeserializer {
 			int windowAckSize = (int)bis.read32Bit();
 			byte limitType = bis.readByte();
 			return new RtmpMessagePeerBandwidth(windowAckSize, limitType);
+		//case RtmpMessage.MESSAGE_AGGREGATE:
 			
 		default:
-			System.out.println("UNKNOWN HEADER TYPE:" + header.getType());
 			return new RtmpMessageUnknown(header.getType(), data);
 		}
 	}

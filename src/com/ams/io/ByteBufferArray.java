@@ -65,7 +65,7 @@ public class ByteBufferArray implements IByteBufferReader, IByteBufferWriter {
 		return new ByteBufferArray(dup);
 	}
 
-	public ByteBuffer[] read(int size) throws IOException {
+	public synchronized ByteBuffer[] read(int size) throws IOException {
 		if (index >= buffers.size()) return null;
 		ArrayList<ByteBuffer> list = new ArrayList<ByteBuffer>();
 		int length = size;

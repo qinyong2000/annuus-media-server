@@ -168,7 +168,7 @@ public class MulticastConnector extends Connector {
 		}
 	}
 
-	protected void writeToChannel(ByteBuffer[] buf) throws IOException {
+	protected synchronized void writeToChannel(ByteBuffer[] buf) throws IOException {
 		ArrayList<ByteBuffer> buffers = new ArrayList<ByteBuffer>();
 		ByteBuffer frame = null;
 		short sequnce = 0;
